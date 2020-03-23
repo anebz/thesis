@@ -1,4 +1,5 @@
 # minimal BPE from arxiv 1508.07909
+# to apply at test time
 
 import re
 import collections
@@ -33,11 +34,15 @@ vocab = {'l o w </w>': 5,
          'l o w e r </w>': 2,
          'n e w e s t </w>': 6,
          'w i d e s t </w>': 3}
-num_merges = 10
-
+num_merges = 15
 for i in range(num_merges):
   pairs = get_stats(vocab)
-  best = max(pairs, key=pairs.get)
+  try:
+    best = max(pairs, key=pairs.get)
+  except ValueError:
+    break
+  if pairs[best] < 2:
+     sys.stderr.write('no pair has frequency > 1. Stopping\n')
+     break
   vocab = merge_vocab(best, vocab)
   print(best)
-print(vocab)
