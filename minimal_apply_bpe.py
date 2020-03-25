@@ -2,6 +2,7 @@
 # to apply at test time
 
 import re
+import sys
 import collections
 
 def get_stats(vocab):
@@ -23,7 +24,8 @@ def merge_vocab(pair, v_in):
   v_out = {}
   # escape space
   bigram = re.escape(' '.join(pair))
-  p = re.compile(r'(?<!\S)' + bigram + r'(?!\S)') # don't understand the regex. but it merges the bigram chars together
+  # don't understand the regex. but it merges the bigram chars together
+  p = re.compile(r'(?<!\S)' + bigram + r'(?!\S)')
   for word in v_in:
     w_out = p.sub(''.join(pair), word)
     v_out[w_out] = v_in[word]

@@ -291,6 +291,6 @@ if __name__ == '__main__':
     '''
     
     argsinput = codecs.open(os.path.join(currentdir, 'data/eng_with_10k.txt'), encoding='utf-8')
-    argsoutput = codecs.open(os.path.join(currentdir, 'data/out.txt'), 'w', encoding='utf-8')
+    argsoutput = codecs.open(os.path.join(currentdir, 'data/_out.txt'), 'w', encoding='utf-8')
 
     learn_bpe(argsinput, argsoutput, 100, min_frequency=2, verbose=True, is_dict=False, total_symbols=10000)
