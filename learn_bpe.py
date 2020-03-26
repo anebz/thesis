@@ -217,6 +217,7 @@ def learn_bpe(infile, outfile, num_symbols, min_frequency=2, verbose=False, is_d
     stats, indices = get_pair_statistics(sorted_vocab)
     big_stats = copy.deepcopy(stats)
 
+    # reduces \# of merge operations depending on word-internal chars, and word-final chars. but why?
     if total_symbols:
         uniq_char_internal = set()
         uniq_char_final = set()
