@@ -32,19 +32,23 @@ def merge_vocab(pair, v_in):
   return v_out
 
 
-vocab = {'l o w </w>': 5,
-         'l o w e r </w>': 2,
-         'n e w e s t </w>': 6,
-         'w i d e s t </w>': 3}
-num_merges = 15
-for i in range(num_merges):
-  pairs = get_stats(vocab)
-  try:
-    best = max(pairs, key=pairs.get)
-  except ValueError:
-    break
-  if pairs[best] < 2:
-     sys.stderr.write('no pair has frequency > 1. Stopping\n')
-     break
-  vocab = merge_vocab(best, vocab)
-  print(best)
+if __name__ == "__main__":
+
+  vocab = {'l o w </w>': 5,
+          'l o w e r </w>': 2,
+          'n e w e s t </w>': 6,
+          'w i d e s t </w>': 3}
+
+  num_merges = 15
+  
+  for i in range(num_merges):
+    pairs = get_stats(vocab)
+    try:
+      best = max(pairs, key=pairs.get)
+    except ValueError:
+      break
+    if pairs[best] < 2:
+      sys.stderr.write('no pair has frequency > 1. Stopping\n')
+      break
+    vocab = merge_vocab(best, vocab)
+    print(best)

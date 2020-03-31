@@ -164,7 +164,7 @@ if __name__ == '__main__':
 
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     argsinput = codecs.open(os.path.join(currentdir, 'data/eng_with_10k.txt'), encoding='utf-8')
-    argsoutput = codecs.open(os.path.join(currentdir, 'data/minimal_out.txt'), 'w', encoding='utf-8')
+    argsoutput = codecs.open(os.path.join(currentdir, 'data/minimal_model.bpe'), 'w', encoding='utf-8')
     numsymbols = 100
 
     learn_bpe(argsinput, argsoutput, numsymbols, total_symbols=10000)
