@@ -16,8 +16,8 @@ def get_vocabulary(fobj):
         _, line = line.split('\t')
         for word in line.strip('\r\n ').split(' '):
             if word:
-                # split word into chars and add '</w>' at the end of the word
-                word_splitted = tuple(word[:-1]) + (word[-1] + '</w>',)
+                # split word into chars, while adding ▁ to the first word
+                word_splitted = (u'\u2581' + word[0],) + tuple(word[1:])
                 vocab[word_splitted] += 1
     return vocab
 
