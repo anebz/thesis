@@ -24,12 +24,12 @@ def apply_bpe(argsinput, codes, argsoutput, merges):
     Then you find smaller BPEs for the rest of the characters.
     '''
 
+    all_lines = []
     for line in argsinput:
         _, line = line.split('\t')
-        all_line = []
         for word in line.strip('\r\n ').split(' '):
             word_splitted = (u'\u2581' + word[0],) + tuple(word[1:])
-            all_line.append(word_splitted)
+            all_lines.append(word_splitted)
 
     return
 

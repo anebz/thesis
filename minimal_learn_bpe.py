@@ -9,6 +9,7 @@ from collections import defaultdict, Counter
 
 def get_vocabulary(fobj):
     """
+    word vocabulary
     Read text and return dictionary that encodes vocabulary
     """
     vocab = Counter()
@@ -36,7 +37,7 @@ def get_pair_statistics(vocab):
     for i, (word, freq) in enumerate(vocab):
         prev_char = word[0]
         for char in word[1:]:
-            stats[prev_char, char] += freq # \U0001F917
+            stats[prev_char, char] += freq
             # dict of dict. first key is tuple of bigram, 
             # second key is the index where it's found, last value is the frequency
             # the only option where freq might be >1 is if the same bigram is repeated many times in the same index
@@ -134,7 +135,7 @@ def update_pair_statistics(pair, changed, stats, indices):
             i += 1
     return
 
-def learn_bpe(infile, outfile, num_symbols, total_symbols=False):
+def learn_bpe(infile, outfile, num_symbols):
     """
     Learn num_symbols BPE operations from vocabulary, and write to outfile.
     """
@@ -167,4 +168,4 @@ if __name__ == '__main__':
     argsoutput = codecs.open(os.path.join(currentdir, 'data/minimal_model.bpe'), 'w', encoding='utf-8')
     numsymbols = 100
 
-    learn_bpe(argsinput, argsoutput, numsymbols, total_symbols=10000)
+    learn_bpe(argsinput, argsoutput, numsymbols)
