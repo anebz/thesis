@@ -6,24 +6,21 @@ import re
 import inspect
 import codecs
 
-def apply_bpe(argsinput, codes, argsoutput, merges):
-    
-    # from paper's code
-    bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(codes) if n < merges]
-    #bpe_codes_reverse = dict([(pair[0] + pair[1], pair) for pair, i in bpe_codes.items()])
-
+def read_corpus(argsinput):
     '''
-    for bigram in merges:
-        for sent in corpus:
-            if bigram in sent: # you can make a set of available bigrams for each sentence and update them.
-                apply_merge(sent, bigram) # update the bigram set for the sentence
-
-    The second way is to look at the merge list as a list of BPEs ('th e' -> 'the').
-    Now, you start from the largest BPE and find which BPE you can find in sentences. 
-    Then you find smaller BPEs for the rest of the characters.
+    read corpus into list of list of bigram tuples
+    [
+        [ # sentencen 1
+            [('_W', 'e')],
+            [('_d'. 'o')],
+            [('_n', 'o'), ('o', 't')],
+            ...
+        ],
+        [
+            sentence 2
+        ]
+    ]
     '''
-
-    # read corpus into list of list of bigram tuples
     corpus = []
     for line in argsinput:
         all_line = []
@@ -42,6 +39,24 @@ def apply_bpe(argsinput, codes, argsoutput, merges):
                 all_word = [word_splitted]
             all_line.append(all_word)
         corpus.append(all_line)
+    return corpus
+
+def apply_bpe(argsinput, codes, argsoutput, merges):
+
+    bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(codes) if n < merges]
+
+    corpus = read_corpus(argsinput)
+
+    '''
+    for bigram in merges:
+        for sent in corpus:
+            if bigram in sent: # you can make a set of available bigrams for each sentence and update them.
+                apply_merge(sent, bigram) # update the bigram set for the sentence
+
+    The second way is to look at the merge list as a list of BPEs ('th e' -> 'the').
+    Now, you start from the largest BPE and find which BPE you can find in sentences. 
+    Then you find smaller BPEs for the rest of the characters.
+    '''
 
     return
 
