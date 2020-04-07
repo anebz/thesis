@@ -9,9 +9,8 @@ import codecs
 def apply_bpe(argsinput, codes, argsoutput, merges):
     
     # from paper's code
-    bpe_codes = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(codes) if (n < merges or merges == -1)]
-    bpe_codes = dict([(code, i) for (i, code) in reversed(list(enumerate(bpe_codes)))])
-    bpe_codes_reverse = dict([(pair[0] + pair[1], pair) for pair, i in bpe_codes.items()])
+    bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(codes) if n < merges]
+    #bpe_codes_reverse = dict([(pair[0] + pair[1], pair) for pair, i in bpe_codes.items()])
 
     '''
     for bigram in merges:
@@ -24,12 +23,25 @@ def apply_bpe(argsinput, codes, argsoutput, merges):
     Then you find smaller BPEs for the rest of the characters.
     '''
 
-    all_lines = []
+    # read corpus into list of list of bigram tuples
+    corpus = []
     for line in argsinput:
+        all_line = []
         _, line = line.split('\t')
         for word in line.strip('\r\n ').split(' '):
             word_splitted = (u'\u2581' + word[0],) + tuple(word[1:])
-            all_lines.append(word_splitted)
+
+            # save bigrams
+            if len(word_splitted) > 2:
+                all_word = []
+                prev_char = word_splitted[0]
+                for letter in word_splitted[1:]:
+                    all_word.append((prev_char, letter))
+                    prev_char = letter
+            else:
+                all_word = [word_splitted]
+            all_line.append(all_word)
+        corpus.append(all_line)
 
     return
 
