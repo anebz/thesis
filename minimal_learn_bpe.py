@@ -150,7 +150,7 @@ def learn_bpe(infile, outfile, num_symbols):
     #big_stats = copy.deepcopy(stats)
 
     # 3. merge symbols
-    for i in tqdm(range(num_symbols)):
+    for _ in tqdm(range(num_symbols)):
         if stats:
             most_frequent = max(stats, key=lambda x: (stats[x], x))
 
@@ -165,8 +165,11 @@ def learn_bpe(infile, outfile, num_symbols):
 if __name__ == '__main__':
 
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    argsinput = codecs.open(os.path.join(currentdir, 'data/eng_with_10k.txt'), encoding='utf-8')
-    argsoutput = codecs.open(os.path.join(currentdir, 'data/minimal_model.bpe'), 'w', encoding='utf-8')
+    datapath = os.path.join(currentdir, 'data')
+
+    lang = 'eng'  # eng, deu
+    argsinput = codecs.open(os.path.join(datapath, lang+'_with_10k.txt'), encoding='utf-8')
+    argsoutput = codecs.open(os.path.join(datapath, lang+'_model.bpe'), 'w', encoding='utf-8')
     numsymbols = 250
 
     learn_bpe(argsinput, argsoutput, numsymbols)

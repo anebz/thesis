@@ -5,68 +5,87 @@ import os
 import re
 import inspect
 import codecs
+from tqdm import tqdm
 
 def read_corpus(argsinput):
     '''
     read corpus into list of list of bigram tuples
-    [
-        [ # sentencen 1
-            [('_W', 'e')],
-            [('_d'. 'o')],
-            [('_n', 'o'), ('o', 't')],
-            ...
-        ],
+    Input: argsinput
+    Output:
         [
-            sentence 2
+            '_W', 'e',
+            '_d'. 'o',
+            '_n', 'o', 't',
+            '_b', 'e', 'l', 'i', 'e', 'v', 'e',
+            ...
+            '\n',
+            ...
         ]
-    ]
     '''
+
     corpus = []
     for line in argsinput:
-        all_line = []
+        # split the number found in the line
         _, line = line.split('\t')
-        for word in line.strip('\r\n ').split(' '):
-            word_splitted = (u'\u2581' + word[0],) + tuple(word[1:])
-
-            # save bigrams
-            if len(word_splitted) > 2:
-                all_word = []
-                prev_char = word_splitted[0]
-                for letter in word_splitted[1:]:
-                    all_word.append((prev_char, letter))
-                    prev_char = letter
-            else:
-                all_word = [word_splitted]
-            all_line.append(all_word)
-        corpus.append(all_line)
+        for word in line.strip('\r\n. ').split(' '):
+            if not word:
+                continue
+            # add '_' to beginning of each word
+            newword = [u'\u2581' + word[0]]
+            newword.extend(list(word[1:]))
+            corpus.extend(newword)
+        corpus.append('\n')
     return corpus
 
-def apply_bpe(argsinput, codes, argsoutput, merges):
 
-    bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(codes) if n < merges]
+def merge_corpus(corpus, bpe_merges, argsoutput):
+    '''
+    merge the bigrams found in the corpus iteratively
+    Inputs: 
+    * corpus in the style from read_corpus
+    * bpe_merges read from the input file
+    Output:
+    * Merged corpus written into `argsoutput`
+    '''
+
+    merged_corpus = corpus.copy()
+    for bigram in tqdm(bpe_merges):
+        pattern = re.compile(r'(?<!\S)' + re.escape(' '.join(bigram)) + r'(?!\S)')
+        pair_str = ''.join(bigram).replace('\\', '\\\\')
+
+        # expand into a big string
+        new_word = ' '.join(merged_corpus)
+        # merge bigram
+        new_word = pattern.sub(pair_str, new_word)
+        # join again
+        merged_corpus = list(new_word.split(' '))
+
+    # restore corpus and write to output
+    restored_corpus = ' '.join(merged_corpus)
+    restored_corpus = restored_corpus.replace(u'\u2581', '').replace(' \n ', '\n')
+    argsoutput.write(restored_corpus)
+    
+    return 
+
+
+def apply_bpe(argsinput, codes, argsoutput):
+
+    bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(codes)]
 
     corpus = read_corpus(argsinput)
 
-    '''
-    for bigram in merges:
-        for sent in corpus:
-            if bigram in sent: # you can make a set of available bigrams for each sentence and update them.
-                apply_merge(sent, bigram) # update the bigram set for the sentence
-
-    The second way is to look at the merge list as a list of BPEs ('th e' -> 'the').
-    Now, you start from the largest BPE and find which BPE you can find in sentences. 
-    Then you find smaller BPEs for the rest of the characters.
-    '''
+    merge_corpus(corpus, bpe_merges, argsoutput)
 
     return
 
 
 if __name__ == "__main__":
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    argsinput = codecs.open(os.path.join(currentdir, 'data/eng_with_10k.txt'), encoding='utf-8')
-    codes = codecs.open(os.path.join(currentdir, 'data/minimal_model.bpe'), encoding='utf-8')
-    argsoutput = codecs.open(os.path.join(currentdir, 'data/eng_merged.txt'), 'w', encoding='utf-8')
-    merges = 100
-    codes.seek(0)
+    datapath = os.path.join(currentdir, 'data')
 
-    apply_bpe(argsinput, codes, argsoutput, merges)
+    lang = 'deu' # eng, deu
+    argsinput = codecs.open(os.path.join(datapath, lang+'_with_10k.txt'), encoding='utf-8')
+    codes = codecs.open(os.path.join(datapath, lang+'_model.bpe'), encoding='utf-8')
+    argsoutput = codecs.open(os.path.join(datapath, lang+'_merged.txt'), 'w', encoding='utf-8')
+
+    apply_bpe(argsinput, codes, argsoutput)
