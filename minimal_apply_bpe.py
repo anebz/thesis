@@ -28,14 +28,16 @@ def read_corpus(argsinput):
     for line in argsinput:
         # split the number found in the line
         _, line = line.split('\t')
-        for word in line.strip('\r\n. ').split(' '):
-            if not word:
-                continue
-            # add '_' to beginning of each word
-            newword = [u'\u2581' + word[0]]
-            newword.extend(list(word[1:]))
-            corpus.extend(newword)
-        corpus.append('\n')
+        line = line.strip('\r\n. ').split(' ') if line.strip('\r\n. ') else []
+        if line: # ignore empty lines, or lines with just a .
+            for word in line:
+                if not word:
+                    continue
+                # add '_' to beginning of each word
+                newword = [u'\u2581' + word[0]]
+                newword.extend(list(word[1:]))
+                corpus.extend(newword)
+            corpus.append('\n')
     return corpus
 
 
@@ -85,12 +87,16 @@ if __name__ == "__main__":
     datapath = os.path.join(currentdir, 'data')
 
     lang = 'deu' # eng, deu
-    argsinput = codecs.open(os.path.join(datapath, lang+'_with_10k.txt'), encoding='utf-8')
-    codes = codecs.open(os.path.join(datapath, lang+'_model.bpe'), encoding='utf-8')
-    argsoutput = codecs.open(os.path.join(datapath, lang+'_merged.txt'), 'w', encoding='utf-8')
+    numsymbols = '2500' # 250, 2500
+
+    argsinput = codecs.open(os.path.join(datapath, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
+    codes = codecs.open(os.path.join(datapath, lang+'_model_'+numsymbols+'.bpe'), encoding='utf-8')
+    argsoutput = codecs.open(os.path.join(datapath, lang+'_merged_'+numsymbols+'.txt'), 'w', encoding='utf-8')
 
     print("Merging BPE symbols for {}".format(lang))
     time0 = datetime.datetime.now().replace(microsecond=0)
+
     apply_bpe(argsinput, codes, argsoutput)
+    
     time1 = datetime.datetime.now().replace(microsecond=0)
     print("Time elapsed:", time1-time0)

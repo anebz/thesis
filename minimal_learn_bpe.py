@@ -16,11 +16,13 @@ def get_vocabulary(fobj):
     vocab = Counter()
     for line in fobj:
         _, line = line.split('\t')
-        for word in line.strip('\r\n ').split(' '):
-            if word:
-                # split word into chars, while adding ▁ to the first word
-                word_splitted = (u'\u2581' + word[0],) + tuple(word[1:])
-                vocab[word_splitted] += 1
+        line = line.strip('\r\n. ').split(' ') if line.strip('\r\n. ') else []
+        if line: # ignore empty lines, or lines with just a .
+            for word in line:
+                if word:
+                    # split word into chars, while adding ▁ to the first word
+                    word_splitted = (u'\u2581' + word[0],) + tuple(word[1:])
+                    vocab[word_splitted] += 1
     return vocab
 
 
@@ -168,9 +170,9 @@ if __name__ == '__main__':
     datapath = os.path.join(currentdir, 'data')
 
     lang = 'deu'  # eng, deu
-    argsinput = codecs.open(os.path.join(datapath, lang+'_with_10k.txt'), encoding='utf-8')
-    argsoutput = codecs.open(os.path.join(datapath, lang+'_model.bpe'), 'w', encoding='utf-8')
     numsymbols = 2500
+    argsinput = codecs.open(os.path.join(datapath, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
+    argsoutput = codecs.open(os.path.join(datapath, lang+'_model_'+numsymbols+'.bpe'), 'w', encoding='utf-8')
 
     print("Learning {} BPE symbols for {}".format(numsymbols, lang))
     learn_bpe(argsinput, argsoutput, numsymbols)
