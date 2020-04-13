@@ -167,9 +167,10 @@ if __name__ == '__main__':
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     datapath = os.path.join(currentdir, 'data')
 
-    lang = 'eng'  # eng, deu
+    lang = 'deu'  # eng, deu
     argsinput = codecs.open(os.path.join(datapath, lang+'_with_10k.txt'), encoding='utf-8')
     argsoutput = codecs.open(os.path.join(datapath, lang+'_model.bpe'), 'w', encoding='utf-8')
-    numsymbols = 250
+    numsymbols = 2500
 
+    print("Learning {} BPE symbols for {}".format(numsymbols, lang))
     learn_bpe(argsinput, argsoutput, numsymbols)

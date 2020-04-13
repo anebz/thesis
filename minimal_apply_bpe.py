@@ -3,8 +3,9 @@
 
 import os
 import re
-import inspect
 import codecs
+import inspect
+import datetime
 from tqdm import tqdm
 
 def read_corpus(argsinput):
@@ -88,4 +89,8 @@ if __name__ == "__main__":
     codes = codecs.open(os.path.join(datapath, lang+'_model.bpe'), encoding='utf-8')
     argsoutput = codecs.open(os.path.join(datapath, lang+'_merged.txt'), 'w', encoding='utf-8')
 
+    print("Merging BPE symbols for {}".format(lang))
+    time0 = datetime.datetime.now().replace(microsecond=0)
     apply_bpe(argsinput, codes, argsoutput)
+    time1 = datetime.datetime.now().replace(microsecond=0)
+    print("Time elapsed:", time1-time0)
