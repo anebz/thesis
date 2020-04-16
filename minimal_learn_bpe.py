@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import os
+from os.path import join
 import re
 import sys
 import copy
+import glob
 import inspect
 import codecs
 from collections import defaultdict, Counter
@@ -167,12 +169,16 @@ def learn_bpe(infile, outfile, num_symbols):
 if __name__ == '__main__':
 
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    datapath = os.path.join(currentdir, 'data')
+    datapath = join(currentdir, 'data')
 
-    lang = 'deu'  # eng, deu
-    numsymbols = 2500
-    argsinput = codecs.open(os.path.join(datapath, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
-    argsoutput = codecs.open(os.path.join(datapath, lang+'_model_'+numsymbols+'.bpe'), 'w', encoding='utf-8')
+    num_symbols = 1000
 
-    print("Learning {} BPE symbols for {}".format(numsymbols, lang))
-    learn_bpe(argsinput, argsoutput, numsymbols)
+    os.chdir(join(datapath, 'input'))
+    for ifile in glob.glob("*.txt"):
+        lang = ifile.split('_')[0]
+        argsinput = codecs.open(ifile, encoding='utf-8')
+        argsoutput = codecs.open(join(datapath, lang+'.model'), 'w', encoding='utf-8')
+        argsoutput.write('{0} {1}\n'.format(lang, num_symbols))
+
+        print("Learning {} BPE symbols for {}".format(num_symbols, lang))
+        learn_bpe(argsinput, argsoutput, num_symbols)

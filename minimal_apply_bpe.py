@@ -3,6 +3,7 @@
 
 import os
 import re
+import glob
 import codecs
 import inspect
 import datetime
@@ -28,16 +29,13 @@ def read_corpus(argsinput):
     for line in argsinput:
         # split the number found in the line
         _, line = line.split('\t')
-        line = line.strip('\r\n. ').split(' ') if line.strip('\r\n. ') else []
-        if line: # ignore empty lines, or lines with just a .
-            for word in line:
-                if not word:
-                    continue
-                # add '_' to beginning of each word
-                newword = [u'\u2581' + word[0]]
-                newword.extend(list(word[1:]))
-                corpus.extend(newword)
-            corpus.append('\n')
+        line = line.strip('\r\n ').split(' ') if line.strip('\r\n ') else []
+        for word in line:
+            # add '_' to beginning of each word
+            newword = [u'\u2581' + word[0]]
+            newword.extend(list(word[1:]))
+            corpus.extend(newword)
+        corpus.append('\n')
     return corpus
 
 
@@ -52,21 +50,20 @@ def merge_corpus(corpus, bpe_merges, argsoutput):
     '''
 
     merged_corpus = corpus.copy()
+    # expand into a big string
+    str_corpus = ' '.join(corpus)
+
+    # iterate bpe merges
     for bigram in tqdm(bpe_merges):
         pattern = re.compile(r'(?<!\S)' + re.escape(' '.join(bigram)) + r'(?!\S)')
         pair_str = ''.join(bigram).replace('\\', '\\\\')
 
-        # expand into a big string
-        new_word = ' '.join(merged_corpus)
         # merge bigram
-        new_word = pattern.sub(pair_str, new_word)
-        # join again
-        merged_corpus = list(new_word.split(' '))
+        str_corpus = pattern.sub(pair_str, str_corpus)
 
     # restore corpus and write to output
-    restored_corpus = ' '.join(merged_corpus)
-    restored_corpus = restored_corpus.replace(u'\u2581', '').replace(' \n ', '\n')
-    argsoutput.write(restored_corpus)
+    merged_corpus = str_corpus.replace(' \n ', '\n')
+    argsoutput.write(merged_corpus)
     
     return 
 
@@ -76,7 +73,6 @@ def apply_bpe(argsinput, codes, argsoutput):
     bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(codes)]
 
     corpus = read_corpus(argsinput)
-
     merge_corpus(corpus, bpe_merges, argsoutput)
 
     return
@@ -86,17 +82,19 @@ if __name__ == "__main__":
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     datapath = os.path.join(currentdir, 'data')
 
-    lang = 'deu' # eng, deu
-    numsymbols = '2500' # 250, 2500
+    os.chdir(datapath)
+    for ifile in glob.glob("*.model"):
+        lang = ifile.split('.')[0]
+        codes = codecs.open(os.path.join(datapath, lang+'.model'), encoding='utf-8').readlines()
+        _, num_symbols = codes.pop(0).split()
 
-    argsinput = codecs.open(os.path.join(datapath, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
-    codes = codecs.open(os.path.join(datapath, lang+'_model_'+numsymbols+'.bpe'), encoding='utf-8')
-    argsoutput = codecs.open(os.path.join(datapath, lang+'_merged_'+numsymbols+'.txt'), 'w', encoding='utf-8')
+        argsinput = codecs.open(os.path.join(datapath, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
+        argsoutput = codecs.open(os.path.join(datapath, lang+'_'+str(num_symbols)+'.bpe'), 'w', encoding='utf-8')
 
-    print("Merging BPE symbols for {}".format(lang))
-    time0 = datetime.datetime.now().replace(microsecond=0)
+        print("Merging BPE symbols for {}".format(lang))
+        time0 = datetime.datetime.now().replace(microsecond=0)
 
-    apply_bpe(argsinput, codes, argsoutput)
-    
-    time1 = datetime.datetime.now().replace(microsecond=0)
-    print("Time elapsed:", time1-time0)
+        apply_bpe(argsinput, codes, argsoutput)
+        
+        time1 = datetime.datetime.now().replace(microsecond=0)
+        print("Time elapsed:", time1-time0)

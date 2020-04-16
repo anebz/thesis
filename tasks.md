@@ -6,10 +6,10 @@ python script.py |& tee file.txt
 
 ## Small things
 
-* [ ] **leave the _ at beginning of word**
-* [ ] don't delete periods
-* [ ] add metadata to model like language, number of symbols
-* [ ] .model for model, .bpe for outputs
+* [X] **leave the _ at beginning of word**
+* [X] don't delete periods
+* [X] add metadata to model like language, number of symbols
+* [X] .model for model, .bpe for outputs
 
 ## Next things
 
