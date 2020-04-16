@@ -4,13 +4,6 @@
 python script.py |& tee file.txt
 ```
 
-## Small things
-
-* [X] **leave the _ at beginning of word**
-* [X] don't delete periods
-* [X] add metadata to model like language, number of symbols
-* [X] .model for model, .bpe for outputs
-
 ## Next things
 
 * [ ] calc_score with gold from data
@@ -19,7 +12,7 @@ python script.py |& tee file.txt
 * [ ] do calc_score
 * [ ] check calc_score for normal input, what's the good bpe size, 2k, 5k?
 * [ ] figure, bpe size vs. alignment quality / score
-* [ ] think how to apply bpe dropout in our method, where. in apply_bpe
+* [X] apply bpe dropout
 
 ```python
 BPE to word mapping example:

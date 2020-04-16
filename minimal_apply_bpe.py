@@ -5,6 +5,7 @@ import os
 import re
 import glob
 import codecs
+import random
 import inspect
 import datetime
 from tqdm import tqdm
@@ -39,7 +40,7 @@ def read_corpus(argsinput):
     return corpus
 
 
-def merge_corpus(corpus, bpe_merges, argsoutput):
+def merge_corpus(corpus, bpe_merges, dropout=0.1):
     '''
     merge the bigrams found in the corpus iteratively
     Inputs: 
@@ -49,38 +50,28 @@ def merge_corpus(corpus, bpe_merges, argsoutput):
     * Merged corpus written into `argsoutput`
     '''
 
-    merged_corpus = corpus.copy()
     # expand into a big string
     str_corpus = ' '.join(corpus)
 
     # iterate bpe merges
     for bigram in tqdm(bpe_merges):
+
+        if random.uniform(0, 1) < dropout:
+            continue
+
         pattern = re.compile(r'(?<!\S)' + re.escape(' '.join(bigram)) + r'(?!\S)')
-        pair_str = ''.join(bigram).replace('\\', '\\\\')
 
         # merge bigram
-        str_corpus = pattern.sub(pair_str, str_corpus)
-
-    # restore corpus and write to output
-    merged_corpus = str_corpus.replace(' \n ', '\n')
-    argsoutput.write(merged_corpus)
+        str_corpus = pattern.sub(''.join(bigram), str_corpus)
     
-    return 
-
-
-def apply_bpe(argsinput, codes, argsoutput):
-
-    bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(codes)]
-
-    corpus = read_corpus(argsinput)
-    merge_corpus(corpus, bpe_merges, argsoutput)
-
-    return
+    return str_corpus.replace(' \n ', '\n')
 
 
 if __name__ == "__main__":
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     datapath = os.path.join(currentdir, 'data')
+
+    dropout = 0.1
 
     os.chdir(datapath)
     for ifile in glob.glob("*.model"):
@@ -94,7 +85,11 @@ if __name__ == "__main__":
         print("Merging BPE symbols for {}".format(lang))
         time0 = datetime.datetime.now().replace(microsecond=0)
 
-        apply_bpe(argsinput, codes, argsoutput)
-        
+        ''' apply BPE '''
+        corpus = read_corpus(argsinput)
+        bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(codes)]
+        merged_corpus = merge_corpus(corpus, bpe_merges, dropout)
+        argsoutput.write(merged_corpus)
+
         time1 = datetime.datetime.now().replace(microsecond=0)
         print("Time elapsed:", time1-time0)
