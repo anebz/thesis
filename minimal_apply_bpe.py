@@ -2,12 +2,10 @@
 # to apply at test time
 
 import os
-import re
 import glob
 import codecs
 import random
 import inspect
-import datetime
 from tqdm import tqdm
 
 def read_corpus(argsinput):
@@ -47,7 +45,7 @@ def merge_corpus(corpus, bpe_merges, dropout=0.1):
     * corpus in the style from read_corpus
     * bpe_merges read from the input file
     Output:
-    * Merged corpus written into `argsoutput`
+    * Merged corpus
     '''
 
     # expand into a big string
@@ -59,10 +57,8 @@ def merge_corpus(corpus, bpe_merges, dropout=0.1):
         if random.uniform(0, 1) < dropout:
             continue
 
-        pattern = re.compile(r'(?<!\S)' + re.escape(' '.join(bigram)) + r'(?!\S)')
-
         # merge bigram
-        str_corpus = pattern.sub(''.join(bigram), str_corpus)
+        str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
     
     return str_corpus.replace(' \n ', '\n')
 
@@ -75,21 +71,19 @@ if __name__ == "__main__":
 
     os.chdir(datapath)
     for ifile in glob.glob("*.model"):
-        lang = ifile.split('.')[0]
-        codes = codecs.open(os.path.join(datapath, lang+'.model'), encoding='utf-8').readlines()
-        _, num_symbols = codes.pop(0).split()
+        lang, num_symbols = ifile.split('.')[0].split('_')
+        
+        codes = codecs.open(ifile, encoding='utf-8').readlines()[1:]
 
         argsinput = codecs.open(os.path.join(datapath, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
-        argsoutput = codecs.open(os.path.join(datapath, lang+'_'+str(num_symbols)+'.bpe'), 'w', encoding='utf-8')
 
-        print("Merging BPE symbols for {}".format(lang))
-        time0 = datetime.datetime.now().replace(microsecond=0)
+        print(f"Merging BPE symbols for {lang} and {num_symbols} symbols")
 
         ''' apply BPE '''
         corpus = read_corpus(argsinput)
         bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(codes)]
         merged_corpus = merge_corpus(corpus, bpe_merges, dropout)
-        argsoutput.write(merged_corpus)
 
-        time1 = datetime.datetime.now().replace(microsecond=0)
-        print("Time elapsed:", time1-time0)
+        # write to output
+        argsoutput = codecs.open(os.path.join(datapath, lang+'_'+num_symbols+'.bpe'), 'w', encoding='utf-8')
+        argsoutput.write(merged_corpus)

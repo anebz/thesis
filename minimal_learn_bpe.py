@@ -171,13 +171,13 @@ if __name__ == '__main__':
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     datapath = join(currentdir, 'data')
 
-    num_symbols = 1000
+    num_symbols = 2000
 
     os.chdir(join(datapath, 'input'))
     for ifile in glob.glob("*.txt"):
         lang = ifile.split('_')[0]
         argsinput = codecs.open(ifile, encoding='utf-8')
-        argsoutput = codecs.open(join(datapath, lang+'.model'), 'w', encoding='utf-8')
+        argsoutput = codecs.open(join(datapath, lang+'_'+str(num_symbols)+'.model'), 'w', encoding='utf-8')
         argsoutput.write('{0} {1}\n'.format(lang, num_symbols))
 
         print("Learning {} BPE symbols for {}".format(num_symbols, lang))

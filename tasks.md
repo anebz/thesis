@@ -1,18 +1,12 @@
 # tasks
 
-```bash
-python script.py |& tee file.txt
-```
-
-## Next things
-
+* [ ] Check that . can be present in merge list
 * [ ] calc_score with gold from data
 * [ ] b ut w e -> [0, 0, 1, 1] to which word does each bpe belong to. do with both langs
 * [ ] we get bpe alignments like 1-2, 3-4, 4-5. we want to transform to word alignments, so 1 in the bpe list belongs to word nº0. bpe alignment -> word alignment
 * [ ] do calc_score
 * [ ] check calc_score for normal input, what's the good bpe size, 2k, 5k?
 * [ ] figure, bpe size vs. alignment quality / score
-* [X] apply bpe dropout
 
 ```python
 BPE to word mapping example:
