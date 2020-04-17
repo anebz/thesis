@@ -27,14 +27,15 @@ if __name__ == "__main__":
 	'''
 
 	eflomal_path = "/mounts/Users/student/masoud/tools/eflomal-master/"
-	#fastalign_path = "/mounts/Users/student/masoud/tools/fast_align/build/fast_align"
-	#atools_path = "/mounts/Users/student/masoud/tools/fast_align/build/atools"
 
-	fastalign_path = "/home/ane/Desktop/thesis/tools/fast_align/build/fast_align"
-	atools_path = "/home/ane/Desktop/thesis/tools/fast_align/build/atools"
-
-	project_path = "C:/Users/anebe/Documents/Github/thesis/"
+	# ubuntu
+	project_path = "/home/ane/Desktop/thesis/"
 	fastalign_path = os.path.join(project_path, "tools/fast_align/build/fast_align")
+	atools_path = os.path.join(project_path, "tools/fast_align/build/atools")
+
+	# windows
+	#project_path = "C:/Users/anebe/Documents/Github/thesis/"
+	#fastalign_path = os.path.join(project_path, "tools/fast_align/build/fast_align")
 
 	parser = argparse.ArgumentParser(description="Extract alignments with different models and store in files.", epilog="example: python extract_alignments.py -s file1 -t file2 -o output_file")
 	parser.add_argument("-s", default="")
@@ -45,9 +46,9 @@ if __name__ == "__main__":
 
 	args = parser.parse_args()
 
-	version = "2500"
-	s = os.path.join(project_path, "data/eng_merged_"+version+".txt")
-	t = os.path.join(project_path, "data/deu_merged_"+version+".txt")
+	version = "2000"
+	s = os.path.join(project_path, "data/eng_"+version+".bpe")
+	t = os.path.join(project_path, "data/deu_"+version+".bpe")
 	o = os.path.join(project_path, "data/fastalign/"+version)
 	p = ""
 	m = "fast"
