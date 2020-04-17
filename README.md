@@ -4,9 +4,11 @@ Master thesis repo
 
 ## tasks
 
-* [ ] Check that . can be present in merge list
-* [ ] b ut w e -> [0, 0, 1, 1] to which word does each bpe belong to. do with both langs
-* [ ] we get bpe alignments like 1-2, 3-4, 4-5. we want to transform to word alignments, so 1 in the bpe list belongs to word nº0. bpe alignment -> word alignment
+* [X] Check that . can be present in merge list
+* [X] b ut w e -> [0, 0, 1, 1] to which word does each bpe belong to. do with both langs
+* [ ] get bpe alignments
+* [ ] bpe alignment -> word alignment
+  * 1 in the bpe list belongs to word nº0
 * [ ] do calc_score with gold from data
 * [ ] check calc_score for normal input, what's the good bpe size, 2k, 5k?
 * [ ] figure, bpe size vs. alignment quality / score
