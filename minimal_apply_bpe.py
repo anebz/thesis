@@ -8,14 +8,20 @@ import random
 import inspect
 from tqdm import tqdm
 
+
 def read_corpus(argsinput):
     '''
     read corpus into list of list of bigram tuples
     Input: argsinput
+        [
+            '1   This is the first line',
+            '2   The second line',
+            ....
+        ]
     Output:
         [
             '_W', 'e',
-            '_d'. 'o',
+            '_d', 'o',
             '_n', 'o', 't',
             '_b', 'e', 'l', 'i', 'e', 'v', 'e',
             ...
@@ -26,9 +32,8 @@ def read_corpus(argsinput):
 
     corpus = []
     for line in argsinput:
-        # split the number found in the line
-        _, line = line.split('\t')
-        line = line.strip('\r\n ').split(' ') if line.strip('\r\n ') else []
+        # line.split('\t')[1] to strip the number in the line
+        line = line.split('\t')[1].strip('\r\n ').split(' ')
         for word in line:
             # add '_' to beginning of each word
             newword = [u'\u2581' + word[0]]

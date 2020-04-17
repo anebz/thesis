@@ -17,14 +17,11 @@ def get_vocabulary(fobj):
     """
     vocab = Counter()
     for line in fobj:
-        _, line = line.split('\t')
-        line = line.strip('\r\n. ').split(' ') if line.strip('\r\n. ') else []
-        if line: # ignore empty lines, or lines with just a .
-            for word in line:
-                if word:
-                    # split word into chars, while adding ▁ to the first word
-                    word_splitted = (u'\u2581' + word[0],) + tuple(word[1:])
-                    vocab[word_splitted] += 1
+        line = line.split('\t')[1].strip('\r\n ').split(' ')
+        for word in line:
+            # split word into chars, while adding ▁ to the first word
+            word_splitted = (u'\u2581' + word[0],) + tuple(word[1:])
+            vocab[word_splitted] += 1
     return vocab
 
 
