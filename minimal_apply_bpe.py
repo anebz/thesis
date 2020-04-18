@@ -1,7 +1,5 @@
-# minimal BPE from arxiv 1508.07909
-# to apply at test time
-
 import os
+import sys
 import glob
 import codecs
 import random
@@ -53,15 +51,11 @@ def merge_corpus(corpus, bpe_merges, dropout=0.1):
     * Merged corpus
     '''
 
-    # expand into a big string
     str_corpus = ' '.join(corpus)
-
-    # iterate bpe merges
     for bigram in tqdm(bpe_merges):
 
         if random.uniform(0, 1) < dropout:
             continue
-
         # merge bigram
         str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
     
@@ -73,12 +67,22 @@ if __name__ == "__main__":
     datapath = os.path.join(currentdir, 'data')
 
     dropout = 0.1
+    num_symbols = 8000
 
     os.chdir(datapath)
     for ifile in glob.glob("*.model"):
-        lang, num_symbols = ifile.split('.')[0].split('_')
+
+        # open BPE model
+        lang = ifile.split('.')[0]
+        bpe_model = codecs.open(ifile, encoding='utf-8').readlines()
+        model_symbols = bpe_model[0].strip('\r\n').split()[1]
+
+        if num_symbols > int(model_symbols):
+            print(f"Asking for {num_symbols} but the BPE model only has {model_symbols}")
+            sys.exit()
         
-        codes = codecs.open(ifile, encoding='utf-8').readlines()[1:]
+        # only get the desired amount of symbols
+        bpe_model = bpe_model[1:num_symbols+1]
 
         argsinput = codecs.open(os.path.join(datapath, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
 
@@ -86,9 +90,9 @@ if __name__ == "__main__":
 
         ''' apply BPE '''
         corpus = read_corpus(argsinput)
-        bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(codes)]
+        bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(bpe_model)]
         merged_corpus = merge_corpus(corpus, bpe_merges, dropout)
 
         # write to output
-        argsoutput = codecs.open(os.path.join(datapath, lang+'_'+num_symbols+'.bpe'), 'w', encoding='utf-8')
+        argsoutput = codecs.open(os.path.join(datapath, lang+'_'+str(num_symbols)+'.bpe'), 'w', encoding='utf-8')
         argsoutput.write(merged_corpus)

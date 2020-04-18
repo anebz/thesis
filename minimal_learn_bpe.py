@@ -168,13 +168,24 @@ if __name__ == '__main__':
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     datapath = join(currentdir, 'data')
 
-    num_symbols = 2000
+    num_symbols = 1000
 
     os.chdir(join(datapath, 'input'))
     for ifile in glob.glob("*.txt"):
         lang = ifile.split('_')[0]
+
+        # check if a BPE model for this language exists
+        # if so, only create new BPE model if num_symbols > symbols in the model
+        model_path = join(datapath, lang+'.model')
+        if os.path.isfile(model_path):
+            bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
+            model_symbols = bpe_model[0].strip('\r\n').split()[1]
+            if num_symbols < int(model_symbols):
+                print(f"There already exists a model with at least {num_symbols} symbols")
+                sys.exit()
+        
         argsinput = codecs.open(ifile, encoding='utf-8')
-        argsoutput = codecs.open(join(datapath, lang+'_'+str(num_symbols)+'.model'), 'w', encoding='utf-8')
+        argsoutput = codecs.open(model_path, 'w', encoding='utf-8')
         argsoutput.write('{0} {1}\n'.format(lang, num_symbols))
 
         print("Learning {} BPE symbols for {}".format(num_symbols, lang))

@@ -4,11 +4,10 @@ Master thesis repo
 
 ## tasks
 
-* [X] get bpe alignments
-* [X] bpe alignment -> word alignment
+* [X] Get different bpe sized outputs, 2k, 5k?
+* [Linux] Get alignments for different num_symbols, and normal data
 * [ ] do calc_score with gold from data
-* [Linux] check calc_score for normal input
-* [Linux] Get different bpe sized outputs, 2k, 5k?
+* [ ] check calc_score for normal input
 * [ ] figure, bpe size vs. alignment quality / score
 
 ## resources
