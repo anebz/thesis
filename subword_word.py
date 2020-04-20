@@ -47,14 +47,16 @@ def map_subword_to_word(corpus, bpes, lang):
 def bpe_word_align(bpes, bpe_aligns):
     '''
     Input: dictionary of bpes obtained as output of map_subword_to_word()
-    Output: list of word alignments
-        [
-            '0-0 0-1 1-1 1-2 3-1 2-4',
+    Output: list of word alignments and their indexes
+        "
+            0   0-0 0-1 1-1 1-2 3-1 2-4 \n
+            1   0-0 1-0 1-1 2-1 \n
             ...
-        ]
+        "
     '''
-    all_word_aligns = []
+    all_word_aligns = ''
     # iterate all sentences
+    i = 0
     for sent1, sent2, bpe_al in zip(bpes['eng'], bpes['deu'], bpe_aligns):
         word_aligns = ''
         # iterate each alignment
@@ -64,7 +66,8 @@ def bpe_word_align(bpes, bpe_aligns):
             # skip already seen word alignments
             if not new_al in word_aligns:
                 word_aligns += new_al + ' '
-        all_word_aligns.append(word_aligns[:-1])
+        all_word_aligns += str(i) + "\t" + word_aligns[:-1] + "\n"
+        i += 1
     return all_word_aligns
 
 
@@ -72,14 +75,17 @@ if __name__ == "__main__":
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     datapath = os.path.join(currentdir, 'data')
 
-    num_symbols = '1000'
-
     os.chdir(datapath)
-    bpes = {}
-    for ifile in glob.glob("*_"+num_symbols+".bpe"):
-        lang, _ = ifile.split('.')[0].split('_')
-        argsinput = codecs.open(ifile, encoding='utf-8')
-        bpes = map_subword_to_word(argsinput, bpes, lang)
+    for alfile in glob.glob("fastalign/[0-9]*.gdfa"):
+        num_symbols = alfile.split(".")[0].split("/")[1]
+        bpes = {}
+        for ifile in glob.glob("*_"+num_symbols+".bpe"):
+            lang, _ = ifile.split('.')[0].split('_')
+            argsinput = codecs.open(ifile, encoding='utf-8')
+            bpes = map_subword_to_word(argsinput, bpes, lang)
 
-    argsalign = codecs.open(os.path.join(datapath, 'fastalign', num_symbols+'.gdfa'), encoding='utf-8')
-    all_word_aligns = bpe_word_align(bpes, argsalign)
+        argsalign = codecs.open(alfile, encoding='utf-8')
+        all_word_aligns = bpe_word_align(bpes, argsalign)
+
+        argsoutput = codecs.open(os.path.join(datapath, 'fastalign', num_symbols+'_word.gdfa'), 'w', encoding='utf-8')
+        argsoutput.write(all_word_aligns)
