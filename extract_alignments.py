@@ -46,7 +46,9 @@ if __name__ == "__main__":
 
 	args = parser.parse_args()
 
-	version = "2000"
+	version = "8000"
+	#s = os.path.join(project_path, "data/input/eng_with_10k.txt")
+	#t = os.path.join(project_path, "data/input/deu_with_10k.txt")
 	s = os.path.join(project_path, "data/eng_"+version+".bpe")
 	t = os.path.join(project_path, "data/deu_"+version+".bpe")
 	o = os.path.join(project_path, "data/fastalign/"+version)
