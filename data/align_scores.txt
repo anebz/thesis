@@ -1,6 +1,0 @@
-Input               Prec: 0.574	Rec: 0.628	F1: 0.6	    AER: 0.4
-Num symbols: 1000	Prec: 0.267	Rec: 0.207	F1: 0.233	AER: 0.766
-Num symbols: 2000	Prec: 0.258	Rec: 0.195	F1: 0.222	AER: 0.777
-Num symbols: 3000	Prec: 0.263	Rec: 0.214	F1: 0.236	AER: 0.764
-Num symbols: 4000	Prec: 0.261	Rec: 0.211	F1: 0.233	AER: 0.766
-Num symbols: 8000	Prec: 0.269	Rec: 0.225	F1: 0.245	AER: 0.754

@@ -5,6 +5,8 @@ import os.path
 import inspect
 import codecs
 import glob
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def load_gold(g_path):
 	gold_f = open(g_path, "r")
@@ -25,6 +27,7 @@ def load_gold(g_path):
 
 	print("number of gold align sentences:", len(pros), "\n")
 	return pros, surs, surs_count
+
 
 def calc_score(input_path, probs, surs, surs_count):
 	total_hit = 0.
@@ -58,6 +61,21 @@ def calc_score(input_path, probs, surs, surs_count):
 	return y_prec, y_rec, y_f1, aer
 
 
+def plot_scores(df, currentdir):
+
+	# gca stands for 'get current axis'
+	ax = plt.gca()
+
+	colors = ['black', 'blue', 'green', 'red']
+	columns = list(df)
+
+	for column, color in zip(columns[1:], colors):
+		df.plot(kind='line', x=columns[0], y=column, color=color, ax=ax)
+
+	plt.savefig(os.path.join(currentdir, 'scores.png'))
+	return
+
+
 if __name__ == "__main__":
 	'''
 	Calculate alignment quality scores based on the gold standard.
@@ -80,18 +98,23 @@ if __name__ == "__main__":
 	gold_path = os.path.join(currentdir, 'pbc_utils/data/eng_deu/eng_deu.gold')
 	probs, surs, surs_count = load_gold(gold_path)
 
-	output = codecs.open(os.path.join(datapath, 'align_scores.txt'), 'a', encoding='utf-8')
+	scores = []
 
+	# calc score of input
+	alfile = os.path.join(datapath, 'fastalign/input.gdfa')
+	score = ['input']
+	score.extend(list(calc_score(alfile, probs, surs, surs_count)))
+	scores.append(score)
+
+	# calc score of num_symbols
 	os.chdir(datapath + '/fastalign/')
 	for alfile in glob.glob('*_word.gdfa'):
-		input_path = os.path.join(alfile)
 		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
 
-		if not os.path.isfile(input_path):
-			print("The input file does not exist:\n", input_path)
-			exit()
+		score = [int(num_symbols)]
+		score.extend(list(calc_score(alfile, probs, surs, surs_count)))
+		scores.append(score)
 
-		y_prec, y_rec, y_f1, aer = calc_score(input_path, probs, surs, surs_count)
-
-		output.write(f"Num symbols: {num_symbols}\tPrec: {y_prec}\tRec: {y_rec}\tF1: {y_f1}\tAER: {aer}\n")
-
+	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER'])
+	plot_scores(df, datapath)
+	df.to_csv(os.path.join(datapath, 'scores.csv'), index=False)
