@@ -5,16 +5,13 @@ Master thesis repo
 ## tasks
 
 * [ ] simplify learn_bpe
-* [ ] scores without dropout?
-* [X] figure, bpe size vs. alignment score
 
-## questions
+## pipeline
 
-* What to do with fastalign files, fwd, inter, rev, txt?
-* Why are there alignments like '19p26' in the gold file? Difference between 'p' and '-'?
-  * p: possible, -: sure
-* Very low Prec, Rec
-* Alignments extracted from input myself have many more alignments than the gold
+1. minimal_apply_bpe.py with num_symbols
+2. extract_alignments.py
+3. subword_word.py
+4. calc_align_score.py
 
 ## resources
 
