@@ -67,6 +67,7 @@ def plot_scores(df, currentdir):
 	ax = plt.gca()
 
 	colors = ['black', 'blue', 'green', 'red']
+	df = df.sort_values('num_symbols')
 	columns = list(df)
 
 	for column, color in zip(columns[1:], colors):
@@ -102,13 +103,13 @@ if __name__ == "__main__":
 
 	# calc score of input
 	alfile = os.path.join(datapath, 'fastalign/input.gdfa')
-	score = ['input']
+	score = [0]
 	score.extend(list(calc_score(alfile, probs, surs, surs_count)))
 	scores.append(score)
 
 	# calc score of num_symbols
 	os.chdir(datapath + '/fastalign/')
-	for alfile in glob.glob('*_word.gdfa'):
+	for alfile in glob.glob('[0-9]*_word.gdfa'):
 		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
 
 		score = [int(num_symbols)]
