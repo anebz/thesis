@@ -62,7 +62,8 @@ def bpe_word_align(bpes, bpe_aligns):
         # iterate each alignment
         # bpe_al.split('\t')[1] to remove the index in the alignment file .gdfa
         for al in bpe_al.split('\t')[1].split():
-            new_al = str(sent1[int(al[0])]) + '-' + str(sent2[int(al[-1])])
+            firstal, secondal = al.split('-')
+            new_al = str(sent1[int(firstal)]) + '-' + str(sent2[int(secondal)])
             # skip already seen word alignments
             if not new_al in word_aligns:
                 word_aligns += new_al + ' '

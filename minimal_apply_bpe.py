@@ -54,10 +54,8 @@ def merge_corpus(corpus, bpe_merges, dropout=0.1):
     str_corpus = ' '.join(corpus)
     for bigram in tqdm(bpe_merges):
 
-        '''
         if random.uniform(0, 1) < dropout:
             continue
-        '''
         # merge bigram
         str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
     
@@ -68,7 +66,7 @@ if __name__ == "__main__":
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     datapath = os.path.join(currentdir, 'data')
 
-    dropout = 0.1
+    dropout = 0.1 #0
     all_symbols = [1000, 2000, 3000, 4000, 8000]
 
     os.chdir(datapath)
@@ -89,7 +87,7 @@ if __name__ == "__main__":
 
             argsinput = codecs.open(os.path.join(datapath, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
 
-            print(f"Merging BPE symbols for {lang} and {num_symbols} symbols")
+            print(f"Merging BPE symbols for {lang},  {num_symbols} symbols and dropout {dropout*100}%")
 
             ''' apply BPE '''
             corpus = read_corpus(argsinput)
@@ -97,5 +95,10 @@ if __name__ == "__main__":
             merged_corpus = merge_corpus(corpus, bpe_merges, dropout)
 
             # write to output
-            argsoutput = codecs.open(os.path.join(datapath, lang+'_'+str(num_symbols)+'.bpe'), 'w', encoding='utf-8')
+            if dropout > 0:
+                outputpath = os.path.join(datapath, 'dropout', lang+'_'+str(num_symbols)+'.bpe')
+            else:
+                outputpath = os.path.join(datapath, lang+'_'+str(num_symbols)+'.bpe')
+
+            argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
             argsoutput.write(merged_corpus)

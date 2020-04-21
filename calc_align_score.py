@@ -73,6 +73,7 @@ def plot_scores(df, currentdir):
 	for column, color in zip(columns[1:], colors):
 		df.plot(kind='line', x=columns[0], y=column, color=color, ax=ax)
 
+	#plt.ylim(ymax=1, ymin=0)
 	plt.savefig(os.path.join(currentdir, 'scores.png'))
 	return
 
