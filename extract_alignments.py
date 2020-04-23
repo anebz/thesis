@@ -51,11 +51,11 @@ if __name__ == "__main__":
 
 		print(f"Alignments for {num_symbols} symbols")
 
-		#s = os.path.join(project_path, "data/input/eng_with_10k.txt")
+		s = os.path.join(project_path, "data/input/eng_with_10k.txt")
 		#t = os.path.join(project_path, "data/input/deu_with_10k.txt")
-		s = os.path.join(project_path, "data/eng_"+str(num_symbols)+".bpe")
+		s# = os.path.join(project_path, "data/eng_"+str(num_symbols)+".bpe")
 		t = os.path.join(project_path, "data/deu_"+str(num_symbols)+".bpe")
-		o = os.path.join(project_path, "data/fastalign/"+str(num_symbols))
+		o = os.path.join(project_path, "data/fastalign/"+str(num_symbols)+"_deu")
 		p = ""
 		m = "fast"
 
