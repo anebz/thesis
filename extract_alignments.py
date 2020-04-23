@@ -3,6 +3,7 @@ import codecs
 import argparse
 import os.path
 import os
+import inspect
 
 def add_numbers(input_file, output_file, start=0, max_num=-1):
 	with codecs.open(input_file, "r", "utf-8") as fi, codecs.open(output_file, "w", "utf-8") as fo:
@@ -28,14 +29,16 @@ if __name__ == "__main__":
 
 	eflomal_path = "/mounts/Users/student/masoud/tools/eflomal-master/"
 
+	currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+	datapath = os.path.join(currentdir, 'data')
+
 	# ubuntu
-	project_path = "/home/ane/Desktop/thesis/"
-	fastalign_path = os.path.join(project_path, "tools/fast_align/build/fast_align")
-	atools_path = os.path.join(project_path, "tools/fast_align/build/atools")
+	fastalign_path = os.path.join(currentdir, "tools2/fast_align/build/fast_align")
+	atools_path = os.path.join(currentdir, "tools2/fast_align/build/atools")
 
 	# windows
-	#project_path = "C:/Users/anebe/Documents/Github/thesis/"
-	#fastalign_path = os.path.join(project_path, "tools/fast_align/build/fast_align")
+	#currentdir = "C:/Users/anebe/Documents/Github/thesis/"
+	#fastalign_path = os.path.join(currentdir, "tools/fast_align/build/fast_align")
 	'''
 	parser = argparse.ArgumentParser(description="Extract alignments with different models and store in files.", epilog="example: python extract_alignments.py -s file1 -t file2 -o output_file")
 	parser.add_argument("-s", default="")
@@ -51,11 +54,11 @@ if __name__ == "__main__":
 
 		print(f"Alignments for {num_symbols} symbols")
 
-		s = os.path.join(project_path, "data/input/eng_with_10k.txt")
-		#t = os.path.join(project_path, "data/input/deu_with_10k.txt")
-		s# = os.path.join(project_path, "data/eng_"+str(num_symbols)+".bpe")
-		t = os.path.join(project_path, "data/deu_"+str(num_symbols)+".bpe")
-		o = os.path.join(project_path, "data/fastalign/"+str(num_symbols)+"_deu")
+		#s = os.path.join(currentdir, "data/input/eng_with_10k.txt")
+		#t = os.path.join(currentdir, "data/input/deu_with_10k.txt")
+		s = os.path.join(currentdir, "data/eng_"+str(num_symbols)+".bpe")
+		t = os.path.join(currentdir, "data/deu_"+str(num_symbols)+".bpe")
+		o = os.path.join(currentdir, "data/fastalign/"+str(num_symbols))
 		p = ""
 		m = "fast"
 
