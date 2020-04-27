@@ -66,13 +66,17 @@ def plot_scores(df, currentdir):
 	# gca stands for 'get current axis'
 	ax = plt.gca()
 
-	colors = ['black', 'blue', 'green', 'red']
+	colors = ['magenta', 'blue', 'green', 'red']
 	df = df.sort_values('num_symbols')
 	columns = list(df)
 
 	for column, color in zip(columns[1:], colors):
 		df.plot(kind='line', x=columns[0], y=column, color=color, ax=ax)
 
+	for baseline_results, color in zip(list(df.iloc[0])[1:], colors):
+		plt.axhline(y=baseline_results, color=color, linestyle='dashed')
+
+	plt.grid()
 	#plt.ylim(ymax=1, ymin=0)
 	plt.savefig(os.path.join(currentdir, 'scores.png'))
 	return
@@ -95,7 +99,7 @@ if __name__ == "__main__":
 	'''
 
 	currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-	datapath = os.path.join(currentdir, 'data')
+	datapath = os.path.join(currentdir, 'data/dropout')
 
 	gold_path = os.path.join(currentdir, 'pbc_utils/data/eng_deu/eng_deu.gold')
 	probs, surs, surs_count = load_gold(gold_path)

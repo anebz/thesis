@@ -33,8 +33,8 @@ if __name__ == "__main__":
 	datapath = os.path.join(currentdir, 'data')
 
 	# ubuntu
-	fastalign_path = os.path.join(currentdir, "tools2/fast_align/build/fast_align")
-	atools_path = os.path.join(currentdir, "tools2/fast_align/build/atools")
+	fastalign_path = os.path.join(currentdir, "tools/fast_align/build/fast_align")
+	atools_path = os.path.join(currentdir, "tools/fast_align/build/atools")
 
 	# windows
 	#currentdir = "C:/Users/anebe/Documents/Github/thesis/"
