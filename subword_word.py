@@ -76,9 +76,11 @@ if __name__ == "__main__":
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     datapath = os.path.join(currentdir, 'data')
 
+    german_bpe = False
+
     os.chdir(datapath)
     for alfile in glob.glob("fastalign/[0-9]*.gdfa"):
-        if '_deu' in alfile or '_word' in alfile:
+        if german_bpe ^ ('_deu' in alfile) or '_word' in alfile:
             continue
         try:
             num_symbols = alfile.split(".")[0].split("/")[1]
@@ -89,8 +91,12 @@ if __name__ == "__main__":
         bpes = {}
         for ifile in glob.glob("*_"+num_symbols+".bpe"):
             lang, _ = ifile.split('.')[0].split('_')
-            if lang == 'a':
+            if german_bpe and lang == 'eng':
                 argsinput = codecs.open(os.path.join(datapath, 'input/eng_with_10k.txt'), encoding='utf-8')
+                bpes['eng'] = []
+                for line in argsinput:
+                    line = line.split('\t')[1].strip('\r\n ').split(' ')
+                    bpes['eng'].append(list(range(len(line))))
             else:
                 argsinput = codecs.open(ifile, encoding='utf-8')
                 bpes = map_subword_to_word(argsinput, bpes, lang)

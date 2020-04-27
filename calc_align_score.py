@@ -61,7 +61,7 @@ def calc_score(input_path, probs, surs, surs_count):
 	return y_prec, y_rec, y_f1, aer
 
 
-def plot_scores(df, currentdir):
+def plot_scores(df, currentdir, plot_name):
 
 	# gca stands for 'get current axis'
 	ax = plt.gca()
@@ -80,7 +80,7 @@ def plot_scores(df, currentdir):
 
 	plt.grid()
 	#plt.ylim(ymax=1, ymin=0)
-	plt.savefig(os.path.join(currentdir, 'scores.png'))
+	plt.savefig(os.path.join(currentdir, plot_name+'.png'))
 	return
 
 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
 	'''
 
 	currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-	datapath = os.path.join(currentdir, 'data/dropout')
+	datapath = os.path.join(currentdir, 'data')
 
 	gold_path = os.path.join(currentdir, 'pbc_utils/data/eng_deu/eng_deu.gold')
 	probs, surs, surs_count = load_gold(gold_path)
@@ -124,5 +124,6 @@ if __name__ == "__main__":
 		scores.append(score)
 
 	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER'])
-	plot_scores(df, datapath)
-	df.to_csv(os.path.join(datapath, 'scores.csv'), index=False)
+	plot_name = 'scores_deu'
+	plot_scores(df, datapath, plot_name)
+	df.to_csv(os.path.join(datapath, plot_name+'.csv'), index=False)
