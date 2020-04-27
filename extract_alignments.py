@@ -30,7 +30,7 @@ if __name__ == "__main__":
 	eflomal_path = "/mounts/Users/student/masoud/tools/eflomal-master/"
 
 	currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-	datapath = os.path.join(currentdir, 'data/dropout')
+	datapath = os.path.join(currentdir, 'data')
 
 	# ubuntu
 	fastalign_path = os.path.join(currentdir, "tools/fast_align/build/fast_align")

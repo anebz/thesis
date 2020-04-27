@@ -6,17 +6,9 @@ Master thesis repo
 
 * [ ] simplify learn_bpe
 * [ ] Use the normal text on one side and BPE on the other side. Maybe BPE is only useful on the German side
-* [X] Try different num_symbol sizes ex: 100, 200, 500, and 10k, 20k, 30k.
 * [ ] with dropout is getting worse, check bpe dropout paper again how they do it
 * [ ] do the same dropout test like 3,5,10 times, check scores, average scores. because dropout is different each time. maybe one sample is really good
-* [ ] what if we make a training data with 100k sentences by putting 10 samples together and then look at the quality of their aggregation. put samples one after another, get alignments, that way we get a bigger trainset.
-
-## questions
-
-* Delete fastalign files? .for, .rev, .txt
-  * gdfa has high recall, less accurate
-  * inter is high precision
-  * for and rev in gitignore
+* [ ] make a training data with 100k sentences by putting 10 samples together and then look at the quality of their aggregation. put samples one after another, get alignments, that way we get a bigger trainset.
 
 ## pipeline
 
