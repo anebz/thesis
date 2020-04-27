@@ -66,8 +66,8 @@ if __name__ == "__main__":
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     datapath = os.path.join(currentdir, 'data')
 
-    dropout = 0.1 #0
-    all_symbols = [1000, 2000, 3000, 4000, 8000]
+    dropout = 0.1 #0.1
+    all_symbols = [100, 200, 500, 1000, 2000, 3000, 4000, 8000, 10000]
 
     os.chdir(datapath)
     for num_symbols in all_symbols:

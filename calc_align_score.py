@@ -99,7 +99,7 @@ if __name__ == "__main__":
 	'''
 
 	currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-	datapath = os.path.join(currentdir, 'data/dropout')
+	datapath = os.path.join(currentdir, 'data')
 
 	gold_path = os.path.join(currentdir, 'pbc_utils/data/eng_deu/eng_deu.gold')
 	probs, surs, surs_count = load_gold(gold_path)

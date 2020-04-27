@@ -30,7 +30,7 @@ if __name__ == "__main__":
 	eflomal_path = "/mounts/Users/student/masoud/tools/eflomal-master/"
 
 	currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-	datapath = os.path.join(currentdir, 'data')
+	datapath = os.path.join(currentdir, 'data/dropout')
 
 	# ubuntu
 	fastalign_path = os.path.join(currentdir, "tools/fast_align/build/fast_align")
@@ -49,16 +49,16 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 	'''
 
-	all_symbols = [1000, 2000, 3000, 4000, 8000]
+	all_symbols = [100, 200, 500, 1000, 2000, 3000, 4000, 8000, 10000]
 	for num_symbols in all_symbols:
 
 		print(f"Alignments for {num_symbols} symbols")
 
 		#s = os.path.join(currentdir, "data/input/eng_with_10k.txt")
 		#t = os.path.join(currentdir, "data/input/deu_with_10k.txt")
-		s = os.path.join(currentdir, "data/eng_"+str(num_symbols)+".bpe")
-		t = os.path.join(currentdir, "data/deu_"+str(num_symbols)+".bpe")
-		o = os.path.join(currentdir, "data/fastalign/"+str(num_symbols))
+		s = os.path.join(datapath, "eng_"+str(num_symbols)+".bpe")
+		t = os.path.join(datapath, "deu_"+str(num_symbols)+".bpe")
+		o = os.path.join(datapath, "fastalign/"+str(num_symbols))
 		p = ""
 		m = "fast"
 

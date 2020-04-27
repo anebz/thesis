@@ -131,8 +131,6 @@ dmypy.json
 subword-nmt/
 pbc_utils/
 tools/
-data/fastalign/*
-*.rev
-*.fwd
-*.inter
-fastalign/*.txt
+data/fastalign/
+data/dropout/fastalign/
+*.bpe

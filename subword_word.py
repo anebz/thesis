@@ -77,13 +77,19 @@ if __name__ == "__main__":
     datapath = os.path.join(currentdir, 'data')
 
     os.chdir(datapath)
-    for alfile in glob.glob("fastalign/[0-9]*_deu.gdfa"):
-        num_symbols = alfile.split(".")[0].split("/")[1]
+    for alfile in glob.glob("fastalign/[0-9]*.gdfa"):
+        if '_deu' in alfile or '_word' in alfile:
+            continue
+        try:
+            num_symbols = alfile.split(".")[0].split("/")[1]
+        except:
+            num_symbols = alfile.split(".")[0].split("\\")[1]
+
         num_symbols = num_symbols.replace('_deu', '')
         bpes = {}
         for ifile in glob.glob("*_"+num_symbols+".bpe"):
             lang, _ = ifile.split('.')[0].split('_')
-            if lang == 'eng':
+            if lang == 'a':
                 argsinput = codecs.open(os.path.join(datapath, 'input/eng_with_10k.txt'), encoding='utf-8')
             else:
                 argsinput = codecs.open(ifile, encoding='utf-8')
