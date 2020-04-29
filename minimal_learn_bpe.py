@@ -168,7 +168,7 @@ if __name__ == '__main__':
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     datapath = join(currentdir, 'data')
 
-    num_symbols = 1000
+    num_symbols = 10000
 
     os.chdir(join(datapath, 'input'))
     for ifile in glob.glob("*.txt"):
