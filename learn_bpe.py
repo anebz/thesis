@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+# inspired by https://gist.github.com/akashjaswal/ba302b943dfb4e56ace0d5761d01b9cf#file-bpe-py
 import os
 from os.path import join
 import re
@@ -8,6 +10,8 @@ import inspect
 import codecs
 from collections import defaultdict, Counter
 from tqdm import tqdm
+from time import time
+
 
 def build_vocab(corpus: list) -> dict:
     """
@@ -49,8 +53,8 @@ def replace_pair(pair: tuple, vocab: dict) -> dict:
 
     for word in vocab:
         # replace most frequent pair in all vocabulary
-        w_out = p.sub(''.join(pair), word)
-        merged_vocab[w_out] = vocab[word]
+        merged_word = p.sub(''.join(pair), word)
+        merged_vocab[merged_word] = vocab[word]
 
     return merged_vocab
 
@@ -62,21 +66,32 @@ def learn_bpe(corpus, bpe_model, num_symbols):
     # 1. split corpus into characters, count frequency
     vocab = build_vocab(corpus)
 
-    for _ in tqdm(range(num_symbols)):
+    stats_time = 0
+    replace_time = 0
 
+    for i in tqdm(range(num_symbols)):
+
+        a = time()
         # 2. count bigrams in corpus
         pairs = get_stats(vocab)
+        stats_time += time() - a
 
         if not pairs:
             break
 
         # 3. merge symbols
         most_frequent = max(pairs, key=pairs.get)
+        a = time()
         vocab = replace_pair(most_frequent, vocab)
+        replace_time += time() - a
+
+        if i % 20 == 0:
+            print(f"stats time {stats_time}, replace time {replace_time}")
 
         # 4. write merge list to file
         bpe_model.write('{0} {1}\n'.format(*most_frequent))
     return
+
 
 if __name__ == '__main__':
 

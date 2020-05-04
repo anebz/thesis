@@ -134,3 +134,4 @@ tools/
 data/fastalign/
 data/dropout/fastalign/
 *.bpe
+test/
