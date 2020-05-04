@@ -63,6 +63,7 @@ def calc_score(input_path, probs, surs, surs_count):
 
 def plot_scores(df, currentdir, plot_name):
 
+	plt.clf()
 	# gca stands for 'get current axis'
 	ax = plt.gca()
 
