@@ -25,7 +25,7 @@ def load_gold(g_path):
 		all_count += len(pros[line[0]])
 		surs_count += len(surs[line[0]])
 
-	print("number of gold align sentences:", len(pros), "\n")
+	#print("number of gold align sentences:", len(pros), "\n")
 	return pros, surs, surs_count
 
 
