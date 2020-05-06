@@ -5,8 +5,11 @@ Master thesis repo
 ## tasks
 
 * [X] do the same dropout test 3,5,10 times, check scores, average scores. because dropout is different each time. maybe one sample is really good
-* [X] average dropouts
+  * with fewer symbols there's better recall than baseline, much worse precision. f1 slightly worse
+  * with more symbols, recall ~ baseline, precision stabilizes 2.5% lower
+  * similar scores for average of 3 dropout files, 5, 7, or 10
 * [X] make a training data with 100k sentences by putting 10 samples together and then look at the quality of their aggregation. put samples one after another, get alignments, that way we get a bigger trainset.
+  * precision 30% worse than baseline, recall ~12% worse than baseline
 * [ ] http://www.timoschick.com/paper%20picks/word%20level%20semantics/2020/04/14/bpe-is-suboptimal-for-lm-pretraining.html
 * [ ] https://arxiv.org/abs/1910.07181
 * [ ] https://arxiv.org/abs/2001.07676
