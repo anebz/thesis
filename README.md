@@ -4,23 +4,23 @@ Master thesis repo
 
 ## tasks
 
-* [X] do the same dropout test 3,5,10 times, check scores, average scores. because dropout is different each time. maybe one sample is really good
-  * with fewer symbols there's better recall than baseline, much worse precision. f1 slightly worse
-  * with more symbols, recall ~ baseline, precision stabilizes 2.5% lower
-  * similar scores for average of 3 dropout files, 5, 7, or 10
-* [X] make a training data with 100k sentences by putting 10 samples together and then look at the quality of their aggregation. put samples one after another, get alignments, that way we get a bigger trainset.
-  * precision 30% worse than baseline, recall ~12% worse than baseline
-* [ ] http://www.timoschick.com/paper%20picks/word%20level%20semantics/2020/04/14/bpe-is-suboptimal-for-lm-pretraining.html
+* compare bpe & bpe_dropout
+* test whole pipeline with deu as source, eng as target
+* do normal_eng & bpe_deu again, both sides, fewer symbols
+* dropout + bpe_deu experiment
+* delete normal dropout, always work with 10 and avgs
+* [ ] https://arxiv.org/abs/2004.03720
+* [ ] http://www.timoschick.com/paper%20picks/2020/04/14/bpe-is-suboptimal-for-lm-pretraining.html
 * [ ] https://arxiv.org/abs/1910.07181
 * [ ] https://arxiv.org/abs/2001.07676
 
-## questions
+## bpe dropout
 
 * with dropout is getting worse, check bpe dropout paper again how they do it
   * They produce multiple segmentations
   * During segmentation, at each merge step some merges are randomly dropped with probability p
   * using BPE-Dropout on the source side is more beneficial than using it on the target side
-  * The improvement with respect to normal BPE are consistent no matter the vocabulary size. But we see that the effect from using BPE-Dropout vanishes when a corpora size gets bigger.
+  * The improvement with respect to normal BPE are consistent no matter the vocabulary size. But the effect from using BPE-Dropout vanishes when a corpora size gets bigger.
 
 ## pipeline
 
