@@ -4,11 +4,10 @@ Master thesis repo
 
 ## tasks
 
-* compare bpe & bpe_dropout
-* test whole pipeline with deu as source, eng as target
-* do normal_eng & bpe_deu again, both sides, fewer symbols
-* dropout + bpe_deu experiment
-* delete normal dropout, always work with 10 and avgs
+* [ ] compare bpe & bpe_dropout
+* [ ] test whole pipeline with deu as source, eng as target
+* [ ] do normal_eng & bpe_deu again, both sides, fewer symbols
+* [ ] dropout + bpe_deu experiment
 * [ ] https://arxiv.org/abs/2004.03720
 * [ ] http://www.timoschick.com/paper%20picks/2020/04/14/bpe-is-suboptimal-for-lm-pretraining.html
 * [ ] https://arxiv.org/abs/1910.07181
@@ -28,6 +27,37 @@ Master thesis repo
 2. extract_alignments.py
 3. subword_word.py
 4. calc_align_score.py
+
+## directory structure
+
+.
+├── data
+│   ├── input
+│   │   ├── eng_with_10k.txt                          # input txt file with 10k english sentences
+│   │   ├── deu_with_10k.txt
+│   ├── normal_bpe
+│   │   ├── fastalign                                 # files obtained from fastalign alignment algorithm
+│   │   │   └── .fwd, .gdfa, .inter, .rev, .txt
+│   │   ├── segmentations                             # files obtained by segmenting based on num_symbols
+│   │   │   └── .bpe
+│   │   └── scores.png, scores.csv
+│   ├── dropout_bpe
+│   │   ├── fastalign
+│   │   │   └── .fwd, .gdfa, .inter, .rev, .txt
+│   │   ├── segmentations
+│   │   │   └── .bpe
+│   │   ├── scripts                                    # TODO
+│   │   │   └── ...
+│   │   ├── test_scores
+│   │   │   └── .png, .csv
+│   │   ├── merged                                     # TODO
+│   │   │   └── ...
+│   │   └── scores.png, scores.csv
+│   ├── eng.model                                      # merge list for english
+│   └── deu.model
+├── README.md
+├── .py
+└── ...
 
 ## resources
 
