@@ -12,6 +12,8 @@ from collections import defaultdict, Counter
 from tqdm import tqdm
 from time import time
 
+# import global variables from lib/__init__.py
+from lib import *
 
 def build_vocab(corpus: list) -> dict:
     """
@@ -94,11 +96,6 @@ def learn_bpe(corpus, bpe_model, num_symbols):
 
 
 if __name__ == '__main__':
-
-    currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    datapath = join(currentdir, 'data')
-
-    num_symbols = 10000
 
     os.chdir(join(datapath, 'input'))
     for ifile in glob.glob("*.txt"):

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import codecs
 import argparse
-import os.path
+from os.path import join
 import os
-import inspect
+
+# import global variables from lib/__init__.py
+from lib import *
 
 def add_numbers(input_file, output_file, start=0, max_num=-1):
 	with codecs.open(input_file, "r", "utf-8") as fi, codecs.open(output_file, "w", "utf-8") as fo:
@@ -14,51 +16,19 @@ def add_numbers(input_file, output_file, start=0, max_num=-1):
 			if max_num > 0 and count >= max_num:
 				break
 
-if __name__ == "__main__":
-	'''
-	Extract alignments with different models and store in files.
-	The output_file is set by "-o" and is the path and name of the output file without extension.
-	The alignment model is set by "-m". The options are "fast" for Fastalign and "eflomal".
-	Input files can either be two separate source and target files, or a single parallel file in Fastalign format.
 
-	usage 1: ./extract_alignments.py -s file1 -t file2 -o output_file
-	usage 2: ./extract_alignments.py -p parallel_file -o output_file
+def extract_alignments(i=-1):
 
-	example: ./extract_alignments.py -p data/eng_deu.txt -m fast -o alignments/eng_deu
-	'''
-
-	eflomal_path = "/mounts/Users/student/masoud/tools/eflomal-master/"
-
-	currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-	datapath = os.path.join(currentdir, 'data')
-
-	# ubuntu
-	fastalign_path = os.path.join(currentdir, "tools/fast_align/build/fast_align")
-	atools_path = os.path.join(currentdir, "tools/fast_align/build/atools")
-
-	# windows
-	#currentdir = "C:/Users/anebe/Documents/Github/thesis/"
-	#fastalign_path = os.path.join(currentdir, "tools/fast_align/build/fast_align")
-	'''
-	parser = argparse.ArgumentParser(description="Extract alignments with different models and store in files.", epilog="example: python extract_alignments.py -s file1 -t file2 -o output_file")
-	parser.add_argument("-s", default="")
-	parser.add_argument("-t", default="")
-	parser.add_argument("-p", help="parallel text in fastalign format (if available)", default="")
-	parser.add_argument("-o", help="the output_file path and name without extension")
-	parser.add_argument("-m", choices=['fast', 'eflomal'], default="fast")
-	args = parser.parse_args()
-	'''
-
-	all_symbols = [100, 200, 500, 1000, 2000, 3000, 4000, 8000, 10000]
 	for num_symbols in all_symbols:
 
 		print(f"Alignments for {num_symbols} symbols")
 
-		#s = os.path.join(currentdir, "data/input/eng_with_10k.txt")
-		#t = os.path.join(currentdir, "data/input/deu_with_10k.txt")
-		s = os.path.join(datapath, "eng_"+str(num_symbols)+".bpe")
-		t = os.path.join(datapath, "deu_"+str(num_symbols)+".bpe")
-		o = os.path.join(datapath, "fastalign/"+str(num_symbols))
+		#s = join(currentdir, "data/input/eng_with_10k.txt")
+		#t = join(currentdir, "data/input/deu_with_10k.txt")
+		s = join(bpepath, 'segmentations', "eng_"+str(num_symbols) +('_'+str(i) if i != -1 else '')+".bpe")
+		t = join(bpepath, 'segmentations', "deu_"+str(num_symbols) +('_'+str(i) if i != -1 else '')+".bpe")
+
+		o = join(bpepath, "fastalign/"+str(num_symbols))
 		p = ""
 		m = "fast"
 
@@ -103,3 +73,33 @@ if __name__ == "__main__":
 				l2 = set(l2.strip().split())
 				fo.write(str(count) + "\t" + " ".join(sorted([x for x in l1 & l2])) + "\n")
 				count += 1
+		print("\n\n\n\n")
+	return
+
+if __name__ == "__main__":
+	'''
+	Extract alignments with different models and store in files.
+	The output_file is set by "-o" and is the path and name of the output file without extension.
+	The alignment model is set by "-m". The options are "fast" for Fastalign and "eflomal".
+	Input files can either be two separate source and target files, or a single parallel file in Fastalign format.
+
+	usage 1: ./extract_alignments.py -s file1 -t file2 -o output_file
+	usage 2: ./extract_alignments.py -p parallel_file -o output_file
+
+	example: ./extract_alignments.py -p data/eng_deu.txt -m fast -o alignments/eng_deu
+	'''
+
+	eflomal_path = "/mounts/Users/student/masoud/tools/eflomal-master/"
+
+	# ubuntu
+	fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
+	atools_path = join(rootdir, "tools/fast_align/build/atools")
+
+	if dropout > 0:
+        # create `dropout_repetitions` segmentations, to aggregate later
+		for i in range(dropout_repetitions):
+			print(f"Iteration {i+1}")
+			extract_alignments(i)
+			print("\n\n\n\n")
+	else:
+		extract_alignments()

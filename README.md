@@ -4,6 +4,8 @@ Master thesis repo
 
 ## tasks
 
+* [ ] merge subword_word.py
+* [ ] _word.gdfa in calc_score, dropout scores look bad
 * [ ] compare bpe & bpe_dropout
 * [ ] test whole pipeline with deu as source, eng as target
 * [ ] do normal_eng & bpe_deu again, both sides, fewer symbols

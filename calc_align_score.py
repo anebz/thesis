@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-import argparse
 import collections
-import os.path
-import inspect
+import os
+from os.path import join
 import codecs
 import glob
 import pandas as pd
 import matplotlib.pyplot as plt
+
+# import global variables from lib/__init__.py
+from lib import *
 
 def load_gold(g_path):
 	gold_f = open(g_path, "r")
@@ -61,7 +63,7 @@ def calc_score(input_path, probs, surs, surs_count):
 	return y_prec, y_rec, y_f1, aer
 
 
-def plot_scores(df, currentdir, plot_name):
+def plot_scores(df, scoredir):
 
 	plt.clf()
 	# gca stands for 'get current axis'
@@ -81,7 +83,33 @@ def plot_scores(df, currentdir, plot_name):
 
 	plt.grid()
 	#plt.ylim(ymax=1, ymin=0)
-	plt.savefig(os.path.join(currentdir, plot_name+'.png'))
+	plt.savefig(join(scoredir+'.png'))
+	return
+
+def calc_align_scores(i=-1):
+
+	scores = []
+
+	# calc score of input
+	alfile = join(bpepath, 'fastalign/input.gdfa')
+	score = [0]
+	score.extend(list(calc_score(alfile, probs, surs, surs_count)))
+	scores.append(score)
+
+	# calc score of num_symbols
+	os.chdir(join(bpepath, 'fastalign'))
+	for alfile in glob.glob('[0-9]*_word.gdfa'):
+		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
+
+		score = [int(num_symbols)]
+		score.extend(list(calc_score(alfile, probs, surs, surs_count)))
+		scores.append(score)
+
+	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER'])
+	scoredir = join(bpepath, 'scores', 'scores'+('_'+str(i) if dropout else ''))
+	print(f"Scores saved into {scoredir}")
+	plot_scores(df, scoredir)
+	df.to_csv(scoredir+'.csv', index=False)
 	return
 
 
@@ -92,39 +120,17 @@ if __name__ == "__main__":
 	The gold annotated file should be selected by "gold_path".
 	The generated alignment file should be selected by "input_path".
 	Both gold file and input file are in the FastAlign format with sentence number at the start of line separated with TAB.
-
-	usage: python calc_align_score.py gold_file generated_file
-
-	parser = argparse.ArgumentParser(description="Calculate alignment quality scores based on the gold standard.", epilog="example: python calc_align_score.py gold_path input_path")
-	parser.add_argument("gold_path")
-	parser.add_argument("input_path")
-	args = parser.parse_args()
 	'''
 
-	currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-	datapath = os.path.join(currentdir, 'data')
-
-	gold_path = os.path.join(currentdir, 'pbc_utils/data/eng_deu/eng_deu.gold')
+	gold_path = join(rootdir, 'tools/pbc_utils/data/eng_deu/eng_deu.gold')
 	probs, surs, surs_count = load_gold(gold_path)
 
-	scores = []
+	if dropout > 0:
+        # create `dropout_repetitions` segmentations, to aggregate later
+		for i in range(dropout_repetitions):
+			print(f"Iteration {i+1}")
+			calc_align_scores(i)
+	else:
+		calc_align_scores()
 
-	# calc score of input
-	alfile = os.path.join(datapath, 'fastalign/input.gdfa')
-	score = [0]
-	score.extend(list(calc_score(alfile, probs, surs, surs_count)))
-	scores.append(score)
 
-	# calc score of num_symbols
-	os.chdir(datapath + '/fastalign/')
-	for alfile in glob.glob('[0-9]*_word.gdfa'):
-		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
-
-		score = [int(num_symbols)]
-		score.extend(list(calc_score(alfile, probs, surs, surs_count)))
-		scores.append(score)
-
-	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER'])
-	plot_name = 'scores_deu'
-	plot_scores(df, datapath, plot_name)
-	df.to_csv(os.path.join(datapath, plot_name+'.csv'), index=False)
