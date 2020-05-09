@@ -23,12 +23,14 @@ def extract_alignments(i=-1):
 
 		print(f"Alignments for {num_symbols} symbols")
 
+		# TODO extract input alignments if not present
 		#s = join(currentdir, "data/input/eng_with_10k.txt")
 		#t = join(currentdir, "data/input/deu_with_10k.txt")
-		s = join(bpepath, 'segmentations', "eng_"+str(num_symbols) +('_'+str(i) if i != -1 else '')+".bpe")
-		t = join(bpepath, 'segmentations', "deu_"+str(num_symbols) +('_'+str(i) if i != -1 else '')+".bpe")
 
-		o = join(bpepath, "fastalign/"+str(num_symbols))
+		s = join(bpepath, 'segmentations', "eng_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
+		t = join(bpepath, 'segmentations', "deu_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
+
+		o = join(bpepath, "fastalign", str(num_symbols)+('_'+str(i) if i != -1 else ''))
 		p = ""
 		m = "fast"
 

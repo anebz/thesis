@@ -1,9 +1,14 @@
 import os
+from os.path import join
 import glob
 import codecs
-import inspect
+from tqdm import tqdm
 
-def map_subword_to_word(corpus, bpes, lang):
+# import global variables from lib/__init__.py
+from lib import *
+
+
+def subword_align_to_word(corpus, bpes, lang):
     '''
     Input: list of sentences with subword separation
         [
@@ -44,9 +49,28 @@ def map_subword_to_word(corpus, bpes, lang):
     return bpes
 
 
+def load_and_map_segmentations(num_symbols, i=-1):
+
+    bpes = {}
+    os.chdir(join(bpepath, 'segmentations'))
+    for inputpath in glob.glob("*_"+num_symbols+('_'+i if i!=-1 else '')+".bpe"):
+        lang = inputpath.split('.')[0].split('_')[0]
+        if german_bpe and lang == 'eng':
+            argsinput = codecs.open(
+                join(datapath, 'input/eng_with_10k.txt'), encoding='utf-8')
+            bpes['eng'] = []
+            for line in argsinput:
+                line = line.split('\t')[1].strip('\r\n ').split(' ')
+                bpes['eng'].append(list(range(len(line))))
+        else:
+            argsinput = codecs.open(inputpath, encoding='utf-8')
+            bpes = subword_align_to_word(argsinput, bpes, lang)
+    return bpes
+
+
 def bpe_word_align(bpes, bpe_aligns):
     '''
-    Input: dictionary of bpes obtained as output of map_subword_to_word()
+    Input: dictionary of bpes obtained as output of subword_align_to_word()
     Output: list of word alignments and their indexes
         "
             0   0-0 0-1 1-1 1-2 3-1 2-4 \n
@@ -73,36 +97,24 @@ def bpe_word_align(bpes, bpe_aligns):
 
 
 if __name__ == "__main__":
-    currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    datapath = os.path.join(currentdir, 'data')
 
     german_bpe = False
+    os.chdir(bpepath)
 
-    os.chdir(datapath)
-    for alfile in glob.glob("fastalign/[0-9]*.gdfa"):
+    for alfile in tqdm(glob.glob("fastalign/[0-9]*.gdfa")):
         if german_bpe ^ ('_deu' in alfile) or '_word' in alfile:
             continue
-        try:
-            num_symbols = alfile.split(".")[0].split("/")[1]
-        except:
-            num_symbols = alfile.split(".")[0].split("\\")[1]
 
+        num_symbols = alfile.split(".")[0].split(os.sep)[1]
+        i = -1
+        if dropout:
+            num_symbols, i = num_symbols.split('_')
         num_symbols = num_symbols.replace('_deu', '')
-        bpes = {}
-        for ifile in glob.glob("*_"+num_symbols+".bpe"):
-            lang, _ = ifile.split('.')[0].split('_')
-            if german_bpe and lang == 'eng':
-                argsinput = codecs.open(os.path.join(datapath, 'input/eng_with_10k.txt'), encoding='utf-8')
-                bpes['eng'] = []
-                for line in argsinput:
-                    line = line.split('\t')[1].strip('\r\n ').split(' ')
-                    bpes['eng'].append(list(range(len(line))))
-            else:
-                argsinput = codecs.open(ifile, encoding='utf-8')
-                bpes = map_subword_to_word(argsinput, bpes, lang)
+        bpes = load_and_map_segmentations(num_symbols, i)
 
-        argsalign = codecs.open(alfile, encoding='utf-8')
+        argsalign = codecs.open(join(bpepath, alfile), encoding='utf-8')
         all_word_aligns = bpe_word_align(bpes, argsalign)
 
-        argsoutput = codecs.open(os.path.join(datapath, 'fastalign', num_symbols+'_word.gdfa'), 'w', encoding='utf-8')
+        outputpath = join(bpepath, 'fastalign',num_symbols+('_'+i if i!=-1 else '')+'_word.gdfa')
+        argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
         argsoutput.write(all_word_aligns)

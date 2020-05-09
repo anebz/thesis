@@ -1,10 +1,39 @@
 import os
+from os.path import join
 import sys
 import glob
 import codecs
 import random
-import inspect
 from tqdm import tqdm
+
+# import global variables from lib/__init__.py
+from lib import *
+
+def load_data():
+
+    os.chdir(datapath)
+    langs = []
+    bpe_models = []
+    corpora = []
+    for ifile in glob.glob("*.model"):
+
+        lang = ifile.split('.')[0]
+        langs.append(lang)
+
+        bpe_model = codecs.open(ifile, encoding='utf-8').readlines()
+
+        model_symbols = bpe_model[0].strip('\r\n').split()[1]
+        if max(all_symbols) > int(model_symbols):
+            print(f"Asking for {max(all_symbols)} but the BPE model only has {model_symbols}")
+            sys.exit()
+
+        bpe_model = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(bpe_model)]
+        bpe_models.append(bpe_model)
+
+        argsinput = codecs.open(join(datapath, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
+        corpora.append(read_corpus(argsinput))
+
+    return langs, bpe_models, corpora
 
 
 def read_corpus(argsinput):
@@ -62,43 +91,33 @@ def merge_corpus(corpus, bpe_merges, dropout=0.1):
     return str_corpus.replace(' \n ', '\n')
 
 
-if __name__ == "__main__":
-    currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    datapath = os.path.join(currentdir, 'data')
-
-    dropout = 0.1 #0.1
-    all_symbols = [100, 200, 500, 1000, 2000, 3000, 4000, 8000, 10000]
-
+def apply_bpe(i=-1):
     os.chdir(datapath)
     for num_symbols in all_symbols:
-        for ifile in glob.glob("*.model"):
+        for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
 
-            # open BPE model
-            lang = ifile.split('.')[0]
-            bpe_model = codecs.open(ifile, encoding='utf-8').readlines()
-            model_symbols = bpe_model[0].strip('\r\n').split()[1]
-
-            if num_symbols > int(model_symbols):
-                print(f"Asking for {num_symbols} but the BPE model only has {model_symbols}")
-                sys.exit()
-            
             # only get the desired amount of symbols
             bpe_model = bpe_model[1:num_symbols+1]
 
-            argsinput = codecs.open(os.path.join(datapath, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
+            print(f"Merging BPE symbols for {lang}, {num_symbols} symbols and dropout {dropout*100}%")
 
-            print(f"Merging BPE symbols for {lang},  {num_symbols} symbols and dropout {dropout*100}%")
+            merged_corpus = merge_corpus(corpus, bpe_model, dropout)
 
-            ''' apply BPE '''
-            corpus = read_corpus(argsinput)
-            bpe_merges = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(bpe_model)]
-            merged_corpus = merge_corpus(corpus, bpe_merges, dropout)
-
-            # write to output
-            if dropout > 0:
-                outputpath = os.path.join(datapath, 'dropout', lang+'_'+str(num_symbols)+'.bpe')
-            else:
-                outputpath = os.path.join(datapath, lang+'_'+str(num_symbols)+'.bpe')
-
+            outputpath = join(bpepath, 'segmentations', lang+"_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
             argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
             argsoutput.write(merged_corpus)
+    return
+
+
+if __name__ == "__main__":
+
+    langs, bpe_models, corpora = load_data()
+
+    if dropout > 0:
+        # create `dropout_repetitions` segmentations, to aggregate later
+        for i in range(dropout_repetitions):
+            print(f"Iteration {i+1}")
+            apply_bpe(i)
+            print("\n\n\n\n")
+    else:
+        apply_bpe()

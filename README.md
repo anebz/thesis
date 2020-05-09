@@ -4,7 +4,9 @@ Master thesis repo
 
 ## tasks
 
-* [ ] merge subword_word.py
+* [X] merge subword_word.py
+* [ ] merged calc_align_score.py
+* [ ] merge extract_align and subword_word
 * [ ] _word.gdfa in calc_score, dropout scores look bad
 * [ ] compare bpe & bpe_dropout
 * [ ] test whole pipeline with deu as source, eng as target
