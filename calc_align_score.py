@@ -63,6 +63,19 @@ def calc_score(input_path, probs, surs, surs_count):
 	return y_prec, y_rec, y_f1, aer
 
 
+def get_baseline_score():
+    alfile = join(bpepath, 'fastalign/input.gdfa') 
+    gold_path = join(rootdir, 'tools/pbc_utils/data/eng_deu/eng_deu.gold')
+    probs, surs, surs_count = load_gold(gold_path)
+
+    scores = []
+    score = [0]
+    score.extend(list(calc_score(alfile, probs, surs, surs_count)))
+    scores.append(score)
+    baseline_df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+    return baseline_df
+
+
 def plot_scores(df, scoredir):
 
 	plt.clf()
@@ -86,19 +99,18 @@ def plot_scores(df, scoredir):
 	plt.savefig(join(scoredir+'.png'))
 	return
 
+
 def calc_align_scores(i=-1):
-
+	
+	gold_path = join(rootdir, 'tools/pbc_utils/data/eng_deu/eng_deu.gold')
+	probs, surs, surs_count = load_gold(gold_path)
+	
+	baseline_df = get_baseline_score()
 	scores = []
-
-	# calc score of input
-	alfile = join(bpepath, 'fastalign/input.gdfa')
-	score = [0]
-	score.extend(list(calc_score(alfile, probs, surs, surs_count)))
-	scores.append(score)
 
 	# calc score of num_symbols
 	os.chdir(join(bpepath, 'fastalign'))
-	for alfile in glob.glob('[0-9]*_word.gdfa'):
+	for alfile in glob.glob('[0-9]*'+('_'+str(i) if dropout else '')+'_word.gdfa'):
 		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
 
 		score = [int(num_symbols)]
@@ -106,6 +118,8 @@ def calc_align_scores(i=-1):
 		scores.append(score)
 
 	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER'])
+	df = pd.concat([baseline_df, df]).round(decimals=3)
+
 	scoredir = join(bpepath, 'scores', 'scores'+('_'+str(i) if dropout else ''))
 	print(f"Scores saved into {scoredir}")
 	plot_scores(df, scoredir)
@@ -123,7 +137,6 @@ if __name__ == "__main__":
 	'''
 
 	gold_path = join(rootdir, 'tools/pbc_utils/data/eng_deu/eng_deu.gold')
-	probs, surs, surs_count = load_gold(gold_path)
 
 	if dropout > 0:
         # create `dropout_repetitions` segmentations, to aggregate later
@@ -132,5 +145,3 @@ if __name__ == "__main__":
 			calc_align_scores(i)
 	else:
 		calc_align_scores()
-
-
