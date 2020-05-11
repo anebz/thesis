@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
         for rd_idx in list(random_idx):
 
-            df2 = pd.read_csv(os.path.join(bpepath, 'scores', 'scores_'+str(rd_idx)+'.csv'))
+            df2 = pd.read_csv(os.path.join(bpedir, 'scores', 'scores_'+source+'_'+target+str(rd_idx)+'.csv'))
 
             # first step of the iteration, just get the whole dataframe
             if df.empty:
@@ -40,6 +40,6 @@ if __name__ == "__main__":
     
         df = pd.concat([baseline_df, df]).round(decimals=3)
 
-        plot_name = 'scores/avg/scores_avg_'+str(i)
-        df.to_csv(os.path.join(bpepath, plot_name+'.csv'), index=False)
-        plot_scores(df, join(bpepath, plot_name))
+        plot_name = 'scores/avg/scores_'+source+'_'+target+'avg_'+str(i)
+        df.to_csv(os.path.join(bpedir, plot_name+'.csv'), index=False)
+        plot_scores(df, join(bpedir, plot_name))

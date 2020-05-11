@@ -97,13 +97,13 @@ def learn_bpe(corpus, bpe_model, num_symbols):
 
 if __name__ == '__main__':
 
-    os.chdir(join(datapath, 'input'))
+    os.chdir(join(datadir, 'input'))
     for ifile in glob.glob("*.txt"):
         lang = ifile.split('_')[0]
 
         # check if a BPE model for this language exists
         # if so, only create new BPE model if num_symbols > symbols in the model
-        model_path = join(datapath, lang+'.model')
+        model_path = join(datadir, lang+'.model')
         if os.path.isfile(model_path):
             bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
             if bpe_model:

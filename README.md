@@ -4,11 +4,8 @@ Master thesis repo
 
 ## tasks
 
-* [X] merged calc_align_score.py and avg_scores
-* [X] extract input alignment if not present
-* [X] merge extract_align and subword_word, skip .fwd, .rev, .inter?
+* [X] test whole pipeline with deu as source, eng as target. Make it automatic
 * [ ] compare bpe (as baseline? or normal?) & bpe_dropout
-* [ ] test whole pipeline with deu as source, eng as target. Make it automatic
 * [ ] do normal_eng & bpe_deu again, both sides, fewer symbols (if german_bpe ^ ('_deu' in alfile))
 * [ ] dropout + bpe_deu experiment
 * [ ] https://arxiv.org/abs/2004.03720
@@ -26,7 +23,7 @@ Master thesis repo
 
 ## pipeline
 
-1. Set parameters in lib/`__init__.py`
+1. Set parameters in `lib/__init__.py`
 2. minimal_apply_bpe.py
 3. extract_alignments.py
 4. calc_align_score.py

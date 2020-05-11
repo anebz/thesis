@@ -24,15 +24,15 @@ def extract_alignments(i=-1, input_mode=False):
 
 		if input_mode:
 			print(f"Alignments for input files")
-			s = join(datapath, "input/eng_with_10k.txt")
-			t = join(datapath, "input/deu_with_10k.txt")
-			o = join(bpepath, "fastalign/input")
+			s = join(datadir, "input/"+source+"_with_10k.txt")
+			t = join(datadir, "input/"+target+"_with_10k.txt")
+			o = join(bpedir, "fastalign/input")
 
 		else:
 			print(f"Alignments for {num_symbols} symbols")
-			s = join(bpepath, 'segmentations', "eng_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
-			t = join(bpepath, 'segmentations', "deu_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
-			o = join(bpepath, "fastalign", str(num_symbols)+('_'+str(i) if i != -1 else ''))
+			s = join(bpedir, 'segmentations', source+"_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
+			t = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
+			o = join(bpedir, "fastalign", str(num_symbols)+('_'+str(i) if i != -1 else ''))
 
 		p = ""
 		m = "fast"
@@ -68,6 +68,9 @@ def extract_alignments(i=-1, input_mode=False):
 		os.system("{0} -i {1}.fwd -j {1}.rev -c grow-diag-final-and > {1}_unnum.gdfa".format(atools_path, o))
 		add_numbers(o + "_unnum.gdfa", o + ".gdfa")
 		os.system("rm {}_unnum.gdfa".format(o))
+		os.system("rm {}.fwd".format(o))
+		os.system("rm {}.rev".format(o))
+		os.system("rm {}.txt".format(o))
 
 		'''
 		with open(o + ".fwd", "r") as f1, open(o + ".rev", "r") as f2, open(o + ".inter", "w") as fo:
@@ -86,12 +89,13 @@ def extract_alignments(i=-1, input_mode=False):
 		german_bpe = False
 		bpes = load_and_map_segmentations(num_symbols, i, german_bpe)
 
-		argsalign = codecs.open(join(bpepath, o+'.gdfa'), encoding='utf-8')
+		argsalign = codecs.open(join(bpedir, o+'.gdfa'), encoding='utf-8')
 		all_word_aligns = bpe_word_align(bpes, argsalign)
 
-		argsoutput = codecs.open(o+'_word.gdfa', 'w', encoding='utf-8')
+		argsoutput = codecs.open(o+'.wgdfa', 'w', encoding='utf-8')
 		argsoutput.write(all_word_aligns)
 
+		os.system("rm {}.gdfa".format(o))
 		print("\n\n\n\n")
 	return
 
@@ -104,8 +108,6 @@ if __name__ == "__main__":
 
 	usage 1: ./extract_alignments.py -s file1 -t file2 -o output_file
 	usage 2: ./extract_alignments.py -p parallel_file -o output_file
-
-	example: ./extract_alignments.py -p data/eng_deu.txt -m fast -o alignments/eng_deu
 	'''
 
 	eflomal_path = "/mounts/Users/student/masoud/tools/eflomal-master/"
@@ -114,7 +116,7 @@ if __name__ == "__main__":
 	fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 	atools_path = join(rootdir, "tools/fast_align/build/atools")
 
-	if not os.path.isfile(join(bpepath, 'fastalign/input.gdfa')):
+	if not os.path.isfile(join(bpedir, 'fastalign/input.wgdfa')):
 		extract_alignments(input_mode=True)
 
 	if dropout > 0:

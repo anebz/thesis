@@ -21,8 +21,20 @@ def load_gold(g_path):
 		line = line.strip().split("\t")
 		line[1] = line[1].split()
 
-		pros[line[0]] = set([x.replace("p", "-") for x in line[1]])
-		surs[line[0]] = set([x for x in line[1] if "p" not in x])
+		pros[line[0]] = set()
+		surs[line[0]] = set()
+
+		for al in line[1]:
+			# swap eng-deu alignments when source is german
+			if source == 'deu':
+				second, first = al.replace('p', '-').split('-')
+				pros[line[0]].add(first + '-' + second)
+				if 'p' not in al:
+					surs[line[0]].add(first + '-' + second)
+			else:
+				pros[line[0]].add(al.replace('p', '-'))
+				if 'p' not in al:
+					surs[line[0]].add(al)
 
 		all_count += len(pros[line[0]])
 		surs_count += len(surs[line[0]])
@@ -45,6 +57,9 @@ def calc_score(input_path, probs, surs, surs_count):
 
 		line[1] = line[1].split()
 
+		if source == 'deu' and 'input' in input_path:
+			line[1] = [al.split('-')[1] + '-' + al.split('-')[0] for al in line[1]]
+
 		for pair in line[1]:
 			if pair in probs[line[0]]:
 				p_hit += 1
@@ -64,7 +79,7 @@ def calc_score(input_path, probs, surs, surs_count):
 
 
 def get_baseline_score():
-    alfile = join(bpepath, 'fastalign/input.gdfa') 
+    alfile = join(bpedir, 'fastalign/input.wgdfa') 
     gold_path = join(rootdir, 'tools/pbc_utils/data/eng_deu/eng_deu.gold')
     probs, surs, surs_count = load_gold(gold_path)
 
@@ -109,8 +124,8 @@ def calc_align_scores(i=-1):
 	scores = []
 
 	# calc score of num_symbols
-	os.chdir(join(bpepath, 'fastalign'))
-	for alfile in glob.glob('[0-9]*'+('_'+str(i) if dropout else '')+'_word.gdfa'):
+	os.chdir(join(bpedir, 'fastalign'))
+	for alfile in glob.glob('[0-9]*'+('_'+str(i) if dropout else '')+'.wgdfa'):
 		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
 
 		score = [int(num_symbols)]
@@ -120,10 +135,10 @@ def calc_align_scores(i=-1):
 	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER'])
 	df = pd.concat([baseline_df, df]).round(decimals=3)
 
-	scoredir = join(bpepath, 'scores', 'scores'+('_'+str(i) if dropout else ''))
+	scoredir = join(bpedir, 'scores', 'scores_'+source+'_'+target+('_'+str(i) if dropout else ''))
 	print(f"Scores saved into {scoredir}")
-	plot_scores(df, scoredir)
 	df.to_csv(scoredir+'.csv', index=False)
+	plot_scores(df, scoredir)
 	return
 
 

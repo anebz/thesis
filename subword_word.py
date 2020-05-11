@@ -51,11 +51,11 @@ def subword_align_to_word(corpus, bpes, lang):
 def load_and_map_segmentations(num_symbols, i=-1, german_bpe=False):
 
     bpes = {}
-    os.chdir(join(bpepath, 'segmentations'))
+    os.chdir(join(bpedir, 'segmentations'))
     for inputpath in glob.glob("*_"+str(num_symbols)+('_'+str(i) if i!=-1 else '')+".bpe"):
         lang = inputpath.split('.')[0].split('_')[0]
         if german_bpe and lang == 'eng':
-            argsinput = codecs.open(join(datapath, 'input/eng_with_10k.txt'), encoding='utf-8')
+            argsinput = codecs.open(join(datadir, 'input/eng_with_10k.txt'), encoding='utf-8')
             bpes['eng'] = []
             for line in argsinput:
                 line = line.split('\t')[1].strip('\r\n ').split(' ')
@@ -79,7 +79,7 @@ def bpe_word_align(bpes, bpe_aligns):
     all_word_aligns = ''
     # iterate all sentences
     i = 0
-    for sent1, sent2, bpe_al in zip(bpes['eng'], bpes['deu'], bpe_aligns):
+    for sent1, sent2, bpe_al in zip(bpes[source], bpes[target], bpe_aligns):
         word_aligns = ''
         # iterate each alignment
         # bpe_al.split('\t')[1] to remove the index in the alignment file .gdfa

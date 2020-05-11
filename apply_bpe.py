@@ -11,7 +11,7 @@ from lib import *
 
 def load_data():
 
-    os.chdir(datapath)
+    os.chdir(datadir)
     langs = []
     bpe_models = []
     corpora = []
@@ -30,7 +30,7 @@ def load_data():
         bpe_model = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(bpe_model)]
         bpe_models.append(bpe_model)
 
-        argsinput = codecs.open(join(datapath, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
+        argsinput = codecs.open(join(datadir, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
         corpora.append(read_corpus(argsinput))
 
     return langs, bpe_models, corpora
@@ -92,7 +92,7 @@ def merge_corpus(corpus, bpe_merges, dropout=0.1):
 
 
 def apply_bpe(i=-1):
-    os.chdir(datapath)
+    os.chdir(datadir)
     for num_symbols in all_symbols:
         for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
 
@@ -103,7 +103,7 @@ def apply_bpe(i=-1):
 
             merged_corpus = merge_corpus(corpus, bpe_model, dropout)
 
-            outputpath = join(bpepath, 'segmentations', lang+"_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
+            outputpath = join(bpedir, 'segmentations', lang+"_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
             argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
             argsoutput.write(merged_corpus)
     return

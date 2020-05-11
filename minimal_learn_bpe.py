@@ -166,17 +166,17 @@ def learn_bpe(infile, outfile, num_symbols):
 if __name__ == '__main__':
 
     currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    datapath = join(currentdir, 'data')
+    datadir = join(currentdir, 'data')
 
     num_symbols = 10000
 
-    os.chdir(join(datapath, 'input'))
+    os.chdir(join(datadir, 'input'))
     for ifile in glob.glob("*.txt"):
         lang = ifile.split('_')[0]
 
         # check if a BPE model for this language exists
         # if so, only create new BPE model if num_symbols > symbols in the model
-        model_path = join(datapath, lang+'.model')
+        model_path = join(datadir, lang+'.model')
         if os.path.isfile(model_path):
             bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
             model_symbols = bpe_model[0].strip('\r\n').split()[1]
