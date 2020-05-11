@@ -4,13 +4,12 @@ Master thesis repo
 
 ## tasks
 
-* [X] merge subword_word.py
-* [ ] merged calc_align_score.py
-* [ ] merge extract_align and subword_word
-* [ ] _word.gdfa in calc_score, dropout scores look bad
-* [ ] compare bpe & bpe_dropout
-* [ ] test whole pipeline with deu as source, eng as target
-* [ ] do normal_eng & bpe_deu again, both sides, fewer symbols
+* [X] merged calc_align_score.py and avg_scores
+* [X] extract input alignment if not present
+* [X] merge extract_align and subword_word, skip .fwd, .rev, .inter?
+* [ ] compare bpe (as baseline? or normal?) & bpe_dropout
+* [ ] test whole pipeline with deu as source, eng as target. Make it automatic
+* [ ] do normal_eng & bpe_deu again, both sides, fewer symbols (if german_bpe ^ ('_deu' in alfile))
 * [ ] dropout + bpe_deu experiment
 * [ ] https://arxiv.org/abs/2004.03720
 * [ ] http://www.timoschick.com/paper%20picks/2020/04/14/bpe-is-suboptimal-for-lm-pretraining.html
@@ -27,13 +26,14 @@ Master thesis repo
 
 ## pipeline
 
-1. minimal_apply_bpe.py with num_symbols
-2. extract_alignments.py
-3. subword_word.py
+1. Set parameters in lib/`__init__.py`
+2. minimal_apply_bpe.py
+3. extract_alignments.py
 4. calc_align_score.py
 
 ## directory structure
 
+```
 .
 ├── data
 │   ├── input
@@ -50,8 +50,6 @@ Master thesis repo
 │   │   │   └── .fwd, .gdfa, .inter, .rev, .txt
 │   │   ├── segmentations
 │   │   │   └── .bpe
-│   │   ├── scripts                                    # TODO
-│   │   │   └── ...
 │   │   ├── test_scores
 │   │   │   └── .png, .csv
 │   │   ├── merged                                     # TODO
@@ -62,6 +60,7 @@ Master thesis repo
 ├── README.md
 ├── .py
 └── ...
+```
 
 ## resources
 

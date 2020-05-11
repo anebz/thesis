@@ -2,7 +2,6 @@ import os
 from os.path import join
 import glob
 import codecs
-from tqdm import tqdm
 
 # import global variables from lib/__init__.py
 from lib import *
@@ -49,15 +48,14 @@ def subword_align_to_word(corpus, bpes, lang):
     return bpes
 
 
-def load_and_map_segmentations(num_symbols, i=-1):
+def load_and_map_segmentations(num_symbols, i=-1, german_bpe=False):
 
     bpes = {}
     os.chdir(join(bpepath, 'segmentations'))
-    for inputpath in glob.glob("*_"+num_symbols+('_'+i if i!=-1 else '')+".bpe"):
+    for inputpath in glob.glob("*_"+str(num_symbols)+('_'+str(i) if i!=-1 else '')+".bpe"):
         lang = inputpath.split('.')[0].split('_')[0]
         if german_bpe and lang == 'eng':
-            argsinput = codecs.open(
-                join(datapath, 'input/eng_with_10k.txt'), encoding='utf-8')
+            argsinput = codecs.open(join(datapath, 'input/eng_with_10k.txt'), encoding='utf-8')
             bpes['eng'] = []
             for line in argsinput:
                 line = line.split('\t')[1].strip('\r\n ').split(' ')
@@ -94,27 +92,3 @@ def bpe_word_align(bpes, bpe_aligns):
         all_word_aligns += str(i) + "\t" + word_aligns[:-1] + "\n"
         i += 1
     return all_word_aligns
-
-
-if __name__ == "__main__":
-
-    german_bpe = False
-    os.chdir(bpepath)
-
-    for alfile in tqdm(glob.glob("fastalign/[0-9]*.gdfa")):
-        if german_bpe ^ ('_deu' in alfile) or '_word' in alfile:
-            continue
-
-        num_symbols = alfile.split(".")[0].split(os.sep)[1]
-        i = -1
-        if dropout:
-            num_symbols, i = num_symbols.split('_')
-        num_symbols = num_symbols.replace('_deu', '')
-        bpes = load_and_map_segmentations(num_symbols, i)
-
-        argsalign = codecs.open(join(bpepath, alfile), encoding='utf-8')
-        all_word_aligns = bpe_word_align(bpes, argsalign)
-
-        outputpath = join(bpepath, 'fastalign',num_symbols+('_'+i if i!=-1 else '')+'_word.gdfa')
-        argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
-        argsoutput.write(all_word_aligns)

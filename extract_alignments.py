@@ -6,6 +6,7 @@ import os
 
 # import global variables from lib/__init__.py
 from lib import *
+from subword_word import *
 
 def add_numbers(input_file, output_file, start=0, max_num=-1):
 	with codecs.open(input_file, "r", "utf-8") as fi, codecs.open(output_file, "w", "utf-8") as fo:
@@ -17,20 +18,22 @@ def add_numbers(input_file, output_file, start=0, max_num=-1):
 				break
 
 
-def extract_alignments(i=-1):
+def extract_alignments(i=-1, input_mode=False):
 
 	for num_symbols in all_symbols:
 
-		print(f"Alignments for {num_symbols} symbols")
+		if input_mode:
+			print(f"Alignments for input files")
+			s = join(datapath, "input/eng_with_10k.txt")
+			t = join(datapath, "input/deu_with_10k.txt")
+			o = join(bpepath, "fastalign/input")
 
-		# TODO extract input alignments if not present
-		#s = join(currentdir, "data/input/eng_with_10k.txt")
-		#t = join(currentdir, "data/input/deu_with_10k.txt")
+		else:
+			print(f"Alignments for {num_symbols} symbols")
+			s = join(bpepath, 'segmentations', "eng_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
+			t = join(bpepath, 'segmentations', "deu_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
+			o = join(bpepath, "fastalign", str(num_symbols)+('_'+str(i) if i != -1 else ''))
 
-		s = join(bpepath, 'segmentations', "eng_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
-		t = join(bpepath, 'segmentations', "deu_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
-
-		o = join(bpepath, "fastalign", str(num_symbols)+('_'+str(i) if i != -1 else ''))
 		p = ""
 		m = "fast"
 
@@ -56,11 +59,9 @@ def extract_alignments(i=-1):
 				fa_file.write(sl + " ||| " + tl + "\n")
 			fa_file.close()
 
-		# FastAlign
 		if m == "fast":
 			os.system("{} -i {} -v -d -o > {}.fwd".format(fastalign_path, p, o))
 			os.system("{} -i {} -v -d -o -r > {}.rev".format(fastalign_path, p, o))
-		# Eflomal
 		elif m == "eflomal":
 			os.system(eflomal_path + "align.py -i {0} --model 3 -f {1}.fwd -r {1}.rev".format(p, o))
 
@@ -68,6 +69,7 @@ def extract_alignments(i=-1):
 		add_numbers(o + "_unnum.gdfa", o + ".gdfa")
 		os.system("rm {}_unnum.gdfa".format(o))
 
+		'''
 		with open(o + ".fwd", "r") as f1, open(o + ".rev", "r") as f2, open(o + ".inter", "w") as fo:
 			count = 0
 			for l1, l2 in zip(f1, f2):
@@ -75,6 +77,21 @@ def extract_alignments(i=-1):
 				l2 = set(l2.strip().split())
 				fo.write(str(count) + "\t" + " ".join(sorted([x for x in l1 & l2])) + "\n")
 				count += 1
+		'''
+
+		if input_mode:
+			break
+
+		# map alignment from subword to word
+		german_bpe = False
+		bpes = load_and_map_segmentations(num_symbols, i, german_bpe)
+
+		argsalign = codecs.open(join(bpepath, o+'.gdfa'), encoding='utf-8')
+		all_word_aligns = bpe_word_align(bpes, argsalign)
+
+		argsoutput = codecs.open(o+'_word.gdfa', 'w', encoding='utf-8')
+		argsoutput.write(all_word_aligns)
+
 		print("\n\n\n\n")
 	return
 
@@ -97,8 +114,11 @@ if __name__ == "__main__":
 	fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 	atools_path = join(rootdir, "tools/fast_align/build/atools")
 
+	if not os.path.isfile(join(bpepath, 'fastalign/input.gdfa')):
+		extract_alignments(input_mode=True)
+
 	if dropout > 0:
-        # create `dropout_repetitions` segmentations, to aggregate later
+		# create `dropout_repetitions` segmentations, to aggregate later
 		for i in range(dropout_repetitions):
 			print(f"Iteration {i+1}")
 			extract_alignments(i)
