@@ -10,7 +10,9 @@ import matplotlib.pyplot as plt
 # import global variables from lib/__init__.py
 from lib import *
 
+
 def load_gold(g_path):
+
 	gold_f = open(g_path, "r")
 	pros = {}
 	surs = {}
@@ -44,6 +46,7 @@ def load_gold(g_path):
 
 
 def calc_score(input_path, probs, surs, surs_count):
+
 	total_hit = 0.
 	p_hit = 0.
 	s_hit = 0.
@@ -57,7 +60,8 @@ def calc_score(input_path, probs, surs, surs_count):
 
 		line[1] = line[1].split()
 
-		if source == 'deu' and 'input' in input_path:
+		# swap alignments in the swapped language case
+		if source == 'deu':
 			line[1] = [al.split('-')[1] + '-' + al.split('-')[0] for al in line[1]]
 
 		for pair in line[1]:
@@ -78,10 +82,9 @@ def calc_score(input_path, probs, surs, surs_count):
 	return y_prec, y_rec, y_f1, aer
 
 
-def get_baseline_score():
-    alfile = join(bpedir, 'fastalign/input.wgdfa') 
-    gold_path = join(rootdir, 'tools/pbc_utils/data/eng_deu/eng_deu.gold')
-    probs, surs, surs_count = load_gold(gold_path)
+def get_baseline_score(probs, surs, surs_count):
+
+    alfile = join(bpedir, 'fastalign/input.wgdfa')
 
     scores = []
     score = [0]
@@ -91,19 +94,16 @@ def get_baseline_score():
     return baseline_df
 
 
-def plot_scores(df, scoredir):
+def plot_scores(df, baseline_df, scoredir):
 
 	plt.clf()
 	# gca stands for 'get current axis'
 	ax = plt.gca()
 
 	colors = ['magenta', 'blue', 'green', 'red']
-
-	# paint horizontal lines to depict baseline
-	for baseline_results, color in zip(list(df.iloc[0])[1:], colors):
+	for baseline_results, color in zip(list(baseline_df.iloc[0][1:]), colors):
 		plt.axhline(y=baseline_results, color=color, linestyle='dashed')
 
-	df.drop(df.head(1).index, inplace=True)
 	df = df.sort_values('num_symbols')
 	columns = list(df)
 	for column, color in zip(columns[1:], colors):
@@ -116,13 +116,13 @@ def plot_scores(df, scoredir):
 
 
 def calc_align_scores(i=-1):
-	
-	gold_path = join(rootdir, 'tools/pbc_utils/data/eng_deu/eng_deu.gold')
-	probs, surs, surs_count = load_gold(gold_path)
-	
-	baseline_df = get_baseline_score()
-	scores = []
 
+	gold_path = join(datadir, 'input/eng_deu.gold')
+	probs, surs, surs_count = load_gold(gold_path)
+
+	baseline_df = get_baseline_score(probs, surs, surs_count)
+
+	scores = []
 	# calc score of num_symbols
 	os.chdir(join(bpedir, 'fastalign'))
 	for alfile in glob.glob('[0-9]*'+('_'+str(i) if dropout else '')+'.wgdfa'):
@@ -132,13 +132,13 @@ def calc_align_scores(i=-1):
 		score.extend(list(calc_score(alfile, probs, surs, surs_count)))
 		scores.append(score)
 
-	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER'])
-	df = pd.concat([baseline_df, df]).round(decimals=3)
+	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 
-	scoredir = join(bpedir, 'scores', 'scores_'+source+'_'+target+('_'+str(i) if dropout else ''))
+	scoredir = join(bpedir, 'scores', 'scores_'+source+'_'+target+'_'+score_baseline+('_'+str(i) if dropout else ''))
 	print(f"Scores saved into {scoredir}")
+
 	df.to_csv(scoredir+'.csv', index=False)
-	plot_scores(df, scoredir)
+	plot_scores(df, baseline_df, scoredir)
 	return
 
 
@@ -150,8 +150,6 @@ if __name__ == "__main__":
 	The generated alignment file should be selected by "input_path".
 	Both gold file and input file are in the FastAlign format with sentence number at the start of line separated with TAB.
 	'''
-
-	gold_path = join(rootdir, 'tools/pbc_utils/data/eng_deu/eng_deu.gold')
 
 	if dropout > 0:
         # create `dropout_repetitions` segmentations, to aggregate later
