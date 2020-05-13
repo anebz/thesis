@@ -80,7 +80,7 @@ def bpe_word_align(bpes, bpe_aligns):
     # iterate all sentences
     i = 0
     for sent1, sent2, bpe_al in zip(bpes[source], bpes[target], bpe_aligns):
-        word_aligns = ''
+        word_aligns = []
         # iterate each alignment
         # bpe_al.split('\t')[1] to remove the index in the alignment file .gdfa
         for al in bpe_al.split('\t')[1].split():
@@ -88,7 +88,7 @@ def bpe_word_align(bpes, bpe_aligns):
             new_al = str(sent1[int(firstal)]) + '-' + str(sent2[int(secondal)])
             # skip already seen word alignments
             if not new_al in word_aligns:
-                word_aligns += new_al + ' '
-        all_word_aligns += str(i) + "\t" + word_aligns[:-1] + "\n"
+                word_aligns.append(new_al)
+        all_word_aligns += str(i) + "\t" + ' '.join(word_aligns) + "\n"
         i += 1
     return all_word_aligns

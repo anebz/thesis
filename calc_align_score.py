@@ -137,7 +137,7 @@ def calc_align_scores(i=-1):
 	scores = []
 	# calc score of num_symbols
 	os.chdir(join(bpedir, 'fastalign'))
-	for alfile in glob.glob('[0-9]*'+('_'+str(i) if dropout else '')+'.wgdfa'):
+	for alfile in glob.glob('[0-9]*_'+('deu' if german_bpe else '')+(str(i) if dropout else '')+'.wgdfa'):
 		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
 
 		score = [int(num_symbols)]
@@ -146,7 +146,12 @@ def calc_align_scores(i=-1):
 
 	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 
-	scoredir = join(bpedir, 'scores', 'scores_'+('' if dropout else source+'_'+target)+('_'+str(i) if dropout else ''))
+	scoredir = join(bpedir, 'scores', 'scores' + ('_deu' if german_bpe else ''))
+	if dropout:
+		scoredir += '_' + str(i)
+	elif not german_bpe:
+		scoredir += '_' + source + '_' + target
+
 	print(f"Scores saved into {scoredir}")
 
 	df.to_csv(scoredir+'.csv', index=False)
