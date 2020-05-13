@@ -4,14 +4,10 @@ Master thesis repo
 
 ## tasks
 
-* [X] test whole pipeline with deu as source, eng as target. Make it automatic
 * [ ] compare bpe (as baseline? or normal?) & bpe_dropout
-* [ ] do normal_eng & bpe_deu again, both sides, fewer symbols (if german_bpe ^ ('_deu' in alfile))
+  * [ ] adjust calc_align_score to plot bpe_baseline in plot as dashed
+* [ ] do normal_eng & bpe_deu again, both sides, fewer symbols (if german_bpe ^ ('\_deu' in alfile))
 * [ ] dropout + bpe_deu experiment
-* [ ] https://arxiv.org/abs/2004.03720
-* [ ] http://www.timoschick.com/paper%20picks/2020/04/14/bpe-is-suboptimal-for-lm-pretraining.html
-* [ ] https://arxiv.org/abs/1910.07181
-* [ ] https://arxiv.org/abs/2001.07676
 
 ## bpe dropout
 
@@ -20,6 +16,10 @@ Master thesis repo
   * During segmentation, at each merge step some merges are randomly dropped with probability p
   * using BPE-Dropout on the source side is more beneficial than using it on the target side
   * The improvement with respect to normal BPE are consistent no matter the vocabulary size. But the effect from using BPE-Dropout vanishes when a corpora size gets bigger.
+
+## unigram LM paper
+
+* [Comments on the paper](http://www.timoschick.com/paper%20picks/2020/04/14/bpe-is-suboptimal-for-lm-pretraining.html)
 
 ## pipeline
 
