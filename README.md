@@ -4,8 +4,6 @@ Master thesis repo
 
 ## tasks
 
-* [ ] compare bpe (as baseline? or normal?) & bpe_dropout
-  * [ ] adjust calc_align_score to plot bpe_baseline in plot as dashed
 * [ ] do normal_eng & bpe_deu again, both sides, fewer symbols (if german_bpe ^ ('\_deu' in alfile))
 * [ ] dropout + bpe_deu experiment
 
@@ -20,6 +18,11 @@ Master thesis repo
 ## unigram LM paper
 
 * [Comments on the paper](http://www.timoschick.com/paper%20picks/2020/04/14/bpe-is-suboptimal-for-lm-pretraining.html)
+
+## scores
+
+* In normal mode, BPE vs. gold standard
+* In dropout mode, dropout BPE vs. BPE
 
 ## pipeline
 

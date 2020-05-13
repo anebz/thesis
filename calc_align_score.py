@@ -101,13 +101,21 @@ def plot_scores(df, baseline_df, scoredir):
 	ax = plt.gca()
 
 	colors = ['magenta', 'blue', 'green', 'red']
-	for baseline_results, color in zip(list(baseline_df.iloc[0][1:]), colors):
-		plt.axhline(y=baseline_results, color=color, linestyle='dashed')
 
 	df = df.sort_values('num_symbols')
 	columns = list(df)
 	for column, color in zip(columns[1:], colors):
 		df.plot(kind='line', x=columns[0], y=column, color=color, ax=ax)
+
+	if dropout:
+		baseline_df = baseline_df.sort_values('num_symbols')
+		columns = list(baseline_df)
+		for column, color in zip(columns[1:], colors):
+			baseline_df.plot(kind='line', x=columns[0], y=column,
+                             color=color, ax=ax, legend=False, linestyle='dashed')
+	else:
+		for baseline_results, color in zip(list(baseline_df.iloc[0][1:]), colors):
+			plt.axhline(y=baseline_results, color=color, linestyle='dashed')
 
 	plt.grid()
 	#plt.ylim(ymax=1, ymin=0)
@@ -120,8 +128,12 @@ def calc_align_scores(i=-1):
 	gold_path = join(datadir, 'input/eng_deu.gold')
 	probs, surs, surs_count = load_gold(gold_path)
 
-	baseline_df = get_baseline_score(probs, surs, surs_count)
-
+	# dropout case: take normal BPE scores as baseline. if normal case, take gold standard
+	if dropout:
+		baseline_df = pd.read_csv(join(datadir, 'normal_bpe/scores/scores_'+source+'_'+target+'.csv'))
+	else:
+		baseline_df = get_baseline_score(probs, surs, surs_count)
+		
 	scores = []
 	# calc score of num_symbols
 	os.chdir(join(bpedir, 'fastalign'))
@@ -134,7 +146,7 @@ def calc_align_scores(i=-1):
 
 	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 
-	scoredir = join(bpedir, 'scores', 'scores_'+source+'_'+target+'_'+score_baseline+('_'+str(i) if dropout else ''))
+	scoredir = join(bpedir, 'scores', 'scores_'+('' if dropout else source+'_'+target)+('_'+str(i) if dropout else ''))
 	print(f"Scores saved into {scoredir}")
 
 	df.to_csv(scoredir+'.csv', index=False)
