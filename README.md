@@ -4,8 +4,15 @@ Master thesis repo
 
 ## tasks
 
-* [ ] dropout + bpe_deu experiment
+* [X] dropout + bpe_deu experiment
+* [X] merge calc_align_score and avg_score
+* [ ] source_bpe, target_bpe instead of german_bpe
+* [ ] dropout only on source side?
+* [ ] input + 1k symbols + 2k symbols, join them (dropout files). do intersection between alignments, union, threshold(if alignment appears in >k files, then it's a good alignment). if it doesn't work then we have to merge the file before fast align
+* [ ] think about BPE on text without dropout. comple t ely. start from beginning?
 * [ ] Read [unified LM tokenization paper](https://www.aclweb.org/anthology/P18-1007/)
+  * bpe drooput similar results than ulm, but less computationally expensive
+* [sentence piece](https://github.com/VKCOM/YouTokenToMe)
 
 ## bpe dropout
 
@@ -27,9 +34,10 @@ Master thesis repo
 ## pipeline
 
 1. Set parameters in `lib/__init__.py`
-2. minimal_apply_bpe.py
-3. extract_alignments.py
-4. calc_align_score.py
+2. learn_bpe.py
+3. apply_bpe.py
+4. extract_alignments.py
+5. calc_align_score.py
 
 ## directory structure
 
@@ -41,13 +49,13 @@ Master thesis repo
 │   │   ├── deu_with_10k.txt
 │   ├── normal_bpe
 │   │   ├── fastalign                                 # files obtained from fastalign alignment algorithm
-│   │   │   └── .fwd, .gdfa, .inter, .rev, .txt
+│   │   │   └── *.wgdfa, *_deu.wgdfa
 │   │   ├── segmentations                             # files obtained by segmenting based on num_symbols
 │   │   │   └── .bpe
 │   │   └── scores.png, scores.csv
 │   ├── dropout_bpe
 │   │   ├── fastalign
-│   │   │   └── .fwd, .gdfa, .inter, .rev, .txt
+│   │   │   └── *.wgdfa, *_deu.wgdfa
 │   │   ├── segmentations
 │   │   │   └── .bpe
 │   │   ├── test_scores
@@ -61,7 +69,3 @@ Master thesis repo
 ├── .py
 └── ...
 ```
-
-## resources
-
-* sentence piece <https://github.com/VKCOM/YouTokenToMe>
