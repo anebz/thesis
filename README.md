@@ -4,7 +4,6 @@ Master thesis repo
 
 ## tasks
 
-* [ ] normal_eng & bpe_deu experiment, terrible scores. analyze `calc_score`
 * [ ] dropout + bpe_deu experiment
 * [ ] Read [unified LM tokenization paper](https://www.aclweb.org/anthology/P18-1007/)
 

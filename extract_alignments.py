@@ -33,8 +33,8 @@ def extract_alignments(i=-1, input_mode=False):
 			if german_bpe:
 				s = join(datadir, 'input/eng_with_10k.txt')
 			else:
-				s = join(bpedir, 'segmentations', source+"_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
-			t = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
+				s = join(bpedir, 'segmentations', source+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
+			t = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
 			o = join(bpedir, "fastalign", 
 						str(num_symbols) +
 						('_'+str(i) if i != -1 else '') +
@@ -53,15 +53,8 @@ def extract_alignments(i=-1, input_mode=False):
 			ftrg = codecs.open(t, "r", "utf-8")
 
 			for sl, tl in zip(fsrc, ftrg):
-				sl = sl.strip().split("\t")
-				tl = tl.strip().split("\t")
-
-				if len(sl) == 2 and len(tl) == 2:
-					sl = sl[1]
-					tl = tl[1]
-				else:
-					sl = sl[0]
-					tl = tl[0]
+				sl = sl.strip().split("\t")[-1]
+				tl = tl.strip().split("\t")[-1]
 
 				fa_file.write(sl + " ||| " + tl + "\n")
 			fa_file.close()
