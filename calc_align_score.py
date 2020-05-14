@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-import collections
-import os
 from os.path import join
-import codecs
 import glob
+import codecs
+import random
+import collections
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -84,14 +84,14 @@ def calc_score(input_path, probs, surs, surs_count):
 
 def get_baseline_score(probs, surs, surs_count):
 
-    alfile = join(bpedir, 'fastalign/input.wgdfa')
+	alfile = join(bpedir, 'fastalign/input.wgdfa')
 
-    scores = []
-    score = [0]
-    score.extend(list(calc_score(alfile, probs, surs, surs_count)))
-    scores.append(score)
-    baseline_df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
-    return baseline_df
+	scores = []
+	score = [0]
+	score.extend(list(calc_score(alfile, probs, surs, surs_count)))
+	scores.append(score)
+	baseline_df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+	return baseline_df
 
 
 def plot_scores(df, baseline_df, scoredir):
@@ -112,7 +112,7 @@ def plot_scores(df, baseline_df, scoredir):
 		columns = list(baseline_df)
 		for column, color in zip(columns[1:], colors):
 			baseline_df.plot(kind='line', x=columns[0], y=column,
-                             color=color, ax=ax, legend=False, linestyle='dashed')
+							 color=color, ax=ax, legend=False, linestyle='dashed')
 	else:
 		for baseline_results, color in zip(list(baseline_df.iloc[0][1:]), colors):
 			plt.axhline(y=baseline_results, color=color, linestyle='dashed')
@@ -123,21 +123,14 @@ def plot_scores(df, baseline_df, scoredir):
 	return
 
 
-def calc_align_scores(i=-1):
+def calc_align_scores(probs, surs, surs_count, baseline_df, i=-1):
 
-	gold_path = join(datadir, 'input/eng_deu.gold')
-	probs, surs, surs_count = load_gold(gold_path)
-
-	# dropout case: take normal BPE scores as baseline. if normal case, take gold standard
-	if dropout:
-		baseline_df = pd.read_csv(join(datadir, 'normal_bpe/scores/scores_'+source+'_'+target+'.csv'))
-	else:
-		baseline_df = get_baseline_score(probs, surs, surs_count)
-		
 	scores = []
 	# calc score of num_symbols
 	os.chdir(join(bpedir, 'fastalign'))
-	for alfile in glob.glob('[0-9]*_'+('deu' if german_bpe else '')+(str(i) if dropout else '')+'.wgdfa'):
+	for alfile in glob.glob('[0-9]*'+('_'+str(i) if dropout else '')+('_deu' if german_bpe else '')+'.wgdfa'):
+		if not german_bpe and '_deu' in alfile:
+			continue
 		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
 
 		score = [int(num_symbols)]
@@ -146,16 +139,50 @@ def calc_align_scores(i=-1):
 
 	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 
-	scoredir = join(bpedir, 'scores', 'scores' + ('_deu' if german_bpe else ''))
+	scoredir = join(bpedir, 'scores/scores')
 	if dropout:
 		scoredir += '_' + str(i)
 	elif not german_bpe:
 		scoredir += '_' + source + '_' + target
+	if german_bpe:
+		scoredir += '_deu'
 
-	print(f"Scores saved into {scoredir}")
+	if not dropout:
+		print(f"Scores saved into {scoredir}")
+		df.to_csv(scoredir+'.csv', index=False)
+		plot_scores(df, baseline_df, scoredir)
+	return df
 
-	df.to_csv(scoredir+'.csv', index=False)
-	plot_scores(df, baseline_df, scoredir)
+
+def avg_scores(baseline_df, score_dfs):
+
+	for avg in avgs:
+
+		# get random i indexes
+		random_idx = set()
+		while len(random_idx) < avg:
+			random_idx.add(random.randrange(10))
+		
+		df = pd.DataFrame()
+		for rd_idx in list(random_idx):
+
+			# first step of the iteration, just get the whole dataframe
+			if df.empty:
+				df = score_dfs[rd_idx]
+				continue
+
+			for col in list(score_dfs[rd_idx])[1:]:
+				df[col] += score_dfs[rd_idx][col]
+
+		# divide all by \# elements added, to get average
+		for col in list(df)[1:]:
+			df[col] = df[col].apply(lambda x: x/avg)
+
+		scoredir = join(bpedir, 'scores/scores_avg_'+str(avg)+('_deu' if german_bpe else ''))
+		print(f"Scores saved into {scoredir}")
+		df.round(decimals=3).to_csv(os.path.join(scoredir+'.csv'), index=False)
+		plot_scores(df, baseline_df, join(scoredir))
+
 	return
 
 
@@ -168,10 +195,19 @@ if __name__ == "__main__":
 	Both gold file and input file are in the FastAlign format with sentence number at the start of line separated with TAB.
 	'''
 
-	if dropout > 0:
-        # create `dropout_repetitions` segmentations, to aggregate later
-		for i in range(dropout_repetitions):
-			print(f"Iteration {i+1}")
-			calc_align_scores(i)
+	print(f"Calculating alignment scores for source={source} and target={target}, dropout={dropout}, german mode={german_bpe}.")
+
+	gold_path = join(datadir, 'input/eng_deu.gold')
+	probs, surs, surs_count = load_gold(gold_path)
+
+	# dropout case: take normal BPE scores as baseline. if normal case, take gold standard
+	if dropout:
+		baseline_df = pd.read_csv(join(datadir, 'normal_bpe/scores/scores_'+source+'_'+target+'.csv'))
 	else:
-		calc_align_scores()
+		baseline_df = get_baseline_score(probs, surs, surs_count)
+
+	if dropout > 0:
+		score_dfs = [calc_align_scores(probs, surs, surs_count, baseline_df, i) for i in range(dropout_repetitions)]
+		avg_scores(baseline_df, score_dfs)
+	else:
+		calc_align_scores(probs, surs, surs_count, baseline_df)

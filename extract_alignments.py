@@ -115,7 +115,7 @@ if __name__ == "__main__":
 	fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 	atools_path = join(rootdir, "tools/fast_align/build/atools")
 
-	print(f"Extracting alignments for source={source} and target={target}. German mode={german_bpe}.")
+	print(f"Extracting alignments for source={source} and target={target}, dropout={dropout}, german mode={german_bpe}.")
 
 	if not os.path.isfile(join(bpedir, 'fastalign/input.wgdfa')):
 		extract_alignments(input_mode=True)
