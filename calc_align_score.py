@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from os.path import join
 import glob
-import codecs
 import random
 import collections
 import pandas as pd
@@ -128,8 +127,8 @@ def calc_align_scores(probs, surs, surs_count, baseline_df, i=-1):
 	scores = []
 	# calc score of num_symbols
 	os.chdir(join(bpedir, 'fastalign'))
-	for alfile in glob.glob('[0-9]*'+('_'+str(i) if dropout else '')+('_deu' if german_bpe else '')+'.wgdfa'):
-		if not german_bpe and '_deu' in alfile:
+	for alfile in glob.glob('[0-9]*'+('_'+str(i) if dropout else '')+('_'+source if source_bpe else '')+('_'+target if target_bpe else '')+'.wgdfa'):
+		if (not target_bpe and '_'+target in alfile) or (not source_bpe and '_'+source in alfile):
 			continue
 		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
 
@@ -142,10 +141,12 @@ def calc_align_scores(probs, surs, surs_count, baseline_df, i=-1):
 	scoredir = join(bpedir, 'scores/scores')
 	if dropout:
 		scoredir += '_' + str(i)
-	elif not german_bpe:
+	elif not (target_bpe or source_bpe):
 		scoredir += '_' + source + '_' + target
-	if german_bpe:
-		scoredir += '_deu'
+	if target_bpe:
+		scoredir += '_'+target
+	if source_bpe:
+		scoredir += '_'+source
 
 	if not dropout:
 		print(f"Scores saved into {scoredir}")
@@ -178,7 +179,7 @@ def avg_scores(baseline_df, score_dfs):
 		for col in list(df)[1:]:
 			df[col] = df[col].apply(lambda x: x/avg)
 
-		scoredir = join(bpedir, 'scores/scores_avg_'+str(avg)+('_deu' if german_bpe else ''))
+		scoredir = join(bpedir, 'scores/scores_avg_'+str(avg)+('_'+source if source_bpe else '')+('_'+target if target_bpe else ''))
 		print(f"Scores saved into {scoredir}")
 		df.round(decimals=3).to_csv(os.path.join(scoredir+'.csv'), index=False)
 		plot_scores(df, baseline_df, join(scoredir))
@@ -195,7 +196,7 @@ if __name__ == "__main__":
 	Both gold file and input file are in the FastAlign format with sentence number at the start of line separated with TAB.
 	'''
 
-	print(f"Calculating alignment scores for source={source} and target={target}, dropout={dropout}, german mode={german_bpe}.")
+	print(f"Calculating alignment scores for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
 
 	gold_path = join(datadir, 'input/eng_deu.gold')
 	probs, surs, surs_count = load_gold(gold_path)

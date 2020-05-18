@@ -48,18 +48,24 @@ def subword_align_to_word(corpus, bpes, lang):
     return bpes
 
 
-def load_and_map_segmentations(num_symbols, i=-1, german_bpe=False):
+def load_and_map_segmentations(num_symbols, i=-1):
 
     bpes = {}
     os.chdir(join(bpedir, 'segmentations'))
     for inputpath in glob.glob("*_"+str(num_symbols)+('_'+str(i) if i!=-1 else '')+".bpe"):
         lang = inputpath.split('.')[0].split('_')[0]
-        if german_bpe and lang == 'eng':
+        if target_bpe and lang == source:
             argsinput = codecs.open(join(datadir, 'input/eng_with_10k.txt'), encoding='utf-8')
-            bpes['eng'] = []
+            bpes[source] = []
             for line in argsinput:
                 line = line.split('\t')[1].strip('\r\n ').split(' ')
-                bpes['eng'].append(list(range(len(line))))
+                bpes[source].append(list(range(len(line))))
+        elif source_bpe and lang == target:
+            argsinput = codecs.open(join(datadir, 'input/deu_with_10k.txt'), encoding='utf-8')
+            bpes[target] = []
+            for line in argsinput:
+                line = line.split('\t')[1].strip('\r\n ').split(' ')
+                bpes[target].append(list(range(len(line))))
         else:
             argsinput = codecs.open(inputpath, encoding='utf-8')
             bpes = subword_align_to_word(argsinput, bpes, lang)

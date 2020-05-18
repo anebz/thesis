@@ -30,15 +30,20 @@ def extract_alignments(i=-1, input_mode=False):
 
 		else:
 			print(f"Alignments for {num_symbols} symbols")
-			if german_bpe:
+			if target_bpe:
 				s = join(datadir, 'input/eng_with_10k.txt')
 			else:
 				s = join(bpedir, 'segmentations', source+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
-			t = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
+			
+			if source_bpe:
+				t = join(datadir, 'input/deu_with_10k.txt')
+			else:
+				t = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
+
 			o = join(bpedir, "fastalign", 
 						str(num_symbols) +
 						('_'+str(i) if i != -1 else '') +
-						('_deu' if german_bpe else '')
+						('_deu' if target_bpe else '')
 					)
 
 		p = ""
@@ -86,7 +91,7 @@ def extract_alignments(i=-1, input_mode=False):
 			break
 
 		# map alignment from subword to word
-		bpes = load_and_map_segmentations(num_symbols, i, german_bpe)
+		bpes = load_and_map_segmentations(num_symbols, i)
 
 		argsalign = codecs.open(o+'.gdfa', encoding='utf-8')
 		all_word_aligns = bpe_word_align(bpes, argsalign)
@@ -115,7 +120,7 @@ if __name__ == "__main__":
 	fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 	atools_path = join(rootdir, "tools/fast_align/build/atools")
 
-	print(f"Extracting alignments for source={source} and target={target}, dropout={dropout}, german mode={german_bpe}.")
+	print(f"Extracting alignments for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
 
 	if not os.path.isfile(join(bpedir, 'fastalign/input.wgdfa')):
 		extract_alignments(input_mode=True)
