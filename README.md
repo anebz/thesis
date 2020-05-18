@@ -4,11 +4,10 @@ Master thesis repo
 
 ## tasks
 
-* [X] dropout + bpe_deu experiment
-* [X] merge calc_align_score and avg_score
-* [ ] source_bpe, target_bpe instead of german_bpe
-* [ ] dropout only on source side?
-* [ ] input + 1k symbols + 2k symbols, join them (dropout files). do intersection between alignments, union, threshold(if alignment appears in >k files, then it's a good alignment). if it doesn't work then we have to merge the file before fast align
+* [ ] dropout only on one side? source_bpe -> source_dropout?
+* [ ] do intersection between dropout alignments, union, threshold. if it doesn't work then we have to merge the file before fast align
+  * [X] union, intersection
+  * [ ] threshold(if alignment appears in >k files, then it's a good alignment)
 * [ ] think about BPE on text without dropout. comple t ely. start from beginning?
 * [ ] Read [unified LM tokenization paper](https://www.aclweb.org/anthology/P18-1007/)
   * bpe drooput similar results than ulm, but less computationally expensive
