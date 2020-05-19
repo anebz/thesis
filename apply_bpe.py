@@ -30,7 +30,7 @@ def load_data():
         bpe_model = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(bpe_model)]
         bpe_models.append(bpe_model)
 
-        argsinput = codecs.open(join(datadir, 'input/'+lang+'_with_10k.txt'), encoding='utf-8')
+        argsinput = codecs.open(inputpath[lang], encoding='utf-8')
         corpora.append(read_corpus(argsinput))
 
     return langs, bpe_models, corpora
@@ -99,7 +99,7 @@ def apply_bpe(i=-1):
             # only get the desired amount of symbols
             bpe_model = bpe_model[1:num_symbols+1]
 
-            print(f"Merging BPE symbols for {lang}, {num_symbols} symbols and dropout {dropout*100}%")
+            print(f"Merging BPE symbols for lang={lang}, num_symbols={num_symbols} symbols and dropout {dropout*100}%")
 
             merged_corpus = merge_corpus(corpus, bpe_model, dropout)
 

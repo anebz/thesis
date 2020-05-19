@@ -97,9 +97,8 @@ def learn_bpe(corpus, bpe_model, num_symbols):
 
 if __name__ == '__main__':
 
-    os.chdir(join(datadir, 'input'))
-    for ifile in glob.glob("*.txt"):
-        lang = ifile.split('_')[0]
+
+    for lang in [source, target]:
 
         # check if a BPE model for this language exists
         # if so, only create new BPE model if num_symbols > symbols in the model
@@ -112,7 +111,7 @@ if __name__ == '__main__':
                     print(f"There already exists a model with at least {num_symbols} symbols")
                     sys.exit()
         
-        argsinput = codecs.open(ifile, encoding='utf-8')
+        argsinput = codecs.open(inputpath[lang], encoding='utf-8')
         bpe_model = codecs.open(model_path, 'w', encoding='utf-8')
         bpe_model.write('{0} {1}\n'.format(lang, num_symbols))
 

@@ -55,7 +55,7 @@ def merge_dropout_alignments():
 
 def calc_score_merges():
     print(f"Calculating merge scores for merge_threshold={merge_threshold}")
-    probs, surs, surs_count = load_gold(join(datadir, 'input/eng_deu.gold'))
+    probs, surs, surs_count = load_gold(goldpath)
     for merge_type in ['union', 'inter', 'thres']:
         scores = []
         for num_symbols in all_symbols:

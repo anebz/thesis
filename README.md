@@ -4,7 +4,8 @@ Master thesis repo
 
 ## tasks
 
-* [ ] Put absolute paths to gold, input_10k in `__input__.py`. probs, surs and surs_count too?
+* [ ] Dropout on one side
+* [X] Put absolute paths to gold, input_10k in `__input__.py`
 * [ ] dropout only on one side? source_bpe -> source_dropout?
 * [ ] think about BPE on text without dropout. comple t ely. start from beginning?
 * [ ] Read [unified LM tokenization paper](https://www.aclweb.org/anthology/P18-1007/)

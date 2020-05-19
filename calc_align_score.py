@@ -127,7 +127,10 @@ def calc_align_scores(probs, surs, surs_count, baseline_df, i=-1):
 	scores = []
 	# calc score of num_symbols
 	os.chdir(join(bpedir, 'fastalign'))
-	for alfile in glob.glob('[0-9]*'+('_'+str(i) if dropout else '')+('_'+source if source_bpe else '')+('_'+target if target_bpe else '')+'.wgdfa'):
+	for alfile in glob.glob('[0-9]*'+
+							('_'+str(i) if dropout else '')+
+							('_'+source if source_bpe else '')+
+							('_'+target if target_bpe else '')+'.wgdfa'):
 		if (not target_bpe and '_'+target in alfile) or (not source_bpe and '_'+source in alfile):
 			continue
 		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
@@ -198,8 +201,7 @@ if __name__ == "__main__":
 
 	print(f"Calculating alignment scores for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
 
-	gold_path = join(datadir, 'input/eng_deu.gold')
-	probs, surs, surs_count = load_gold(gold_path)
+	probs, surs, surs_count = load_gold(goldpath)
 
 	# dropout case: take normal BPE scores as baseline. if normal case, take gold standard
 	if dropout:

@@ -24,19 +24,19 @@ def extract_alignments(i=-1, input_mode=False):
 
 		if input_mode:
 			print(f"Alignments for input files")
-			s = join(datadir, "input/"+source+"_with_10k.txt")
-			t = join(datadir, "input/"+target+"_with_10k.txt")
+			s = inputpath[source]
+			t = inputpath[target]
 			o = join(bpedir, "fastalign/input")
 
 		else:
 			print(f"Alignments for {num_symbols} symbols")
 			if target_bpe:
-				s = join(datadir, 'input/eng_with_10k.txt')
+				s = inputpath[source]
 			else:
 				s = join(bpedir, 'segmentations', source+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
 			
 			if source_bpe:
-				t = join(datadir, 'input/deu_with_10k.txt')
+				t = inputpath[target]
 			else:
 				t = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
 
@@ -115,10 +115,6 @@ if __name__ == "__main__":
 	'''
 
 	eflomal_path = "/mounts/Users/student/masoud/tools/eflomal-master/"
-
-	# ubuntu
-	fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
-	atools_path = join(rootdir, "tools/fast_align/build/atools")
 
 	print(f"Extracting alignments for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
 

@@ -18,13 +18,13 @@ def subword_align_to_word(corpus, bpes, lang):
     Output: dictionary of each language and 
     a list of vectors pointing to which word each subword belongs to
         {
-            'eng':
+            lang_1:
             [
                 [0, 1, 2, 2, 3, 3, 3, 4],
                 [0, 0, 1, 2, 3, 4, 5],
                 ...
             ],
-            'deu':
+            lang_2:
             [
                 [0, 1, 2, 3, 3, 4, 4, 5],
                 [0, 0, 1, 1, 2, 3, 4],
@@ -55,13 +55,13 @@ def load_and_map_segmentations(num_symbols, i=-1):
     for inputpath in glob.glob("*_"+str(num_symbols)+('_'+str(i) if i!=-1 else '')+".bpe"):
         lang = inputpath.split('.')[0].split('_')[0]
         if target_bpe and lang == source:
-            argsinput = codecs.open(join(datadir, 'input/eng_with_10k.txt'), encoding='utf-8')
+            argsinput = codecs.open(inputpath[source], encoding='utf-8')
             bpes[source] = []
             for line in argsinput:
                 line = line.split('\t')[1].strip('\r\n ').split(' ')
                 bpes[source].append(list(range(len(line))))
         elif source_bpe and lang == target:
-            argsinput = codecs.open(join(datadir, 'input/deu_with_10k.txt'), encoding='utf-8')
+            argsinput = codecs.open(inputpath[target], encoding='utf-8')
             bpes[target] = []
             for line in argsinput:
                 line = line.split('\t')[1].strip('\r\n ').split(' ')

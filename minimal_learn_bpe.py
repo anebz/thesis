@@ -10,6 +10,9 @@ import codecs
 from collections import defaultdict, Counter
 from tqdm import tqdm
 
+# import global variables from lib/__init__.py
+from lib import *
+
 def get_vocabulary(fobj):
     """
     word vocabulary
@@ -165,14 +168,7 @@ def learn_bpe(infile, outfile, num_symbols):
 
 if __name__ == '__main__':
 
-    currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    datadir = join(currentdir, 'data')
-
-    num_symbols = 10000
-
-    os.chdir(join(datadir, 'input'))
-    for ifile in glob.glob("*.txt"):
-        lang = ifile.split('_')[0]
+    for lang in [source, target]:
 
         # check if a BPE model for this language exists
         # if so, only create new BPE model if num_symbols > symbols in the model
@@ -184,7 +180,7 @@ if __name__ == '__main__':
                 print(f"There already exists a model with at least {num_symbols} symbols")
                 sys.exit()
         
-        argsinput = codecs.open(ifile, encoding='utf-8')
+        argsinput = codecs.open(inputpath[lang], encoding='utf-8')
         argsoutput = codecs.open(model_path, 'w', encoding='utf-8')
         argsoutput.write('{0} {1}\n'.format(lang, num_symbols))
 
