@@ -3,13 +3,17 @@ from os.path import join
 import sys
 import copy
 import codecs
+import pandas as pd
 from tqdm import tqdm
 from collections import Counter
 
 # import global variables from lib/__init__.py
 from lib import *
+from calc_align_score import *
+
 
 def merge_dropout_alignments():
+    print(f"Merging dropouts for merge_threshold={merge_threshold}")
     union_merge, inter_merge, thres_merge = {}, {}, {}
 
     os.chdir(join(bpedir, 'fastalign'))
@@ -49,9 +53,32 @@ def merge_dropout_alignments():
     return
 
 
-if __name__ == "__main__":
-    print("Merging dropouts")
-    merge_dropout_alignments()
-
+def calc_score_merges():
+    print(f"Calculating merge scores for merge_threshold={merge_threshold}")
+    probs, surs, surs_count = load_gold(join(datadir, 'input/eng_deu.gold'))
     for merge_type in ['union', 'inter', 'thres']:
-        pass
+        scores = []
+        for num_symbols in all_symbols:
+            mergefilepath = join(bpedir, 'fastalign', str(num_symbols)+'_'+merge_type+'.wgdfa')
+
+            baseline_df = pd.read_csv(join(datadir, 'normal_bpe/scores/scores_'+source+'_'+target+'.csv'))
+
+            score = [int(num_symbols)]
+            score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
+            scores.append(score)
+
+       	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+        if merge_type == 'thres':
+            scoredir = join(bpedir, 'scores', 'scores') + '_' + str(merge_threshold) + '_' + merge_type
+        else:
+            scoredir = join(bpedir, 'scores', 'scores') + '_' + merge_type
+        
+        print(f"Scores saved into {scoredir}")
+        df.to_csv(scoredir+'.csv', index=False)
+        plot_scores(df, baseline_df, scoredir)
+    return
+
+
+if __name__ == "__main__":
+    merge_dropout_alignments()
+    calc_score_merges()

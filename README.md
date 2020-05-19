@@ -4,15 +4,17 @@ Master thesis repo
 
 ## tasks
 
+* [ ] Put absolute paths to gold, input_10k in `__input__.py`. probs, surs and surs_count too?
 * [ ] dropout only on one side? source_bpe -> source_dropout?
-* [ ] do intersection between dropout alignments, union, threshold. if it doesn't work then we have to merge the file before fast align
-  * [X] union, intersection
-  * [X] threshold(if alignment appears in >k files, then it's a good alignment)
-  * [ ] Calculate score
 * [ ] think about BPE on text without dropout. comple t ely. start from beginning?
 * [ ] Read [unified LM tokenization paper](https://www.aclweb.org/anthology/P18-1007/)
   * bpe drooput similar results than ulm, but less computationally expensive
 * [sentence piece](https://github.com/VKCOM/YouTokenToMe)
+
+## done this week
+
+* swap eng-deu for alignments, same results
+* union, intersection, threshold for bpe_dropout. significant improvements (`data/dropout_bpe/scores`)
 
 ## bpe dropout
 
@@ -55,13 +57,11 @@ Master thesis repo
 │   │   └── scores.png, scores.csv
 │   ├── dropout_bpe
 │   │   ├── fastalign
-│   │   │   └── *.wgdfa, *_deu.wgdfa
+│   │   │   └── *.wgdfa, *_deu.wgdfa, *_unionwgdfa, *_inter.wgdfa, *_thres.wgdfa
 │   │   ├── segmentations
 │   │   │   └── .bpe
 │   │   ├── test_scores
 │   │   │   └── .png, .csv
-│   │   ├── merged                                     # TODO
-│   │   │   └── ...
 │   │   └── scores.png, scores.csv
 │   ├── eng.model                                      # merge list for english
 │   └── deu.model
