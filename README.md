@@ -7,7 +7,8 @@ Master thesis repo
 * [ ] dropout only on one side? source_bpe -> source_dropout?
 * [ ] do intersection between dropout alignments, union, threshold. if it doesn't work then we have to merge the file before fast align
   * [X] union, intersection
-  * [ ] threshold(if alignment appears in >k files, then it's a good alignment)
+  * [X] threshold(if alignment appears in >k files, then it's a good alignment)
+  * [ ] Calculate score
 * [ ] think about BPE on text without dropout. comple t ely. start from beginning?
 * [ ] Read [unified LM tokenization paper](https://www.aclweb.org/anthology/P18-1007/)
   * bpe drooput similar results than ulm, but less computationally expensive

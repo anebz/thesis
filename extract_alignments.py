@@ -40,7 +40,7 @@ def extract_alignments(i=-1, input_mode=False):
 			else:
 				t = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
 
-			o = join(bpedir, "fastalign", 
+			o = join(bpedir, "fastalign",
 						str(num_symbols) +
 						('_'+str(i) if i != -1 else '') +
 						('_deu' if target_bpe else '')
@@ -95,11 +95,11 @@ def extract_alignments(i=-1, input_mode=False):
 
 		argsalign = codecs.open(o+'.gdfa', encoding='utf-8')
 		all_word_aligns = bpe_word_align(bpes, argsalign)
+		os.system("rm {}.gdfa".format(o))
 
 		argsoutput = codecs.open(o+'.wgdfa', 'w', encoding='utf-8')
 		argsoutput.write(all_word_aligns)
 
-		os.system("rm {}.gdfa".format(o))
 		print("\n\n\n\n")
 	return
 
