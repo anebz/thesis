@@ -4,18 +4,15 @@ Master thesis repo
 
 ## tasks
 
-* [ ] Dropout on one side
-* [X] Put absolute paths to gold, input_10k in `__input__.py`
 * [ ] dropout only on one side? source_bpe -> source_dropout?
-* [ ] think about BPE on text without dropout. comple t ely. start from beginning?
-* [ ] Read [unified LM tokenization paper](https://www.aclweb.org/anthology/P18-1007/)
-  * bpe drooput similar results than ulm, but less computationally expensive
+* [ ] think about BPE on text without dropout. comple t ely
+  * Prioritize affixes and suffixes
 * [sentence piece](https://github.com/VKCOM/YouTokenToMe)
 
 ## done this week
 
-* swap eng-deu for alignments, same results
 * union, intersection, threshold for bpe_dropout. significant improvements (`data/dropout_bpe/scores`)
+* Read [unified LM tokenization paper](https://www.aclweb.org/anthology/P18-1007/)
 
 ## bpe dropout
 
