@@ -99,8 +99,7 @@ def apply_bpe(i=-1):
             # only get the desired amount of symbols
             bpe_model = bpe_model[1:num_symbols+1]
 
-            print(f"Merging BPE symbols for lang={lang}, num_symbols={num_symbols} symbols and dropout {dropout*100}%")
-
+            print(f"Merging BPE symbols for lang={lang}, num_symbols={num_symbols}, dropout={dropout*100}%")
             merged_corpus = merge_corpus(corpus, bpe_model, dropout)
 
             outputpath = join(bpedir, 'segmentations', lang+"_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")

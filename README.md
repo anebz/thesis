@@ -5,9 +5,14 @@ Master thesis repo
 ## tasks
 
 * [ ] dropout only on one side? source_bpe -> source_dropout?
+* [X] dropout vs. merge_threshold test
+  * Tested with all_symbols=[2000, 4000] and dropout_iterations
+  * bpe_dropout paper has highest score at dropout=0.1, dropout_iterations=10, merge_threshold=0.6 with f1=0.669
+  * my tests have highest score at dropout=0.3, dropout_iterations=30, merge_threshold=0.5 with f1=0.685
+  * same result at dropout=0.2, dropout_iterations=30, merge_threshold=0.5 with f1=0.684
+  * for dropout=0.1, no difference between dropout_iterations=10 or 30
 * [ ] think about BPE on text without dropout. comple t ely
   * Prioritize affixes and suffixes
-* [sentence piece](https://github.com/VKCOM/YouTokenToMe)
 
 ## done this week
 
@@ -37,7 +42,7 @@ Master thesis repo
 2. learn_bpe.py
 3. apply_bpe.py
 4. extract_alignments.py
-5. calc_align_score.py
+5. calc_align_score.py / merge_dropout.py
 
 ## directory structure
 
@@ -67,3 +72,8 @@ Master thesis repo
 ├── .py
 └── ...
 ```
+
+## resources
+
+* [Huggingface tokenizers](https://github.com/huggingface/tokenizers)
+* [You token to me](https://github.com/VKCOM/YouTokenToMe)
