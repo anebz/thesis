@@ -4,7 +4,6 @@ Master thesis repo
 
 ## tasks
 
-* [ ] merges are too small, why doesn't it merge bigger words
 * [ ] move \_\_init\_\_ to main folder, then import init or setting.py?
 * [ ] dropout only on one side? source_bpe -> source_dropout?
 * [ ] BPE improvement without dropout. comple t ely
@@ -14,9 +13,14 @@ Master thesis repo
   * book. bo ok -> book. min merge tree depth is 2. could also be 3, bo, boo, book. to get more meaningful chunks
   * t h, both 0, then th:1. th:1, e:0, the:2
   * un:1 accept:3 able:3. acceptable has higher score than unaccept. if 2 chunks have same score, join the larger ones.
-* [ ] remove spaces from corpus. replace ' ' by '\_' or some special character. no need of \_ at beginning of word anymore
+* [ ] no space mode
+  * [ ] **learn_bpe**
+    * [X] learn_bpe in no space mode [**optimized way**]
+    * [ ] Adapt learn_bpe for both modes
+    * [ ] use optimized method for space mode
+  * [X] apply_bpe
+  * [ ] alignments
   * `['_The', 'e_'. 'ice_cre', 'am'] word_belonging = [[0], [0], [1,2], [2]]`. now for each bpe we have a list of words, it was the other way before. each word could have 1+ bpes, now each bpe can have 1+ words. we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
-  * normal space mode but when getting stats, add \_ between words :think:
 
 ## bpe dropout
 
