@@ -4,8 +4,8 @@ import argparse
 from os.path import join
 import os
 
-# import global variables from lib/__init__.py
-from lib import *
+# import global variables from settings.py
+from settings import *
 from subword_word import *
 
 def add_numbers(input_file, output_file, start=0, max_num=-1):

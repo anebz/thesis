@@ -3,8 +3,8 @@ from os.path import join
 import glob
 import codecs
 
-# import global variables from lib/__init__.py
-from lib import *
+# import global variables from settings.py
+from settings import *
 
 
 def subword_align_to_word(corpus, bpes, lang):

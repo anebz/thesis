@@ -6,8 +6,8 @@ import codecs
 import random
 from tqdm import tqdm
 
-# import global variables from lib/__init__.py
-from lib import *
+# import global variables from settings.py
+from settings import *
 
 def load_data():
 

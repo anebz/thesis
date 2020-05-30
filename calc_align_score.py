@@ -6,8 +6,8 @@ import collections
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# import global variables from lib/__init__.py
-from lib import *
+# import global variables from settings.py
+from settings import *
 
 
 def load_gold(g_path):

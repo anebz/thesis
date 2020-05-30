@@ -10,8 +10,8 @@ import codecs
 from collections import defaultdict, Counter
 from tqdm import tqdm
 
-# import global variables from lib/__init__.py
-from lib import *
+# import global variables from settings.py
+from settings import *
 
 def get_vocabulary(fobj):
     """

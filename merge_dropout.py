@@ -7,8 +7,8 @@ import pandas as pd
 from tqdm import tqdm
 from collections import Counter
 
-# import global variables from lib/__init__.py
-from lib import *
+# import global variables from settings.py
+from settings import *
 from calc_align_score import *
 
 
