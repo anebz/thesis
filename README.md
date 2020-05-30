@@ -15,10 +15,9 @@ Master thesis repo
   * un:1 accept:3 able:3. acceptable has higher score than unaccept. if 2 chunks have same score, join the larger ones.
 * [ ] no space mode
   * [ ] **learn_bpe**
-    * [X] learn_bpe in no space mode [**optimized way**]
+    * [~] use optimized method for space mode
     * [ ] Adapt learn_bpe for both modes
-    * [ ] use optimized method for space mode
-  * [X] apply_bpe
+  * [ ] apply_bpe
   * [ ] alignments
   * `['_The', 'e_'. 'ice_cre', 'am'] word_belonging = [[0], [0], [1,2], [2]]`. now for each bpe we have a list of words, it was the other way before. each word could have 1+ bpes, now each bpe can have 1+ words. we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
 

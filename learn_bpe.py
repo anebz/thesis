@@ -9,9 +9,8 @@ import codecs
 from collections import defaultdict, Counter
 from tqdm import tqdm
 
-# import global variables from lib/__init__.py
-from lib import *
-
+# import global variables from settings.py
+from settings import *
 
 def build_vocab(corpus):
     """
@@ -20,18 +19,22 @@ def build_vocab(corpus):
     Each word has a u'\u2581' symbol at the beginning to signal it's the beginning of the word.
     """
 
-    vocab = Counter()
+    tokens = []
+    #vocab = Counter()
     for line in corpus:
         line = line.split('\t')[1].strip('\r\n ').replace('.', ' .').split()
         line[0] = str.lower(line[0])
         
+        '''
         for word in line:
             vocab[u'\u2581' + ' '.join(word)] += 1
+        '''
+        tokens.append(' '.join([u'\u2581' + ' '.join(word) for word in line]))
 
-    return vocab
+    return tokens
 
 
-def build_vocab_no_space(corpus):
+def build_vocab_ns(corpus):
     """
     Read corpus and return dictionary containing each word and its frequency in the corpus.
     Words are separated by spaces.
@@ -47,11 +50,12 @@ def build_vocab_no_space(corpus):
     return tokens
 
 
-def get_stats(vocab: dict) -> dict:
+def get_stats(tokens):
     """
     Count frequency of all symbol pairs
     """
 
+    '''
     pairs = Counter()
     for word, freq in vocab.items():
         symbols = word.split()
@@ -60,9 +64,25 @@ def get_stats(vocab: dict) -> dict:
             pairs[symbols[i], symbols[i + 1]] += freq
 
     return pairs
+    '''
+
+    pairs = Counter()
+    idx = defaultdict(set)
+    for i, sent in enumerate(tokens):
+        words = sent.split(u' \u2581')
+        for word in words:
+            if word[0] != u'\u2581':
+                word = u'\u2581' + word
+            symbols = word.split()
+            for j in range(len(symbols) - 1):
+                new_pair = symbols[j], symbols[j + 1]
+                pairs[new_pair] += 1
+                idx[new_pair].add(i)
+
+    return pairs, idx
 
 
-def get_stats_no_space(tokens):
+def get_stats_ns(tokens):
     """
     Count frequency of all symbol pairs.
     range(2) for bigrams
@@ -97,6 +117,78 @@ def replace_pair(pair: tuple, vocab: dict) -> dict:
 
 
 def update_tokens(tokens, idx, pairs, pair):
+
+    bigram = ' '.join(pair)
+    merged_bigram = ''.join(pair)
+    lenb = len(merged_bigram)
+
+    # only iterate the corpus indexes where the pair to be merged is present
+    for i in idx[pair].copy():
+
+        sent = tokens[i] = tokens[i].replace(bigram, merged_bigram)
+
+        # iterate the merged sentence to find previous and after tokens to update
+        for j in range(len(sent[:-lenb])):
+
+            if sent[j:j+lenb] != merged_bigram:
+                continue
+
+            if u'\u2581' in pair[0] and sent[j+lenb+1] == u'\u2581':
+                # the whole word has been merged
+                pairs[pair] -= 1
+                # TODO update idx if all occurrences of pair have been deleted from pairs
+                # delete this idx, keep count of how many _the s there are and how many of them
+                # have been deleted
+                continue
+
+            if u'\u2581' not in pair[0]:
+                # condition to exclude the first character in the sentence
+                if j != 0:
+                    prev = (sent[:j].split()[-1], pair[0])
+
+                    # remove token before the merged pair
+                    pairs[prev] -= 1
+                    pairs[pair] -= 1
+                    # .discard() instead of .remove() because it's safer when i isn't present in set
+                    idx[prev].discard(i)
+                    if pairs[prev] == 0:
+                        del pairs[prev]
+                        del idx[prev]
+
+                    # add new bigram to pairs and indexes
+                    new_bgm = (prev[0], merged_bigram)
+                    pairs[new_bgm] += 1
+                    idx[new_bgm].add(i)
+
+            # condition to exclude the last character in the sentence
+            if sent[j+lenb+1] != u'\u2581':
+                if j != len(sent):
+                    after = (pair[1], sent[j+lenb:].split()[0])
+
+                    # remove token before the merged pair
+                    pairs[after] -= 1
+                    pairs[pair] -= 1
+                    idx[after].discard(i)
+                    if pairs[after] == 0:
+                        del pairs[after]
+                        del idx[after]
+
+                    # add new bigram to pairs and indexes
+                    new_bgm = (merged_bigram, after[1])
+                    pairs[new_bgm] += 1
+                    idx[new_bgm].add(i)
+
+    # delete bigram that was merged from pairs and idx
+    # TODO not always!
+    if pairs[pair] <= 0:
+        del pairs[pair]
+        del idx[pair]
+
+    return tokens, idx, pairs
+
+
+
+def update_tokens_ns(tokens, idx, pairs, pair):
 
     bigram = ' '.join(pair)
     merged_bigram = ''.join(pair)
@@ -157,29 +249,26 @@ def learn_bpe(corpus, bpe_model, num_symbols):
     Learn num_symbols BPE operations from vocabulary, and write to bpe_model.
     """
     # 1. split corpus into characters, count frequency
-    #vocab = build_vocab(corpus) if space else build_vocab_no_space(corpus)
-    tokens = build_vocab_no_space(corpus)
+    tokens = build_vocab(corpus) if space else build_vocab_ns(corpus)
 
     # 2. count bigrams in corpus
-    pairs, idx = get_stats_no_space(tokens)
+    pairs, idx = get_stats(tokens) if space else get_stats_ns(tokens)
 
     for i in tqdm(range(num_symbols)):
 
-        # 2. count bigrams in corpus
-        #pairs = get_stats(vocab) if space else get_stats_no_space(vocab)
+        # 3. merge symbols
+        most_frequent = pairs.most_common(1)[0][0]
+
+        #vocab = replace_pair(most_frequent, vocab) if space else replace_pair_no_space(most_frequent, vocab)
+        tokens, idx, pairs = update_tokens(tokens, idx, pairs, most_frequent)
+        #tokens, idx, pairs = update_tokens_ns(tokens, idx, pairs, most_frequent)
+
+        # 4. write merge list to file
+        bpe_model.write('{0} {1}\n'.format(*most_frequent))
 
         if not pairs:
             break
 
-        # 3. merge symbols
-        most_frequent = pairs.most_common(1)[0][0]
-        #vocab = replace_pair(most_frequent, vocab) if space else replace_pair_no_space(most_frequent, vocab)
-        #vocab = replace_pair_no_space(most_frequent, vocab, indexes)
-        
-        tokens, idx, pairs = update_tokens(tokens, idx, pairs, most_frequent)
-
-        # 4. write merge list to file
-        bpe_model.write('{0} {1}\n'.format(*most_frequent))
     return
 
 
