@@ -13,14 +13,15 @@ avgs = [3, 5, 7, 10] # average dropout scores, avg of 3, 5, ...
 
 rootdir = os.getcwd()
 datadir = join(rootdir, 'data')
+inputdir = join(datadir, 'input')
 bpedir = join(datadir, 'dropout_bpe' if dropout > 0 else 'normal_bpe')
-goldpath = join(datadir, 'input', 'eng_deu.gold')
-inputpath = {source: join(datadir, 'input', source+'_with_10k.txt'),
-            target: join(datadir, 'input', target+'_with_10k.txt')}
+goldpath = join(inputdir, 'eng_deu.gold')
+inputpath = {source: join(inputdir, source+'_with_10k.txt'),
+            target: join(inputdir, target+'_with_10k.txt')}
 
 fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 atools_path = join(rootdir, "tools/fast_align/build/atools")
 
 space = True
-num_symbols = 10000 #10000
+num_symbols = 200 #10000
 all_symbols = [2000, 4000]#[100, 500, 1000, 2000, 4000, 8000]

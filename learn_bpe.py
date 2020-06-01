@@ -133,59 +133,43 @@ def update_tokens(tokens, idx, pairs, pair):
             if sent[j:j+lenb] != merged_bigram:
                 continue
 
-            if u'\u2581' in pair[0] and sent[j+lenb+1] == u'\u2581':
-                # the whole word has been merged
-                pairs[pair] -= 1
-                # TODO update idx if all occurrences of pair have been deleted from pairs
-                # delete this idx, keep count of how many _the s there are and how many of them
-                # have been deleted
-                continue
+            # condition to exclude the first character in the sentence
+            if j != 0 and pair[0][0] != u'\u2581':
+                prev = (sent[:j].split()[-1], pair[0])
 
-            if u'\u2581' not in pair[0]:
-                # condition to exclude the first character in the sentence
-                if j != 0:
-                    prev = (sent[:j].split()[-1], pair[0])
+                # remove token before the merged pair
+                pairs[prev] -= 1
+                idx[prev].discard(i)
+                if pairs[prev] == 0:
+                    del pairs[prev]
+                    del idx[prev]
 
-                    # remove token before the merged pair
-                    pairs[prev] -= 1
-                    pairs[pair] -= 1
-                    # .discard() instead of .remove() because it's safer when i isn't present in set
-                    idx[prev].discard(i)
-                    if pairs[prev] == 0:
-                        del pairs[prev]
-                        del idx[prev]
-
-                    # add new bigram to pairs and indexes
-                    new_bgm = (prev[0], merged_bigram)
-                    pairs[new_bgm] += 1
-                    idx[new_bgm].add(i)
+                # add new bigram to pairs and indexes
+                new_bgm = (prev[0], merged_bigram)
+                pairs[new_bgm] += 1
+                idx[new_bgm].add(i)
 
             # condition to exclude the last character in the sentence
-            if sent[j+lenb+1] != u'\u2581':
-                if j != len(sent):
-                    after = (pair[1], sent[j+lenb:].split()[0])
+            if j != len(sent) and j+lenb+1 < len(sent) and sent[j+lenb+1] != u'\u2581':
+                after = (pair[1], sent[j+lenb:].split()[0])
 
-                    # remove token before the merged pair
-                    pairs[after] -= 1
-                    pairs[pair] -= 1
-                    idx[after].discard(i)
-                    if pairs[after] == 0:
-                        del pairs[after]
-                        del idx[after]
+                # remove token before the merged pair
+                pairs[after] -= 1
+                idx[after].discard(i)
+                if pairs[after] == 0:
+                    del pairs[after]
+                    del idx[after]
 
-                    # add new bigram to pairs and indexes
-                    new_bgm = (merged_bigram, after[1])
-                    pairs[new_bgm] += 1
-                    idx[new_bgm].add(i)
+                # add new bigram to pairs and indexes
+                new_bgm = (merged_bigram, after[1])
+                pairs[new_bgm] += 1
+                idx[new_bgm].add(i)
 
     # delete bigram that was merged from pairs and idx
-    # TODO not always!
-    if pairs[pair] <= 0:
-        del pairs[pair]
-        del idx[pair]
+    del pairs[pair]
+    del idx[pair]
 
     return tokens, idx, pairs
-
 
 
 def update_tokens_ns(tokens, idx, pairs, pair):
@@ -259,9 +243,8 @@ def learn_bpe(corpus, bpe_model, num_symbols):
         # 3. merge symbols
         most_frequent = pairs.most_common(1)[0][0]
 
-        #vocab = replace_pair(most_frequent, vocab) if space else replace_pair_no_space(most_frequent, vocab)
-        tokens, idx, pairs = update_tokens(tokens, idx, pairs, most_frequent)
-        #tokens, idx, pairs = update_tokens_ns(tokens, idx, pairs, most_frequent)
+        tokens, idx, pairs = update_tokens(tokens, idx, pairs, most_frequent) if space else \
+                             update_tokens_ns(tokens, idx, pairs, most_frequent)
 
         # 4. write merge list to file
         bpe_model.write('{0} {1}\n'.format(*most_frequent))

@@ -4,8 +4,12 @@ Master thesis repo
 
 ## tasks
 
-* [ ] move \_\_init\_\_ to main folder, then import init or setting.py?
+* [ ] summary of my learn_bpe vs. paper learn_bpe, differences, is this paper material? track algorithm performance in my computer, write in percentage. this algo is 1.4% faster than X.
 * [ ] dropout only on one side? source_bpe -> source_dropout?
+* [ ] save most_frequent in list and write in the end. Also write correct \# of merges created, if there's a break
+
+### BPE improvement
+
 * [ ] BPE improvement without dropout. comple t ely
   * divide and conquer, first make big chunks then merge them together instead of adding characters to the biggest chunk one by one
   * I assigned a score to BPEs based on their **depth of merge tree**. the depth score
@@ -13,35 +17,21 @@ Master thesis repo
   * book. bo ok -> book. min merge tree depth is 2. could also be 3, bo, boo, book. to get more meaningful chunks
   * t h, both 0, then th:1. th:1, e:0, the:2
   * un:1 accept:3 able:3. acceptable has higher score than unaccept. if 2 chunks have same score, join the larger ones.
+
+### no space
+
 * [ ] no space mode
   * [ ] **learn_bpe**
     * [~] use optimized method for space mode
-    * [ ] Adapt learn_bpe for both modes
+      * [ ] Some merges are duplicated in `space` mode
+    * [~] Adapt learn_bpe for both modes
   * [ ] apply_bpe
   * [ ] alignments
   * `['_The', 'e_'. 'ice_cre', 'am'] word_belonging = [[0], [0], [1,2], [2]]`. now for each bpe we have a list of words, it was the other way before. each word could have 1+ bpes, now each bpe can have 1+ words. we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
 
-## bpe dropout
-
-* with dropout is getting worse, check bpe dropout paper again how they do it
-  * They produce multiple segmentations
-  * During segmentation, at each merge step some merges are randomly dropped with probability p
-  * using BPE-Dropout on the source side is more beneficial than using it on the target side
-  * The improvement with respect to normal BPE are consistent no matter the vocabulary size. But the effect from using BPE-Dropout vanishes when a corpora size gets bigger.
-
-## scores
-
-* In normal mode, BPE vs. gold standard
-* In dropout mode, dropout BPE vs. BPE
-
-* bpe_dropout paper has highest score at dropout=0.1, dropout_iterations=10, merge_threshold=0.7 with f1=0.666
-* my tests have highest score at dropout=0.3, dropout_iterations=30, merge_threshold=0.5 with f1=0.685
-* same result at dropout=0.2, dropout_iterations=30, merge_threshold=0.5 with f1=0.684
-* for dropout=0.1, no difference between dropout_iterations=10 or 30
-
 ## pipeline
 
-1. Set parameters in `lib/__init__.py`
+1. Set parameters in `settings.py`
 2. learn_bpe.py
 3. apply_bpe.py
 4. extract_alignments.py
