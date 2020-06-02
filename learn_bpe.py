@@ -67,7 +67,19 @@ def get_stats(tokens):
     '''
 
     pairs = Counter()
-    idx = defaultdict(set)
+    idx = defaultdict(lambda: defaultdict(int))
+    '''
+    idx = {
+        # keys are bigrams
+        ('t', 'h'): {
+            # keys are indexes in corpus, values are frequency of appearance
+            0: 2,
+            1: 3,
+            ...
+        }
+        ...
+    }
+    '''
     for i, sent in enumerate(tokens):
         words = sent.split(u' \u2581')
         for word in words:
@@ -77,7 +89,7 @@ def get_stats(tokens):
             for j in range(len(symbols) - 1):
                 new_pair = symbols[j], symbols[j + 1]
                 pairs[new_pair] += 1
-                idx[new_pair].add(i)
+                idx[new_pair][i] += 1
 
     return pairs, idx
 
@@ -100,74 +112,59 @@ def get_stats_ns(tokens):
     return pairs, idx
 
 
-def replace_pair(pair: tuple, vocab: dict) -> dict:
-    """
-    Replace all occurrences of a symbol pair ('A', 'B') with a new symbol 'AB'
-    """
-    merged_vocab = defaultdict(str)
-    bigram = re.escape(' '.join(pair))
-    p = re.compile(r'(?<!\S)' + bigram + r'(?!\S)')
-
-    for word in vocab:
-        # replace most frequent pair in all vocabulary
-        merged_word = p.sub(''.join(pair), word)
-        merged_vocab[merged_word] = vocab[word]
-
-    return merged_vocab
-
-
 def update_tokens(tokens, idx, pairs, pair):
+
+    def update_merge(pairs, idx, pair, new_bgm=-1):
+        # remove 1 from pair freq. delete if freq == 0
+        pairs[pair] -= 1
+        if pairs[pair] == 0: del pairs[pair]
+
+        # delete 1 from pair freq. in idx. if freq == 0, delete entry for that sentence
+        # if pair isn't present in any sentence (idx[pair] is empty), delete idx[pair]
+        idx[pair][i] -= 1
+        if idx[pair][i] == 0: del idx[pair][i]
+        if len(idx[pair]) == 0: del idx[pair]
+
+        # add new bigram to pairs and idx
+        if new_bgm != -1:
+            pairs[new_bgm] += 1
+            idx[new_bgm][i] += 1
+
+        return pairs, idx
 
     bigram = ' '.join(pair)
     merged_bigram = ''.join(pair)
-    lenb = len(merged_bigram)
+    p = re.compile(r'(?<!\S)' + re.escape(bigram) + r'(?!\S)')
 
     # only iterate the corpus indexes where the pair to be merged is present
-    for i in idx[pair].copy():
+    for i in list(idx[pair].keys()).copy():
 
-        sent = tokens[i] = tokens[i].replace(bigram, merged_bigram)
+        sent = tokens[i] = p.sub(merged_bigram, tokens[i])
+        sent = sent.split(merged_bigram)
 
-        # iterate the merged sentence to find previous and after tokens to update
-        for j in range(len(sent[:-lenb])):
+        # iterate occurrences of merged_bigram in sent
+        # where due to the merge, the freqs of previous and after tokens
+        # needs to be reduced by 1
+        for k in range(len(sent[:-1])):
 
-            if sent[j:j+lenb] != merged_bigram:
-                continue
-
-            # condition to exclude the first character in the sentence
-            if j != 0 and pair[0][0] != u'\u2581':
-                prev = (sent[:j].split()[-1], pair[0])
-
-                # remove token before the merged pair
-                pairs[prev] -= 1
-                idx[prev].discard(i)
-                if pairs[prev] == 0:
-                    del pairs[prev]
-                    del idx[prev]
-
-                # add new bigram to pairs and indexes
+            # obtain previous pair to delete, since pair is being merged
+            # only do it if sent[k] isn't a space
+            # and in space mode, if the merged_bigram isn't the beginning of the word.
+            # in this case, we don't want the last letter from the prev word to be merged with
+            # our current pair. ... e _t h ... we dn't want to consider ('e', '_t')
+            if len(sent[k]) > 1 and u'\u2581' not in pair[0][0]:
+                prev = (sent[k].split()[-1], pair[0])
                 new_bgm = (prev[0], merged_bigram)
-                pairs[new_bgm] += 1
-                idx[new_bgm].add(i)
+                pairs, idx = update_merge(pairs, idx, prev, new_bgm)
 
-            # condition to exclude the last character in the sentence
-            if j != len(sent) and j+lenb+1 < len(sent) and sent[j+lenb+1] != u'\u2581':
-                after = (pair[1], sent[j+lenb:].split()[0])
-
-                # remove token before the merged pair
-                pairs[after] -= 1
-                idx[after].discard(i)
-                if pairs[after] == 0:
-                    del pairs[after]
-                    del idx[after]
-
-                # add new bigram to pairs and indexes
+            # same for the after token only if the after token isn't a new word
+            if len(sent[k+1]) > 1 and u'\u2581' not in sent[k+1].split()[0]:
+                after = (pair[1], sent[k+1].split()[0])
                 new_bgm = (merged_bigram, after[1])
-                pairs[new_bgm] += 1
-                idx[new_bgm].add(i)
+                pairs, idx = update_merge(pairs, idx, after, new_bgm)
 
-    # delete bigram that was merged from pairs and idx
-    del pairs[pair]
-    del idx[pair]
+            # delete freq of merged bigram
+            pairs, idx = update_merge(pairs, idx, pair)
 
     return tokens, idx, pairs
 
@@ -238,21 +235,27 @@ def learn_bpe(corpus, bpe_model, num_symbols):
     # 2. count bigrams in corpus
     pairs, idx = get_stats(tokens) if space else get_stats_ns(tokens)
 
+    most_frequent_merges = []
     for i in tqdm(range(num_symbols)):
 
         # 3. merge symbols
         most_frequent = pairs.most_common(1)[0][0]
 
+        # if the most frequent merge was already done, delete entries in pairs and idx and continue
+        if most_frequent in most_frequent_merges:
+            pairs.pop(most_frequent, None)
+            idx.pop(most_frequent, None)
+            continue
+        else:
+            most_frequent_merges.add(most_frequent)
+
         tokens, idx, pairs = update_tokens(tokens, idx, pairs, most_frequent) if space else \
                              update_tokens_ns(tokens, idx, pairs, most_frequent)
-
-        # 4. write merge list to file
-        bpe_model.write('{0} {1}\n'.format(*most_frequent))
 
         if not pairs:
             break
 
-    return
+    return most_frequent_merges, i
 
 
 if __name__ == '__main__':
@@ -272,7 +275,10 @@ if __name__ == '__main__':
         
         argsinput = codecs.open(inputpath[lang], encoding='utf-8')
         bpe_model = codecs.open(model_path, 'w', encoding='utf-8')
-        bpe_model.write('{0} {1}\n'.format(lang, num_symbols))
 
         print(f"Learning {num_symbols} BPE symbols for lang={lang}, space mode={space}")
-        learn_bpe(argsinput, bpe_model, num_symbols)
+        most_freq_merges, i = learn_bpe(argsinput, bpe_model, num_symbols)
+
+        # 4. write merge list to file
+        bpe_model.write(f"{lang} {i}\n")
+        bpe_model.write('\n'.join(' '.join(item) for item in most_freq_merges))

@@ -23,5 +23,5 @@ fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 atools_path = join(rootdir, "tools/fast_align/build/atools")
 
 space = True
-num_symbols = 200 #10000
+num_symbols = 10000 #10000
 all_symbols = [2000, 4000]#[100, 500, 1000, 2000, 4000, 8000]

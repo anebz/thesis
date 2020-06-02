@@ -22,8 +22,9 @@ Master thesis repo
 
 * [ ] no space mode
   * [ ] **learn_bpe**
-    * [~] use optimized method for space mode
-      * [ ] Some merges are duplicated in `space` mode
+    * [X] use optimized method for space mode
+      * [X] Some merges are duplicated in `space` mode
+      * [X] Keep freq of pairs per sentence in idx?
     * [~] Adapt learn_bpe for both modes
   * [ ] apply_bpe
   * [ ] alignments
