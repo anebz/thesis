@@ -22,8 +22,8 @@ Master thesis repo
 
 * [ ] no space mode
   * [X] learn_bpe
-    * space: 0:56/1:52 eng, 1:28/2:36 deu
-    * no_space: 6:13 eng, 4:50 deu
+    * space: 0.49/0:56/1:52 eng, 1:19/1:28/2:36 deu
+    * no_space: 4/6:13 eng, 4:25/4:50 deu
     * [ ] substitute number for digit when merging?
   * [ ] apply_bpe
   * [ ] alignments
