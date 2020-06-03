@@ -22,10 +22,10 @@ Master thesis repo
 
 * [ ] no space mode
   * [ ] **learn_bpe**
-    * [X] use optimized method for space mode
-      * [X] Some merges are duplicated in `space` mode
-      * [X] Keep freq of pairs per sentence in idx?
-    * [~] Adapt learn_bpe for both modes
+    * space: 56s eng, 1:28min deu
+    * no_space: 4 eng, X deu (prev version)
+    * check consecutive merges in no_space mode
+    * [ ] substitute number for digit when merging?
   * [ ] apply_bpe
   * [ ] alignments
   * `['_The', 'e_'. 'ice_cre', 'am'] word_belonging = [[0], [0], [1,2], [2]]`. now for each bpe we have a list of words, it was the other way before. each word could have 1+ bpes, now each bpe can have 1+ words. we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
