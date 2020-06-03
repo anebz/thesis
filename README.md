@@ -21,10 +21,9 @@ Master thesis repo
 ### no space
 
 * [ ] no space mode
-  * [ ] **learn_bpe**
-    * space: 56s eng, 1:28min deu
-    * no_space: 4 eng, X deu (prev version)
-    * check consecutive merges in no_space mode
+  * [X] learn_bpe
+    * space: 0:56/1:52 eng, 1:28/2:36 deu
+    * no_space: 6:13 eng, 4:50 deu
     * [ ] substitute number for digit when merging?
   * [ ] apply_bpe
   * [ ] alignments

@@ -168,7 +168,6 @@ def learn_bpe(corpus, bpe_model, num_symbols):
 
         tokens, idx, pairs = update_tokens(tokens, idx, pairs, most_frequent)
 
-    #argsout.write('\n'.join(tokens))
     return most_frequent_merges
 
 
