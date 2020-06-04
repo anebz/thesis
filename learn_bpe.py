@@ -19,7 +19,12 @@ def build_vocab(corpus: list) -> list:
 
     tokens = []
     for line in corpus:
-        line = line.split('\t')[1].strip('\r\n ').replace('.', ' .').split()
+        line = line.split('\t')[1].strip('\r\n ')
+
+        # pad punctuation https://stackoverflow.com/a/3645946/4569908
+        line = re.sub('([.,:;¡!¿?\'()])', r' \1 ', line)
+
+        line = line.split()
         line[0] = str.lower(line[0])
 
         if space:
@@ -149,8 +154,13 @@ def update_tokens(tokens, idx, pairs, pair):
                     * in this case, we delete the token between the merged_pair: ('i', 's')
                     * and create a new pair ('ssi', 'ssi')
                 '''
-                after = (pair[1], pair[0])
-                new_pair = (merged_pair, merged_pair)
+                if sent[k] and sent[k][-1] == u'\u2581':
+                    after = (u'\u2581'+merged_pair, pair[0])
+                    new_pair = -1
+                else:
+                    after = (pair[1], pair[0])
+                    new_pair = (merged_pair, merged_pair)
+                    pairs, idx = update_freqs(pairs, idx, after, new_pair)
 
             elif sent[k+1].split() and (u'\u2581' not in sent[k+1].split()[0] if space else True):
                 '''
@@ -208,8 +218,8 @@ if __name__ == '__main__':
             if bpe_model:
                 model_symbols = bpe_model[0].strip('\r\n').split()[1]
                 if num_symbols <= int(model_symbols):
-                    print(f"There already exists a model with at least {num_symbols} symbols")
-                    sys.exit()
+                    print(f"A model for lang={lang} with at least {num_symbols} symbols already exists")
+                    continue
         
         argsinput = codecs.open(inputpath[lang], encoding='utf-8')
         bpe_model = codecs.open(model_path, 'w', encoding='utf-8')
