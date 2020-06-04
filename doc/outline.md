@@ -40,3 +40,8 @@
 * my tests have highest score at dropout=0.3, dropout_iterations=30, merge_threshold=0.5 with f1=0.685
 * same result at dropout=0.2, dropout_iterations=30, merge_threshold=0.5 with f1=0.684
 * for dropout=0.1, no difference between dropout_iterations=10 or 30
+
+## no_space learn_bpe results
+
+* space: 0.49/0:56/1:52 eng, 1:19/1:28/2:36 deu
+* no_space: 4/6:13 eng, 4:25/4:50 deu

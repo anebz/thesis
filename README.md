@@ -4,9 +4,10 @@ Master thesis repo
 
 ## tasks
 
-* [ ] summary of my learn_bpe vs. paper learn_bpe, differences, is this paper material? track algorithm performance in my computer, write in percentage. this algo is 1.4% faster than X.
+* [X] summary of my learn_bpe vs. paper learn_bpe, differences, is this paper material? track algorithm performance in my computer, write in percentage. this algo is 1.4% faster than X.
+* [ ] learn_bpe: substitute number for digit when merging?
+* [ ] replace sep token by 'sep', put in settings?
 * [ ] dropout only on one side? source_bpe -> source_dropout?
-* [ ] save most_frequent in list and write in the end. Also write correct \# of merges created, if there's a break
 
 ### BPE improvement
 
@@ -21,13 +22,11 @@ Master thesis repo
 ### no space
 
 * [ ] no space mode
-  * [X] learn_bpe
-    * space: 0.49/0:56/1:52 eng, 1:19/1:28/2:36 deu
-    * no_space: 4/6:13 eng, 4:25/4:50 deu
-    * [ ] substitute number for digit when merging?
-  * [ ] apply_bpe
-  * [ ] alignments
-  * `['_The', 'e_'. 'ice_cre', 'am'] word_belonging = [[0], [0], [1,2], [2]]`. now for each bpe we have a list of words, it was the other way before. each word could have 1+ bpes, now each bpe can have 1+ words. we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
+  * [X] apply_bpe
+  * [Thur] alignments
+    * `['_The', 'e_'. 'ice_cre', 'am'] word_belonging = [[0], [0], [1,2], [2]]`
+    * now for each bpe we have a list of words, it was the other way before. each word could have 1+ bpes, now each bpe can have 1+ words. we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
+  * [ ] calc scores
 
 ## pipeline
 
