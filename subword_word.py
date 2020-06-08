@@ -1,50 +1,106 @@
 import os
 from os.path import join
-import glob
 import codecs
 
 # import global variables from settings.py
 from settings import *
 
 
-def subword_align_to_word(corpus, bpes, lang):
+def map_subword_to_word(corpus, bpes, lang):
     '''
+    SPACE MODE
     Input: list of sentences with subword separation
-        [
-            '_We _do _no t _be li eve _.',
-            '_Thi s _is _a _sent ence _.',
-            ...
-        ]
+    corpus =  [
+        '_We _do _no t _be li eve _.',
+        '_Thi s _is _a _sent ence _.',
+        ...
+    ]
     Output: dictionary of each language and 
-    a list of vectors pointing to which word each subword belongs to
-        {
-            lang_1:
-            [
-                [0, 1, 2, 2, 3, 3, 3, 4],
-                [0, 0, 1, 2, 3, 4, 5],
-                ...
-            ],
-            lang_2:
-            [
-                [0, 1, 2, 3, 3, 4, 4, 5],
-                [0, 0, 1, 1, 2, 3, 4],
-                ...
-            ],
-        }
+    a list of indexes pointing to which word each element (_do) belongs to
+    bpe = {
+        source:
+        [
+            [0, 1, 2, 2, 3, 3, 3, 4],
+            [0, 0, 1, 2, 3, 4, 5],
+            ...
+        ],
+        target:
+        [
+            ...
+        ],
+    }
         
     '''
-    if lang in bpes:
-        return bpes
     bpes[lang] = []
     for sent in corpus:
-        sent = sent.split()
-        subwords = [0]
+        mapping = [0]
         i = 0
-        for subw in sent[1:]:
+        for subw in sent.split()[1:]:
             if subw[0] == u'\u2581':
                 i += 1
-            subwords.append(i)
-        bpes[lang].append(subwords)
+            mapping.append(i)
+        bpes[lang].append(mapping)
+    return bpes
+
+
+def map_multiple_to_word(corpus, bpes, lang):
+    '''
+    NO SPACE MODE
+    Input: list of sentences with subword separation
+    corpus =  [
+        'b u t▁this▁is▁no t▁w hat▁hap pen s▁.',
+        'th e▁ ice▁cre am_.',
+        ...
+    ]
+    Output: dictionary of each language and 
+    a list of indexes pointing to which word each element (t▁w) belongs to
+    bpes = {
+        source:
+        [
+            [[0], [0], [0,1,2,3], [3,4], [4,5], [5], [5,6]],
+            [[0], [0], [1,2], [2]],
+            ...
+        ],
+        target:
+        [
+            ...
+        ],
+    }
+        
+    '''
+
+    bpes[lang] = []
+    for sent in corpus:
+        sent_bpes = []
+        j = 0
+        for word in sent.split():
+
+            if word == u'\u2581':
+                # word is simply '_', doesn't belong to anything
+                j += 1
+                sent_bpes.append([])
+                continue
+
+            word_count = word.count(u'\u2581')
+            if word_count == 0:
+                sent_bpes.append([j])
+                continue
+
+            # multiple words in the element: t▁this▁is▁no -> [0,1,2,3]
+            if word[0] == u'\u2581':
+                # word starts with '_' but there are no elements of the previous word in it
+                j += 1
+                word_count -= 1
+
+            if word[-1] == u'\u2581':
+                # word ends with '_' but there are no elements of the next word in it
+                sent_bpes.append(list(range(j, j + word_count)))
+            else:
+                sent_bpes.append(list(range(j, j + word_count + 1)))
+
+            j += word_count
+
+        bpes[lang].append(sent_bpes)
     return bpes
 
 
@@ -52,8 +108,9 @@ def load_and_map_segmentations(num_symbols, i=-1):
 
     bpes = {}
     os.chdir(join(bpedir, 'segmentations'))
-    for inputpath in glob.glob("*_"+str(num_symbols)+('_'+str(i) if i!=-1 else '')+".bpe"):
-        lang = inputpath.split('.')[0].split('_')[0]
+    for lang in [source, target]:
+        segmentpath = lang+'_'+str(num_symbols)+('_'+str(i) if i != -1 else '')+'.bpe'
+
         if target_bpe and lang == source:
             argsinput = codecs.open(inputpath[source], encoding='utf-8')
             bpes[source] = []
@@ -67,14 +124,17 @@ def load_and_map_segmentations(num_symbols, i=-1):
                 line = line.split('\t')[1].strip('\r\n ').split(' ')
                 bpes[target].append(list(range(len(line))))
         else:
-            argsinput = codecs.open(inputpath, encoding='utf-8')
-            bpes = subword_align_to_word(argsinput, bpes, lang)
+            argsinput = codecs.open(segmentpath, encoding='utf-8')
+            if space:
+                bpes = map_subword_to_word(argsinput, bpes, lang)
+            else:
+                bpes = map_multiple_to_word(argsinput, bpes, lang)
     return bpes
 
 
 def bpe_word_align(bpes, bpe_aligns):
     '''
-    Input: dictionary of bpes obtained as output of subword_align_to_word()
+    Input: dictionary of bpes obtained as output of map_subword_to_word()
     Output: list of word alignments and their indexes
         "
             0   0-0 0-1 1-1 1-2 3-1 2-4 \n
@@ -83,18 +143,19 @@ def bpe_word_align(bpes, bpe_aligns):
         "
     '''
     all_word_aligns = ''
-    # iterate all sentences
-    i = 0
-    for sent1, sent2, bpe_al in zip(bpes[source], bpes[target], bpe_aligns):
-        word_aligns = []
+    for i, (sent1, sent2, bpe_al) in enumerate(zip(bpes[source], bpes[target], bpe_aligns)):
+        word_aligns = set()
         # iterate each alignment
-        # bpe_al.split('\t')[1] to remove the index in the alignment file .gdfa
         for al in bpe_al.split('\t')[1].split():
             firstal, secondal = al.split('-')
-            new_al = str(sent1[int(firstal)]) + '-' + str(sent2[int(secondal)])
-            # skip already seen word alignments
-            if not new_al in word_aligns:
-                word_aligns.append(new_al)
+            if space:
+                new_al = str(sent1[int(firstal)]) + '-' + str(sent2[int(secondal)])
+                word_aligns.add(new_al)
+            else:
+                for el1 in sent1[int(firstal)]:
+                    for el2 in sent2[int(secondal)]:
+                        new_al = str(el1) + '-' + str(el2)
+                        word_aligns.add(new_al)
+
         all_word_aligns += str(i) + "\t" + ' '.join(word_aligns) + "\n"
-        i += 1
     return all_word_aligns

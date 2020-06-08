@@ -140,9 +140,9 @@ def update_pair_statistics(pair, changed, stats, indices):
             i += 1
     return
 
-def learn_bpe(infile, outfile, num_symbols):
+def learn_bpe(infile, outfile, num_all_symbols):
     """
-    Learn num_symbols BPE operations from vocabulary, and write to outfile.
+    Learn num_all_symbols BPE operations from vocabulary, and write to outfile.
     """
     # 1. split corpus into characters, count frequency
     vocab = get_vocabulary(infile)
@@ -154,7 +154,7 @@ def learn_bpe(infile, outfile, num_symbols):
     #big_stats = copy.deepcopy(stats)
 
     # 3. merge symbols
-    for _ in tqdm(range(num_symbols)):
+    for _ in tqdm(range(num_all_symbols)):
         if stats:
             most_frequent = max(stats, key=lambda x: (stats[x], x))
 
@@ -171,18 +171,18 @@ if __name__ == '__main__':
     for lang in [source, target]:
 
         # check if a BPE model for this language exists
-        # if so, only create new BPE model if num_symbols > symbols in the model
+        # if so, only create new BPE model if num_all_symbols > symbols in the model
         model_path = join(datadir, lang+'.model')
         if os.path.isfile(model_path):
             bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
             model_symbols = bpe_model[0].strip('\r\n').split()[1]
-            if num_symbols < int(model_symbols):
-                print(f"There already exists a model with at least {num_symbols} symbols")
+            if num_all_symbols < int(model_symbols):
+                print(f"There already exists a model with at least {num_all_symbols} symbols")
                 sys.exit()
         
         argsinput = codecs.open(inputpath[lang], encoding='utf-8')
         argsoutput = codecs.open(model_path, 'w', encoding='utf-8')
-        argsoutput.write('{0} {1}\n'.format(lang, num_symbols))
+        argsoutput.write('{0} {1}\n'.format(lang, num_all_symbols))
 
-        print("Learning {} BPE symbols for {}".format(num_symbols, lang))
-        learn_bpe(argsinput, argsoutput, num_symbols)
+        print("Learning {} BPE symbols for {}".format(num_all_symbols, lang))
+        learn_bpe(argsinput, argsoutput, num_all_symbols)

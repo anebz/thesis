@@ -56,22 +56,22 @@ def merge_dropout_alignments():
 def calc_score_merges():
     print(f"Calculating merge scores for merge_threshold={merge_threshold}")
     probs, surs, surs_count = load_gold(goldpath)
+    baseline_df = pd.read_csv(join(datadir, 'normal_bpe/scores/scores_'+source+'_'+target+'.csv'))
     for merge_type in ['union', 'inter', 'thres']:
         scores = []
         for num_symbols in all_symbols:
             mergefilepath = join(bpedir, 'fastalign', str(num_symbols)+'_'+merge_type+'.wgdfa')
-
-            baseline_df = pd.read_csv(join(datadir, 'normal_bpe/scores/scores_'+source+'_'+target+'.csv'))
 
             score = [int(num_symbols)]
             score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
             scores.append(score)
 
        	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+        scoredir = join(bpedir, 'scores', 'scores') + ('_ns' if not space else '')
         if merge_type == 'thres':
-            scoredir = join(bpedir, 'scores', 'scores') + '_' + str(merge_threshold) + '_' + merge_type
+            scoredir += '_' + str(merge_threshold) + '_' + merge_type
         else:
-            scoredir = join(bpedir, 'scores', 'scores') + '_' + merge_type
+            scoredir += '_' + merge_type
         
         print(f"Scores saved into {scoredir}")
         df.to_csv(scoredir+'.csv', index=False)
