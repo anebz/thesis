@@ -4,9 +4,12 @@ Master thesis repo
 
 ## tasks
 
-* [X] summary of my learn_bpe vs. paper learn_bpe, differences, is this paper material? track algorithm performance in my computer, write in percentage. this algo is 1.4% faster than X.
 * [ ] learn_bpe: substitute number for digit when merging?
 * [ ] replace sep token by 'sep', put in settings?
+* [ ] add legend to tqdm? script name, lang, num_symbols
+* [ ] merge_dropout iterate through thres, don't calculate union and int every time
+* [ ] interpret results
+* [ ] only plot symbols present in the alignment files, not the baselines. otherwise we get [500, 8000] for all
 * [ ] dropout only on one side? source_bpe -> source_dropout?
 
 ### BPE improvement
@@ -21,19 +24,19 @@ Master thesis repo
 
 ### no space
 
-* [ ] no space mode
-  * [X] apply_bpe
-  * [Thur] alignments
-    * `['_The', 'e_'. 'ice_cre', 'am'] word_belonging = [[0], [0], [1,2], [2]]`
-    * now for each bpe we have a list of words, it was the other way before. each word could have 1+ bpes, now each bpe can have 1+ words. we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
-  * [ ] calc scores
+* results:
+  * at smallest threshold (0.3), recall=0.533 for all symbols, precision decreases for more symbols
+  * the bigger the threshold, the worse the recall. at thres=0.9, precision isn't bad.
+  * union score has very high recall, very low precision
+  * intersection score has very high precision, very low recall
+* we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
 
 ## pipeline
 
 1. Set parameters in `settings.py`
 2. learn_bpe.py
 3. apply_bpe.py
-4. extract_alignments.py
+4. extract_alignments.py (can be done in parallel to apply_bpe, after an offset of ~2 elements)
 5. calc_align_score.py / merge_dropout.py
 
 ## directory structure
