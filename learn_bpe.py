@@ -10,11 +10,27 @@ from collections import defaultdict, Counter
 # import global variables from settings.py
 from settings import *
 
-def build_vocab(corpus: list) -> list:
+def read_bpe_model(lang: str) -> (list, int):
+    # check if a BPE model for this language exists
+    # if so, only create new BPE model if num_all_symbols > symbols in the model
+    model_path = join(datadir, lang+('' if space else '_ns')+'.model')
+    if os.path.isfile(model_path):
+        bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
+        if bpe_model:
+            model_symbols = bpe_model[0].strip('\r\n').split()[1]
+    return bpe_model, model_symbols
+
+
+def read_corpus(corpus: list) -> list:
     """
     Read corpus, strip index and new line characters.
     In space mode, each word has a u'\u2581' symbol at the beginning to signal it's the beginning of the word.
     In no space mode, there's no signal at the beginning of the word but word are joined by u'\u2581'.
+    example:
+    tokens = [
+        'w e ▁ d o ▁ n o t ▁ b e l i e v e ▁ t h a t ▁ w e ▁ s h o u l d ▁ c h e r r y - p i c k ▁ .',
+        ...
+    ]
     """
 
     tokens = []
@@ -178,29 +194,30 @@ def update_tokens(tokens, idx, pairs, pair):
     return tokens, idx, pairs
 
 
-def learn_bpe(corpus, bpe_model, num_symbols):
+def learn_bpe(corpus, bpe_model):
     """
-    Learn num_symbols BPE operations from vocabulary, and write to bpe_model.
+    Learn num_all_symbols BPE operations from vocabulary, and write to bpe_model.
+    Steps:
+    1. split corpus into characters, count frequency
+    2. count bigrams in corpus
+    3. merge most frequent symbols
+    4. Update bigrams in corpus 
     """
-    # 1. split corpus into characters, count frequency
-    tokens = build_vocab(corpus)
 
-    # 2. count bigrams in corpus
+    tokens = read_corpus(corpus)
+
     pairs, idx = get_stats(tokens)
 
     most_frequent_merges = []
-    for i in tqdm(range(num_symbols)):
+    for i in tqdm(range(num_all_symbols)):
 
         try:
-            # 3. merge symbols
             most_frequent = pairs.most_common(1)[0][0]
         except:
             # pairs is empty
             break
 
         most_frequent_merges.append(most_frequent)
-
-        # 4. Merge the most frequent merge, update pairs 
         tokens, idx, pairs = update_tokens(tokens, idx, pairs, most_frequent)
 
     return most_frequent_merges
@@ -210,23 +227,15 @@ if __name__ == '__main__':
 
     for lang in [source, target]:
 
-        # check if a BPE model for this language exists
-        # if so, only create new BPE model if num_symbols > symbols in the model
-        model_path = join(datadir, lang+('' if space else '_ns')+'.model')
-        if os.path.isfile(model_path):
-            bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
-            if bpe_model:
-                model_symbols = bpe_model[0].strip('\r\n').split()[1]
-                if num_symbols <= int(model_symbols):
-                    print(f"A model for lang={lang} with at least {num_symbols} symbols already exists")
-                    continue
-        
         argsinput = codecs.open(inputpath[lang], encoding='utf-8')
-        bpe_model = codecs.open(model_path, 'w', encoding='utf-8')
+        bpe_model, model_symbols = read_bpe_model(lang)
 
-        print(f"Learning {num_symbols} BPE symbols for lang={lang}, space mode={space}")
-        most_freq_merges = learn_bpe(argsinput, bpe_model, num_symbols)
+        if num_all_symbols <= int(model_symbols):
+            print(f"A model for lang={lang} with at least {num_all_symbols} symbols already exists")
+            continue
 
-        # 4. write merge list to file
+        print(f"Learning {num_all_symbols} BPE symbols for lang={lang}, space mode={space}")
+        most_freq_merges = learn_bpe(argsinput, bpe_model)
+
         bpe_model.write(f"{lang} {len(most_freq_merges)}\n")
         bpe_model.write('\n'.join(' '.join(item) for item in most_freq_merges))
