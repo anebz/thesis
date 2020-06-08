@@ -36,7 +36,7 @@ def map_subword_to_word(corpus, bpes, lang):
         mapping = [0]
         i = 0
         for subw in sent.split()[1:]:
-            if subw[0] == u'\u2581':
+            if subw[0] == word_sep:
                 i += 1
             mapping.append(i)
         bpes[lang].append(mapping)
@@ -75,24 +75,24 @@ def map_multiple_to_word(corpus, bpes, lang):
         j = 0
         for word in sent.split():
 
-            if word == u'\u2581':
+            if word == word_sep:
                 # word is simply '_', doesn't belong to anything
                 j += 1
                 sent_bpes.append([])
                 continue
 
-            word_count = word.count(u'\u2581')
+            word_count = word.count(word_sep)
             if word_count == 0:
                 sent_bpes.append([j])
                 continue
 
             # multiple words in the element: t▁this▁is▁no -> [0,1,2,3]
-            if word[0] == u'\u2581':
+            if word[0] == word_sep:
                 # word starts with '_' but there are no elements of the previous word in it
                 j += 1
                 word_count -= 1
 
-            if word[-1] == u'\u2581':
+            if word[-1] == word_sep:
                 # word ends with '_' but there are no elements of the next word in it
                 sent_bpes.append(list(range(j, j + word_count)))
             else:

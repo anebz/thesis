@@ -3,6 +3,7 @@ import os
 from os.path import join
 import sys
 
+word_sep = u'\u2581'
 source, target = 'eng', 'deu' #eng, deu
 source_bpe, target_bpe = False, False # both can't be true at the same time
 

@@ -24,8 +24,8 @@ def read_bpe_model(lang: str) -> (list, int):
 def read_corpus(corpus: list) -> list:
     """
     Read corpus, strip index and new line characters.
-    In space mode, each word has a u'\u2581' symbol at the beginning to signal it's the beginning of the word.
-    In no space mode, there's no signal at the beginning of the word but word are joined by u'\u2581'.
+    In space mode, each word has a word_sep symbol at the beginning to signal it's the beginning of the word.
+    In no space mode, there's no signal at the beginning of the word but word are joined by word_sep.
     example:
     tokens = [
         'w e ▁ d o ▁ n o t ▁ b e l i e v e ▁ t h a t ▁ w e ▁ s h o u l d ▁ c h e r r y - p i c k ▁ .',
@@ -44,10 +44,10 @@ def read_corpus(corpus: list) -> list:
         line[0] = str.lower(line[0])
 
         if space:
-            # add u'\u2581' to each beginning of word and join by space
-            tokens.append( ' '.join([u'\u2581' + ' '.join(word) for word in line]))
+            # add word_sep to each beginning of word and join by space
+            tokens.append( ' '.join([word_sep + ' '.join(word) for word in line]))
         else:
-            # join all words by u'\u2581'
+            # join all words by word_sep
             tokens.append(u' \u2581 '.join([' '.join(word) for word in line]))
 
     return tokens
@@ -70,7 +70,7 @@ def get_stats(tokens: list) -> (Counter, dict):
         }
         ...
     }
-    In space mode, the last token '.' or u'\u2581'. isn't merged with anything.
+    In space mode, the last token '.' or word_sep. isn't merged with anything.
     """
 
     def get_pairs_idx(pairs, idx, symbols):
@@ -87,7 +87,7 @@ def get_stats(tokens: list) -> (Counter, dict):
         if space:
             # get stats for each word independently, no bigrams between different words
             for word in sent[1:].split(u' \u2581'):
-                pairs, idx = get_pairs_idx(pairs, idx, u'\u2581' + word)
+                pairs, idx = get_pairs_idx(pairs, idx, word_sep + word)
         else:
             # get bigram stats for the whole sentence
             pairs, idx = get_pairs_idx(pairs, idx, sent)
@@ -149,7 +149,7 @@ def update_tokens(tokens, idx, pairs, pair):
         sent = sent.split(merged_pair)
         for k in range(len(sent[:-1])):
 
-            if sent[k].split() and (sent[k][-1] == ' ' and u'\u2581' not in pair[0][0] if space else True):
+            if sent[k].split() and (sent[k][-1] == ' ' and word_sep not in pair[0][0] if space else True):
                 '''
                 conditions to update the **previous** token:
                 * if sent[k] isn't empty. if it is, there's no previous token to update.
@@ -161,7 +161,7 @@ def update_tokens(tokens, idx, pairs, pair):
                 new_pair = (prev[0], merged_pair)
                 pairs, idx = update_freqs(pairs, idx, prev, new_pair)
 
-            if space and not sent[k+1].split() and u'\u2581' not in pair[0][0]:
+            if space and not sent[k+1].split() and word_sep not in pair[0][0]:
                 '''
                 conditions to update the **after** token when merged bigrams are consecutive:
                 * in space mode specifically, when the pair's first character isn't the beginning of the word
@@ -170,15 +170,15 @@ def update_tokens(tokens, idx, pairs, pair):
                     * in this case, we delete the token between the merged_pair: ('i', 's')
                     * and create a new pair ('ssi', 'ssi')
                 '''
-                if sent[k] and sent[k][-1] == u'\u2581':
-                    after = (u'\u2581'+merged_pair, pair[0])
+                if sent[k] and sent[k][-1] == word_sep:
+                    after = (word_sep+merged_pair, pair[0])
                     new_pair = -1
                 else:
                     after = (pair[1], pair[0])
                     new_pair = (merged_pair, merged_pair)
                     pairs, idx = update_freqs(pairs, idx, after, new_pair)
 
-            elif sent[k+1].split() and (u'\u2581' not in sent[k+1].split()[0] if space else True):
+            elif sent[k+1].split() and (word_sep not in sent[k+1].split()[0] if space else True):
                 '''
                 conditions to update the **after** token in a more general case:
                 * if sent[k] isn't empty. if it is, there's no after token to update.

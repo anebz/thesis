@@ -4,12 +4,12 @@ Master thesis repo
 
 ## tasks
 
+* [ ] **interpret results**
 * [ ] learn_bpe: substitute number for digit when merging?
-* [ ] replace sep token by 'sep', put in settings?
-* [ ] add legend to tqdm? script name, lang, num_symbols
-* [ ] merge_dropout iterate through thres, don't calculate union and int every time
-* [ ] interpret results
-* [ ] only plot symbols present in the alignment files, not the baselines. otherwise we get [500, 8000] for all
+* [X] replace sep token by 'sep', put in settings?
+* [ ] merge_dropout: iterate through thres, don't calculate union and int every time
+* [ ] calc_align_score: add legend to tqdm? script name, lang, num_symbols
+* [ ] calc_align_score: only plot symbols present in the alignment files, not the baselines. otherwise we get [500, 8000] for all
 * [ ] dropout only on one side? source_bpe -> source_dropout?
 
 ### BPE improvement
