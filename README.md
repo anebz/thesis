@@ -6,8 +6,6 @@ Master thesis repo
 
 * [X] **interpret results**
 * [ ] learn_bpe: substitute number for digit when merging?
-* [X] merge_dropout: iterate through thres, don't calculate union and int every time
-* [X] add legend to tqdm? script name, lang, num_symbols
 * [ ] dropout only on one side? source_bpe -> source_dropout?
 
 ### BPE improvement

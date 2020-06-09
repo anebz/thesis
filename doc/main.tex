@@ -1,0 +1,62 @@
+% Template for a Thesis
+%
+% thesis.tex
+%
+% This is the central document.
+
+% general settings
+\input{settings}
+
+\begin{document}
+
+% new lengths for a harmonized width of the plots
+\newlength{\plotwidth}
+\setlength{\plotwidth}{0.7\columnwidth}
+\newlength{\plotheight}
+\setlength{\plotheight}{0.66\plotwidth}
+\newlength{\semiwidth}
+\setlength{\semiwidth}{0.35\columnwidth}
+\newlength{\semiheight}
+\setlength{\semiheight}{0.66\semiwidth}
+
+% the titlepage
+\pagenumbering{alph}
+\pagestyle{empty}
+\include{sections/titlepage}
+
+% the preface
+\pagenumbering{roman}
+\pagestyle{plain}
+\include{sections/abstract}
+\include{sections/task}
+\include{sections/declaration}
+
+% the table of contents and the lists of figures and tables
+\pagenumbering{arabic}
+\pagestyle{headings}
+\tableofcontents
+\include{sections/notation}
+\include{sections/acronyms}
+\listoffigures
+\listoftables
+
+% the actual content
+\include{sections/introduction}
+\include{sections/body}
+\include{sections/summary}
+
+% the bibliography
+\bibliographystyle{unsrt}	% only numbers
+\bibliography{literature}
+
+% the appendix
+\appendix
+\include{sections/appendix}
+
+% the theses
+\pagestyle{empty}	
+\include{sections/statements}
+
+\end{document}
+
+% end of file
