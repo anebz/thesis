@@ -147,9 +147,9 @@ def calc_align_scores(probs, surs, surs_count, baseline_df, i=-1):
 	elif not (target_bpe or source_bpe):
 		scoredir += '_' + source + '_' + target
 	if target_bpe:
-		scoredir += '_'+target
+		scoredir += '_' + target
 	if source_bpe:
-		scoredir += '_'+source
+		scoredir += '_' + source
 
 	if not dropout:
 		print(f"Scores saved into {scoredir}")

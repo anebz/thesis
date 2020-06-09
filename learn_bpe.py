@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import re
-import sys
 import codecs
 from tqdm import tqdm
 from os.path import join
@@ -16,8 +15,11 @@ def read_bpe_model(lang: str) -> (list, int):
     model_path = join(datadir, lang+('' if space else '_ns')+'.model')
     if os.path.isfile(model_path):
         bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
-        if bpe_model:
-            model_symbols = bpe_model[0].strip('\r\n').split()[1]
+        model_symbols = bpe_model[0].strip('\r\n').split()[1] if bpe_model else 0
+    else:
+        bpe_model = codecs.open(model_path, 'w', encoding='utf-8')
+        model_symbols = 0
+        
     return bpe_model, model_symbols
 
 
@@ -209,7 +211,7 @@ def learn_bpe(corpus, bpe_model):
     pairs, idx = get_stats(tokens)
 
     most_frequent_merges = []
-    for i in tqdm(range(num_all_symbols)):
+    for i in tqdm(range(num_all_symbols), desc=f"learn_bpe: num_symbols={num_all_symbols}, lang={lang}, space mode={space}"):
 
         try:
             most_frequent = pairs.most_common(1)[0][0]
@@ -234,8 +236,6 @@ if __name__ == '__main__':
             print(f"A model for lang={lang} with at least {num_all_symbols} symbols already exists")
             continue
 
-        print(f"Learning {num_all_symbols} BPE symbols for lang={lang}, space mode={space}")
         most_freq_merges = learn_bpe(argsinput, bpe_model)
-
         bpe_model.write(f"{lang} {len(most_freq_merges)}\n")
         bpe_model.write('\n'.join(' '.join(item) for item in most_freq_merges))

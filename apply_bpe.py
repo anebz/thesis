@@ -1,7 +1,5 @@
 import os
 from os.path import join
-import sys
-import glob
 import codecs
 import random
 from tqdm import tqdm
@@ -32,7 +30,7 @@ def load_data():
     return langs, bpe_models, corpora
 
 
-def merge_corpus(corpus, bpe_model, dropout=0.1):
+def merge_corpus(corpus, bpe_model, lang, num_symbols):
     '''
     merge the bigrams found in the corpus iteratively
     Inputs: 
@@ -43,7 +41,7 @@ def merge_corpus(corpus, bpe_model, dropout=0.1):
     '''
 
     str_corpus = '\n'.join(corpus)
-    for bigram in tqdm(bpe_model):
+    for bigram in tqdm(bpe_model, desc=f"apply_bpe: lang={lang}, num_symbols={num_symbols}, dropout={dropout*100}%"):
 
         if random.uniform(0, 1) < dropout:
             continue
@@ -61,8 +59,7 @@ def apply_bpe(i=-1):
             # only get the desired amount of symbols
             bpe_model = bpe_model[:num_symbols]
 
-            print(f"Merging BPE symbols for lang={lang}, num_symbols={num_symbols}, dropout={dropout*100}%")
-            merged_corpus = merge_corpus(corpus, bpe_model, dropout)
+            merged_corpus = merge_corpus(corpus, bpe_model, lang, num_symbols)
 
             outputpath = join(bpedir, 'segmentations', lang+"_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
             argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
@@ -79,6 +76,5 @@ if __name__ == "__main__":
         for i in range(dropout_repetitions):
             print(f"Iteration {i+1}")
             apply_bpe(i)
-            print("\n\n\n\n")
     else:
         apply_bpe()
