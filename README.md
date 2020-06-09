@@ -4,12 +4,10 @@ Master thesis repo
 
 ## tasks
 
-* [ ] **interpret results**
+* [X] **interpret results**
 * [ ] learn_bpe: substitute number for digit when merging?
-* [X] replace sep token by 'sep', put in settings?
-* [ ] merge_dropout: iterate through thres, don't calculate union and int every time
-* [ ] calc_align_score: add legend to tqdm? script name, lang, num_symbols
-* [ ] calc_align_score: only plot symbols present in the alignment files, not the baselines. otherwise we get [500, 8000] for all
+* [X] merge_dropout: iterate through thres, don't calculate union and int every time
+* [X] add legend to tqdm? script name, lang, num_symbols
 * [ ] dropout only on one side? source_bpe -> source_dropout?
 
 ### BPE improvement
@@ -25,9 +23,10 @@ Master thesis repo
 ### no space
 
 * results:
+  * **best results at num_symbols=500, with prec=0.621, rec=0.456, f1=0.523. visible at thres=0.7 specifically**
   * at smallest threshold (0.3), recall=0.533 for all symbols, precision decreases for more symbols
   * the bigger the threshold, the worse the recall. at thres=0.9, precision isn't bad.
-  * union score has very high recall, very low precision
+  * union score has very high recall, very low precision. makes sense, there's many-to-many alignment among words
   * intersection score has very high precision, very low recall
 * we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
 
