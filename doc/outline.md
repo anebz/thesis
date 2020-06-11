@@ -1,14 +1,15 @@
 # Thesis document outline
 
 1. Introduction
-2. State of the art
+2. Goals
+3. State of the art
    1. Tokenization
       1. Tokenization methods
       2. BPE
       3. BPE dropout
    2. Translation
       1. NMT? open vocabulary problems?
-3. Development
+4. Development
    1. Coding practices
    2. Implementation of BPE
       1. Learn BPEs
@@ -19,9 +20,9 @@
    4. Implementation of BPE dropout on source or target side
    5. Improvement over BPE dropout
    6. ...
-4. ...
-5. Future work
-6. Conclusion
+5. ...
+6. Future work
+7. Conclusion
 
 ## tasks
 
@@ -59,8 +60,7 @@
 \section{Language}
 \label{sec:structure}
 
-standards~\cite{hering:technical_reports,grossman:chicago_manual}
-text~\cite{ieee:citation}.
+\href{http://www.sharelatex.com}{Something  Linky}
 
 ~\ref{sec:appendix} on page~\pageref{sec:appendix}.
 

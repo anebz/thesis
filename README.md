@@ -4,7 +4,8 @@ Master thesis repo
 
 ## tasks
 
-* [X] **interpret results**
+* [ ] BPE algo is very slow, everyone uses [fastBPE](https://github.com/glample/fastBPE)
+* [ ] check SentencePiece
 * [ ] learn_bpe: substitute number for digit when merging?
 * [ ] dropout only on one side? source_bpe -> source_dropout?
 

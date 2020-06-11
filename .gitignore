@@ -128,10 +128,24 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# project specific files
 subword-nmt/
 pbc_utils/
 tools/
 fastalign/
 *.bpe
-scripts/
-merged/
+
+# LaTeX
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.gz
+*.lof
+*.lot
+*.nlo
+*.pdf
+*.out
+*.toc
