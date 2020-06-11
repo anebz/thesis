@@ -36,23 +36,25 @@ Master thesis repo
 ├── data
 │   ├── input
 │   │   ├── eng_with_10k.txt                          # input txt file with 10k english sentences
-│   │   ├── deu_with_10k.txt
+│   │   └── deu_with_10k.txt
 │   ├── normal_bpe
 │   │   ├── fastalign                                 # files obtained from fastalign alignment algorithm
 │   │   │   └── *.wgdfa, *_deu.wgdfa
-│   │   ├── segmentations                             # files obtained by segmenting based on num_symbols
-│   │   │   └── .bpe
-│   │   └── scores.png, scores.csv
+│   │   └── segmentations                             # files obtained by segmenting based on num_symbols
+│   │       └── .bpe
 │   ├── dropout_bpe
 │   │   ├── fastalign
-│   │   │   └── *.wgdfa, *_deu.wgdfa, *_unionwgdfa, *_inter.wgdfa, *_thres.wgdfa
-│   │   ├── segmentations
-│   │   │   └── .bpe
-│   │   ├── test_scores
-│   │   │   └── .png, .csv
-│   │   └── scores.png, scores.csv
+│   │   │   └── *.wgdfa, *_deu.wgdfa, *_union.wgdfa, *_inter.wgdfa, *_thres.wgdfa
+│   │   └── segmentations
+│   │       └── .bpe
 │   ├── eng.model                                      # merge list for english
 │   └── deu.model
+├── doc
+├── reports
+│   ├── scores_dropout_bpe
+│   │   └── *.csv, *.png
+│   └── scores_normal_bpe
+│       └── *.csv, *.png
 ├── README.md
 ├── .py
 └── ...

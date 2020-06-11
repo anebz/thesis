@@ -141,7 +141,7 @@ def calc_align_scores(probs, surs, surs_count, baseline_df, i=-1):
 
 	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 
-	scoredir = join(bpedir, 'scores/scores')
+	scoredir = join(scoredir, 'scores')
 	if dropout:
 		scoredir += '_' + str(i)
 	elif not (target_bpe or source_bpe):
@@ -182,7 +182,7 @@ def avg_scores(baseline_df, score_dfs):
 		for col in list(df)[1:]:
 			df[col] = df[col].apply(lambda x: x/avg)
 
-		scoredir = join(bpedir, 'scores/scores_avg_'+str(avg)+('_'+source if source_bpe else '')+('_'+target if target_bpe else ''))
+		scoredir = join(scoredir, 'scores_avg_'+str(avg)+('_'+source if source_bpe else '')+('_'+target if target_bpe else ''))
 		print(f"Scores saved into {scoredir}")
 		df.round(decimals=3).to_csv(os.path.join(scoredir+'.csv'), index=False)
 		plot_scores(df, baseline_df, join(scoredir))
@@ -205,7 +205,7 @@ if __name__ == "__main__":
 
 	# dropout case: take normal BPE scores as baseline. if normal case, take gold standard
 	if dropout:
-		baseline_df = pd.read_csv(join(datadir, 'normal_bpe/scores/scores_'+source+'_'+target+'.csv'))
+		baseline_df = pd.read_csv(join(rootdir, 'reports/scores_normal_bpe', 'scores_'+source+'_'+target+'.csv'))
 	else:
 		baseline_df = get_baseline_score(probs, surs, surs_count)
 

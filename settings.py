@@ -16,6 +16,7 @@ rootdir = os.getcwd()
 datadir = join(rootdir, 'data')
 inputdir = join(datadir, 'input')
 bpedir = join(datadir, 'dropout_bpe' if dropout > 0 else 'normal_bpe')
+scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 else 'normal_bpe'))
 goldpath = join(inputdir, 'eng_deu.gold')
 inputpath = {source: join(inputdir, source+'_with_10k.txt'),
             target: join(inputdir, target+'_with_10k.txt')}

@@ -55,7 +55,7 @@ def merge_dropout_alignments():
 
 def calc_score_merges():
     probs, surs, surs_count = load_gold(goldpath)
-    baseline_df = pd.read_csv(join(datadir, 'normal_bpe/scores/scores_'+source+'_'+target+'.csv'))
+    baseline_df = pd.read_csv(join(scoredir, 'scores_'+source+'_'+target+'.csv'))
     for merge_type in ['union', 'inter']:
         scores = []
         for num_symbols in all_symbols:
@@ -66,7 +66,7 @@ def calc_score_merges():
             scores.append(score)
 
        	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
-        scoredir = join(bpedir, 'scores', 'scores') + ('_ns' if not space else '') + '_' + merge_type
+        scoredir = join(scoredir, 'scores') + ('_ns' if not space else '') + '_' + merge_type
         
         print(f"Scores saved into {scoredir}")
         df.to_csv(scoredir+'.csv', index=False)
@@ -83,7 +83,7 @@ def calc_score_merges():
             scores.append(score)
 
         df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
-        scoredir = join(bpedir, 'scores', 'scores') + ('_ns' if not space else '') + '_' + str(merge_t) + '_thres'
+        scoredir = join(scoredir, 'scores') + ('_ns' if not space else '') + '_' + str(merge_t) + '_thres'
         
         print(f"Scores saved into {scoredir}")
         df.to_csv(scoredir+'.csv', index=False)
