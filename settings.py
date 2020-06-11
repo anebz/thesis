@@ -7,7 +7,7 @@ word_sep = u'\u2581'
 source, target = 'eng', 'deu' #eng, deu
 source_bpe, target_bpe = False, False # both can't be true at the same time
 
-dropout = 0.1 # 0
+dropout = 0.3 # 0
 dropout_repetitions = 10
 merge_threshold = [0.3, 0.5, 0.7, 0.9] # if alignments are present in >X% of files, they're accepted
 avgs = [3, 5, 7, 10] # average dropout scores, avg of 3, 5, ...
@@ -28,4 +28,4 @@ atools_path = join(rootdir, "tools/fast_align/build/atools")
 
 space = False
 num_all_symbols = 10000 #10000
-all_symbols = [100, 200, 500, 1000, 2000, 4000, 8000]
+all_symbols = [100, 200, 500, 1000, 2000, 4000]

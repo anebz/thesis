@@ -6,6 +6,8 @@ Master thesis repo
 
 * [ ] BPE algo is very slow, everyone uses [fastBPE](https://github.com/glample/fastBPE)
 * [ ] check SentencePiece
+* [ ] pipeline: run again, higher dropout
+* [ ] merge_dropout: only plot num_symbols in alignments
 * [ ] learn_bpe: substitute number for digit when merging?
 * [ ] dropout only on one side? source_bpe -> source_dropout?
 
@@ -18,8 +20,6 @@ Master thesis repo
   * book. bo ok -> book. min merge tree depth is 2. could also be 3, bo, boo, book. to get more meaningful chunks
   * t h, both 0, then th:1. th:1, e:0, the:2
   * un:1 accept:3 able:3. acceptable has higher score than unaccept. if 2 chunks have same score, join the larger ones.
-
-
 
 ## pipeline
 

@@ -144,20 +144,22 @@ def calc_align_scores(probs, surs, surs_count, baseline_df, i=-1):
 
 	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 
-	scoredir = join(scoredir, 'scores')
+	scorename = join(scoredir, 'scores')
 	if dropout:
-		scoredir += '_' + str(i)
+		scorename += '_' + str(i)
 	elif not (target_bpe or source_bpe):
-		scoredir += '_' + source + '_' + target
+		scorename += '_' + source + '_' + target
+	if not space:
+		scorename += '_ns'
 	if target_bpe:
-		scoredir += '_' + target
+		scorename += '_' + target
 	if source_bpe:
-		scoredir += '_' + source
+		scorename += '_' + source
 
 	if not dropout:
-		print(f"Scores saved into {scoredir}")
-		df.to_csv(scoredir+'.csv', index=False)
-		plot_scores(df, baseline_df, scoredir)
+		print(f"Scores saved into {scorename}")
+		df.to_csv(scorename+'.csv', index=False)
+		plot_scores(df, baseline_df, scorename)
 	return df
 
 
@@ -207,7 +209,7 @@ if __name__ == "__main__":
 	probs, surs, surs_count = load_gold(goldpath)
 
 	# dropout case: take normal BPE scores as baseline. if normal case, take gold standard
-	if dropout:
+	if dropout or not space:
 		baseline_df = pd.read_csv(join(rootdir, 'reports/scores_normal_bpe', 'scores_'+source+'_'+target+'.csv'))
 	else:
 		baseline_df = get_baseline_score(probs, surs, surs_count)

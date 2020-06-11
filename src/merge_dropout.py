@@ -66,11 +66,11 @@ def calc_score_merges():
             scores.append(score)
 
        	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
-        scoredir = join(scoredir, 'scores') + ('_ns' if not space else '') + '_' + merge_type
-        
-        print(f"Scores saved into {scoredir}")
-        df.to_csv(scoredir+'.csv', index=False)
-        plot_scores(df, baseline_df, scoredir)
+        scorename = join(scoredir, 'scores') + ('_ns' if not space else '') + '_' + merge_type
+
+        print(f"Scores saved into {scorename}")
+        df.to_csv(scorename+'.csv', index=False)
+        plot_scores(df, baseline_df, scorename)
 
     # threshold case, iterate all merge_threshold|saved
     for merge_t in merge_threshold:
@@ -83,11 +83,11 @@ def calc_score_merges():
             scores.append(score)
 
         df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
-        scoredir = join(scoredir, 'scores') + ('_ns' if not space else '') + '_' + str(merge_t) + '_thres'
+        scorename = join(scoredir, 'scores', str(dropout)) + ('_ns' if not space else '') + '_' + str(merge_t) + '_thres'
         
-        print(f"Scores saved into {scoredir}")
-        df.to_csv(scoredir+'.csv', index=False)
-        plot_scores(df, baseline_df, scoredir)
+        print(f"Scores saved into {scorename}")
+        df.to_csv(scorename+'.csv', index=False)
+        plot_scores(df, baseline_df, scorename)
     return
 
 
