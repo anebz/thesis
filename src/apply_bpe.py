@@ -1,10 +1,12 @@
 import os
 from os.path import join
+import sys
 import codecs
 import random
 from tqdm import tqdm
 
 # import global variables from settings.py
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 from learn_bpe import read_bpe_model, read_corpus
 

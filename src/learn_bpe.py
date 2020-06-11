@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
+import os
 import re
+import sys
 import codecs
 from tqdm import tqdm
 from os.path import join
 from collections import defaultdict, Counter
 
 # import global variables from settings.py
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
 def read_bpe_model(lang: str) -> (list, int):

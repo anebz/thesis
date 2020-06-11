@@ -1,13 +1,13 @@
 import os
 from os.path import join
 import sys
-import copy
 import codecs
 import pandas as pd
 from tqdm import tqdm
 from collections import Counter
 
 # import global variables from settings.py
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 from calc_align_score import *
 

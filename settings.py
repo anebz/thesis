@@ -13,6 +13,8 @@ merge_threshold = [0.3, 0.5, 0.7, 0.9] # if alignments are present in >X% of fil
 avgs = [3, 5, 7, 10] # average dropout scores, avg of 3, 5, ...
 
 rootdir = os.getcwd()
+if rootdir.split(os.sep)[-1] == 'src':
+    rootdir = os.sep.join(rootdir.split(os.sep)[:-1])
 datadir = join(rootdir, 'data')
 inputdir = join(datadir, 'input')
 bpedir = join(datadir, 'dropout_bpe' if dropout > 0 else 'normal_bpe')

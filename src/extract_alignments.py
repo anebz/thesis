@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-import codecs
-import argparse
 from os.path import join
 import os
+import sys
+import codecs
+import argparse
 
 # import global variables from settings.py
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 from subword_word import *
 
