@@ -16,7 +16,7 @@ def merge_dropout_alignments():
     union_merge, inter_merge, thres_merge = {}, {}, {}
 
     os.chdir(join(bpedir, 'fastalign'))
-    for num_symbols in tqdm(all_symbols, desc=f"merge_dropout: num_symbols={all_symbols}, union, inter, thres"):
+    for num_symbols in tqdm(all_symbols, desc=f"merge_dropout: dropout={dropout}, union, inter, thres"):
         union_merge[num_symbols], inter_merge[num_symbols], thres_merge[num_symbols] = [], [], []
 
         for i in range(dropout_repetitions):
@@ -56,6 +56,9 @@ def merge_dropout_alignments():
 def calc_score_merges():
     probs, surs, surs_count = load_gold(goldpath)
     baseline_df = pd.read_csv(join(scoredir, 'scores_'+source+'_'+target+'.csv'))
+    scorespath = join(scoredir, 'space' if space else 'no space', str(dropout))
+    if not os.path.isdir(scorespath):
+        os.mkdir(scorespath)
     for merge_type in ['union', 'inter']:
         scores = []
         for num_symbols in all_symbols:
@@ -66,7 +69,7 @@ def calc_score_merges():
             scores.append(score)
 
        	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
-        scorename = join(scoredir, 'scores') + ('_ns' if not space else '') + '_' + merge_type
+        scorename = join(scorespath, 'scores') + ('_ns' if not space else '') + '_' + merge_type
 
         print(f"Scores saved into {scorename}")
         df.to_csv(scorename+'.csv', index=False)
@@ -83,7 +86,7 @@ def calc_score_merges():
             scores.append(score)
 
         df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
-        scorename = join(scoredir, 'scores', str(dropout)) + ('_ns' if not space else '') + '_' + str(merge_t) + '_thres'
+        scorename = join(scorespath, 'scores') + ('_ns' if not space else '') + '_' + str(merge_t) + '_thres'
         
         print(f"Scores saved into {scorename}")
         df.to_csv(scorename+'.csv', index=False)

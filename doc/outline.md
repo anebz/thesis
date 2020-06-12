@@ -54,9 +54,15 @@
 ## no space results
 
 * results:
-  * **best results at num_symbols=500, with prec=0.621, rec=0.456, f1=0.523. visible at thres=0.7 specifically**
   * at smallest threshold (0.3), recall=0.533 for all symbols, precision decreases for more symbols
   * the bigger the threshold, the worse the recall. at thres=0.9, precision isn't bad.
   * union score has very high recall, very low precision. makes sense, there's many-to-many alignment among words
   * intersection score has very high precision, very low recall
 * we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
+
+* dropout=0,   best result at merge_threshold=0.5, num_symbols=200, f1=0.477
+* dropout=0.1, best result at merge_threshold=0.7, num_symbols=200, f1=0.523
+* dropout=0.2, best result at merge_threshold=0.5, num_symbols=500, **f1=0.559**
+* dropout=0.3, best result at merge_threshold=0.5, num_symbols=500, f1=0.556
+* dropout=0.4, best result at merge_threshold=0.3, num_symbols=500, f1=0.532
+* dropout=0.5, best result at merge_threshold=0.3, **num_symbols=4000**, f1=0.529

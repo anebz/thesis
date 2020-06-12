@@ -6,7 +6,8 @@ Master thesis repo
 
 * [ ] BPE algo is very slow, everyone uses [fastBPE](https://github.com/glample/fastBPE)
 * [ ] check SentencePiece
-* [ ] pipeline: run again, higher dropout
+* [ ] pipeline: run again, higher dropout. 10k symbols? in ns mode. learn 20k symbols?
+* [ ] extract_alignments: maybe do fast align in one big file?
 * [ ] merge_dropout: only plot num_symbols in alignments
 * [ ] learn_bpe: substitute number for digit when merging?
 * [ ] dropout only on one side? source_bpe -> source_dropout?
