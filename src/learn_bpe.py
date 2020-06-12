@@ -240,5 +240,6 @@ if __name__ == '__main__':
             continue
 
         most_freq_merges = learn_bpe(argsinput, bpe_model)
-        bpe_model.write(f"{lang} {len(most_freq_merges)}\n")
-        bpe_model.write('\n'.join(' '.join(item) for item in most_freq_merges))
+        bpe_file = codecs.open(join(datadir, lang+('' if space else '_ns')+'.model'), 'w', encoding='utf-8')
+        bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
+        bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))

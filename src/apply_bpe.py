@@ -43,7 +43,7 @@ def merge_corpus(corpus, bpe_model, lang, num_symbols):
     '''
 
     str_corpus = '\n'.join(corpus)
-    for bigram in tqdm(bpe_model, desc=f"apply_bpe: lang={lang}, num_symbols={num_symbols}, dropout={dropout*100}%"):
+    for bigram in tqdm(bpe_model, desc=f"apply_bpe: dropout={dropout}, num_symbols={num_symbols}, lang={lang}"):
 
         if random.uniform(0, 1) < dropout:
             continue
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     if dropout > 0:
         # create `dropout_repetitions` segmentations, to aggregate later
-        for i in range(dropout_repetitions):
+        for i in range(4, 5):#dropout_repetitions):
             print(f"Iteration {i+1}")
             apply_bpe(i)
     else:

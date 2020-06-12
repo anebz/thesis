@@ -49,7 +49,8 @@
 ## no_space learn_bpe results
 
 * space: 0.49/0:54/0:56/1:52 eng, 1:19/1:16/1:28/2:36 deu
-* no_space: 4/6:13 eng, 4:25/4:50 deu
+* no_space 10k symbols: 4/6:13 eng, 4:25/4:50 deu
+* no_space 20k symbols: 9:33 eng, 10:10 deu
 
 ## no space results
 
