@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     if dropout > 0:
         # create `dropout_repetitions` segmentations, to aggregate later
-        for i in range(4, 5):#dropout_repetitions):
+        for i in range(dropout_repetitions):
             print(f"Iteration {i+1}")
             apply_bpe(i)
     else:
