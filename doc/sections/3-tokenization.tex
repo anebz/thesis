@@ -6,9 +6,11 @@
 
 \chapter{Tokenization}\label{sec:tokenization}
 
+\section{Introduction}
+
 Tokenization is the first major step in language processing. Once the corpus is obtained, before starting to process the text, because we're dealing with language, we want to understand the meaning of the text. \textbf{Tokens} in the language have a semantic meaning, be it words, phrases, symbols or other elements, whereby a meaning is assigned to each token. Tokenization is the process of breaking a stream of text up into tokens.~\cite{manning2008introduction}
 
-The way to tokenize heavily depends on the task afterwards. Some applications might require different tokenization algorithms. Nowadays, most deep learning architectures in NLP process the raw text at the token level and as a first step, create embeddings for these tokens, which will be explained in more detail in the following sections. In short, the type of tokenization depends on the type of embedding. There are several, explained further in the following sections, and each has its advantages and drawbacks.
+The way to tokenize heavily depends on the task afterwards. Some applications might require different tokenization algorithms. Nowadays, most deep learning architectures in NLP process the raw text at the token level and as a first step, create embeddings for these tokens, which will be explained in more detail in the following sections.~\ref{subsec:wordemb} In short, the type of tokenization depends on the type of embedding. There are several, explained further in the following sections, and each has its advantages and drawbacks.~\ref{subsec:toktypes}
 
 \paragraph{What is a token?}
 
@@ -39,22 +41,17 @@ Additionaly, tokens can be either characters or \textbf{subwords}. For example, 
 
 The major question in the tokenization phase is: \textit{what are the correct tokens to use?}. The following section explores these 4 types of tokenization methods and delves into the algorithms and code libraries available.
 
-
-\section{Motivation}
-
-
-
-\section{Tokenization algorithm types}
-
-Tokenization can be performed on word, character, or subword level.
+\section{Tokenization algorithm types}\label{subsec:toktypes}
 
 \subsection{Word level tokenization}
 
-Conceptually, splitting on whitespace can also split an element which should be regarded as a single token. This is mostly the case with names, borrowed foreign phrases, and compounds that are sometimes written as multiple words. In the case of information retrieval, splitting tokens on spaces can cause bad retrieval results. This problem can be mitigated by asking the user to write such words with a hyphen between them, but this requires user training.~\cite{manning2008introduction}.
+Word level tokenization was the first tokenization type used, and is also the most common. It splits a piece of text into individual words based on word bounderies, usually a specific delimiter, mostly whitespace ' ' or other punctuation signs.
 
-\paragraph{Word embeddings}
+Conceptually, splitting on whitespace can also split an element which should be regarded as a single token, for example New York. This is mostly the case with names, borrowed foreign phrases, and compounds that are sometimes written as multiple words. Word level tokenization without word boundaries aims to address that problem.~\ref{subsec:wordtokwowb} on page~\pageref{subsec:wordtokwowb}
 
-As stated before, the goal of tokenization is to split the text into units with meaning. Typically, each token is assigned an embedding vector: Mikolov et al. \cite{mikolov2013efficient} introduced word2vec in 2013, as a way of encoding a word in a fixed-size vector of numbers that, viewed abstractly in its N dimensions, that word is close to similar words. As a simple example: 
+\paragraph{Word embeddings}\label{subsec:wordemb}
+
+As stated before, the goal of tokenization is to split the text into units with meaning. Typically, each token is assigned an embedding vector: Mikolov et al. \cite{mikolov2013efficient} introduced word2vec in 2013, as a way of encoding a word in a fixed-size vector of numbers that, viewed abstractly in its N dimensions, that word is close to similar words. As a simple example:
 
 \begin{quote}
     Word: smart, embedding: [2, 3, 1, 4]\\
@@ -64,21 +61,7 @@ As stated before, the goal of tokenization is to split the text into units with 
 
 The embedding numbers are just as an example, to illustrate the distances between words. For example, \emph{smart} and \emph{intelligent} have a distance of 2, since the last 2 numbers in the vector differ by one respectively. If this was plotted in a 4 dimensional space, these words would be very close together. On the other hand, \emph{stupid} is almost the opposite of \emph{smart}. The distance in this case is much higher. In the plot, these words would be very far apart.
 
-Thus, with word embeddings, a sentence is transformed into a sequence of embedding vectors, which is very useful for NLP tasks. Word embeddings have some drawbacks however. In many cases, a word can have more than one meaning: \emph{well}, for example, can be used in these 2 scenarios.
-
-\begin{quote}
-    I 'm doing quite well.\\
-    The well was full of water.
-\end{quote}
-
-In the first case, well is an adverb while in the second it's a noun. \emph{well}'s embedding will probably be a mixture of the two, since word embeddings don't generalize to homonyms.
-
-Another drawback is that if word embeddings are created with a certain vocabulary size, and then a new word arrives which isn't present in the vocabulary, because it's a foreign word, or a misspelled word, it will be given an unknown <UNK> embedding, that will be the same for all unknown words.
-
-These problems are not to be mistaken with tokenization problems, tokenization is merely a way to an ends, they're mostly used to create embeddings. And if embeddings from word tokens are problematic, the tokenization method is changed in order to create different tokens, in order to create other types of embeddings.
-
-
-Word level tokenization was the first type that was created, and is also the most commonly used tokenization algorithm. It splits a piece of text into individual words based on a specific delimiter, usually whitespace ' ' or other punctuation signs. Depending on this delimiter, different word-level tokens are formed.
+Thus, with word embeddings, a sentence is transformed into a sequence of embedding vectors, which is very useful for NLP tasks. 
 
 \subsubsection{Word level algorithms}
 
@@ -99,6 +82,22 @@ It is a rule-based tokenization method that separates out clitics ( words that n
 It is mainly used with treebanks http://faculty.washington.edu/fxia/lsa2011/slides/intro\_to\_treebanks.pdf released by Linguistic Data Consortium. https://www.ldc.upenn.edu/
 
 \subsubsection{Word level drawbacks}
+
+Word embeddings have some drawbacks however. In many cases, a word can have more than one meaning: \emph{well}, for example, can be used in these 2 scenarios.
+
+\begin{quote}
+    I 'm doing quite well.\\
+    The well was full of water.
+\end{quote}
+
+In the first case, well is an adverb while in the second it's a noun. \emph{well}'s embedding will probably be a mixture of the two, since word embeddings don't generalize to homonyms.
+
+Another drawback is that word embeddings aren't well equiped to deal with out of vocabulary (oov) words.
+
+that if word embeddings are created with a certain vocabulary size, and then a new word arrives which isn't present in the vocabulary, because it's a foreign word, or a misspelled word, it will be given an unknown <UNK> embedding, that will be the same for all unknown words.
+
+These problems are not to be mistaken with tokenization problems, tokenization is merely a way to an ends, they're mostly used to create embeddings. And if embeddings from word tokens are problematic, the tokenization method is changed in order to create different tokens, in order to create other types of embeddings.
+
 
 One of the major issues with word tokens is dealing with Out Of Vocabulary (OOV) words. OOV words refer to the new words which are encountered at testing. These new words do not exist in the vocabulary. Hence, these methods fail in handling OOV words.
 
@@ -122,6 +121,7 @@ Character Tokenization splits apiece of text into a set of characters. It overco
 https://www.lighttag.io/blog/character-level-NLP/
 https://github.com/fnl/segtok
 https://github.com/fnl/syntok
+https://towardsdatascience.com/besides-word-embedding-why-you-need-to-know-character-embedding-6096a34a3b10
 
 \subsubsection{Character level algorithms}
 
@@ -132,6 +132,8 @@ Character tokens solve the OOV problem but the length of the input and output se
 This brings us to another tokenization known as Subword Tokenization which is in between a Word and Character tokenization.
 
 \subsection{Subword level tokenization}
+
+https://www.thoughtvector.io/blog/subword-tokenization/
 
 Subword Tokenization splits the piece of text into subwords (or n-gram characters). For example, words like lower can be segmented as low-er, smartest as smart-est, and so on.
 
@@ -146,7 +148,7 @@ BPE, WordPiece, SentencePiece. since BPE is the basis of the thesis, it deserves
 ...
 
 
-\subsection{Tokenization without word boundaries}
+\subsection{Tokenization without word boundaries}\label{subsec:wordtokwowb}
 
 Since there are many possible segmentations of character sequences and given the complications of dealing with different languages and the intricancies of each, there is no foolproof and/or unique tokenization. Another approach has been to abandon word-based indexing, and do all indexing from just short subsequences of characters (character -grams), regardless of whether particular sequences cross word boundaries or not.
 
@@ -157,6 +159,8 @@ Punctuations are rare in certain languages!!
 Hence, at times, each character used is taken as a token in Chinese tokenization.
 
 \section{BPE}
+
+https://medium.com/@makcedward/how-subword-helps-on-your-nlp-model-83dd1b836f46
 
 Byte Pair Encoding (BPE) is a widely used tokenization method among transformer-based models. BPE addresses the issues of Word and Character Tokenizers:
 
