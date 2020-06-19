@@ -6,49 +6,42 @@
 
 \chapter{Tokenization}\label{sec:tokenization}
 
-Tokenization is the first major step in language processing. Once the corpus is obtained, the vocabulary of terms needs to be determined and for that, tokens need to be defined. Why? because the meaning of the text could easily be interpreted by analyzing the words present in the text. In NLP, we deal with meanings, and it is assumed that words have a meaning. So we want to extract words. We assign a meaning to each word.
+Tokenization is the first major step in language processing. Once the corpus is obtained, before starting to process the text, because we're dealing with language, we want to understand the meaning of the text. \textbf{Tokens} in the language have a semantic meaning, be it words, phrases, symbols or other elements, whereby a meaning is assigned to each token. Tokenization is the process of breaking a stream of text up into tokens.~\cite{manning2008introduction}
 
-A token is an instance of a sequence of characters in some particular document that are grouped together as a useful semantic unit for processing.
+The way to tokenize heavily depends on the task afterwards. Some applications might require different tokenization algorithms. Nowadays, most deep learning architectures in NLP process the raw text at the token level and as a first step, create embeddings for these tokens, which will be explained in more detail in the following sections. In short, the type of tokenization depends on the type of embedding. There are several, explained further in the following sections, and each has its advantages and drawbacks.
 
-Tokenization is the process of breaking a stream of text up into words, phrases, symbols, or other meaningful elements called tokens.
+\paragraph{What is a token?}
 
-Tokenization is the task of splitting a phrase, sentence, paragraph, or an entire text document into smaller units called tokens, which can be individual words or terms.
-
-Given a character sequence and a defined document unit, tokenization is the task of chopping it up into pieces, called tokens, perhaps at the same time throwing away certain characters, such as punctuation.~\cite{Bib:stanford_token}
-
-Here is an example of tokenization.
+A token is an instance of a sequence of characters in some particular document that are grouped together as a useful semantic unit for processing. Here is an example of tokenization.
 
 \begin{quote}
-    Input: Cats, felines, tigers, I ate a burger today.\\
-    Output: ['Cats', 'felines', 'tigers', 'I', 'ate', 'a', 'burger', 'today', '.']
+    Input: I ate a burger today, and it was good.\\
+    Output: ['I', 'ate', 'a', 'burger', 'today', 'and', 'it', 'was', 'good']
 \end{quote}
 
-Similarly, tokens can be either characters or subwords. For example, let us consider “smarter”:
+In this example, the way to obtain tokens looks simple: just locate word boundaries, split by whitespace and get the symbols, and remove the punctuation marks, since punctuation marks have no definite meaning. However, this is not always the case.
 
-    Character tokens: s-m-a-r-t-e-r
-    Subword tokens: smart-er
+\paragraph{How to deal with punctuation marks?}
 
-The major question in the tokenization phase is: \textbf{what are the correct tokens to use?} In the simple example above, it looks simple: delete whitespaces and throw away punctuation characters. 
+Each language has its own set of tricky cases, for example in English what is the correct approach when dealing with apostrophes for possession and contractions? For example words like \emph{aren't}, \emph{Sarah's} and \emph{O'Neill}. Because of this, it is imperative to know the language of the text to be tokenized. \textit{Language identification} is the task of identifying the language of the input text. From the initial k-gram algorithms used in cryptography (Konnheim, 1981), to more modern n-gram methods (Dunning, 1994) have been used. Once the language is known, we can follow the rules for each case and deal with punctuation marks appropriately.
 
-But each language has its own set of tricky cases, for example in English what is the correct approach when dealing with apostrophes for possession and contractions? Words like \emph{aren't}, \emph{Sarah's}, \emph{O'Neill}. Because of this, it is imperative to know the language of the text to be tokenized. \textit{Language identification} is the task of identifying the language of the input text. From the initial k-gram algorithms used in cryptography (Konnheim, 1981), to more modern n-gram methods (Dunning, 1994) have been used
+\paragraph{Other types of tokens}
 
-The tokens could be words, numbers or punctuation marks. In tokenization, smaller units are created by locating word boundaries.
+Additionaly, tokens can be either characters or \textbf{subwords}. For example, the word \emph{smarter}:
 
-Conceptually, splitting on white space can also split what should be regarded as a single token. This is mostly the case with names, borrowed foreign phrases, and compounds that are sometimes written as multiple words. Splitting tokens on spaces can cause bad retrieval results. This problem can be mitigated by asking the user to write such words with a hyphen between them, but this requires user training.
+\begin{quote}
+    Sentence: the smarter computer
+    Word: the, smarter, computer\\
+    Word without word boundaries: the smart, er comput, er\\
+    Character tokens: t-h-e, s-m-a-r-t-e-r, c-o-m-p-u-t-e-r\\
+    Subword tokens: the, smart-er, comput-er
+\end{quote}
 
-\subsection{Tokenization without word boundaries}
+The major question in the tokenization phase is: \textit{what are the correct tokens to use?}. The following section explores these 4 types of tokenization methods and delves into the algorithms and code libraries available.
 
-Since there are many possible segmentations of character sequences and given the complications of dealing with different languages and the intricancies of each, there is no foolproof and/or unique tokenization. Another approach has been to abandon word-based indexing, and do all indexing from just short subsequences of characters (character -grams), regardless of whether particular sequences cross word boundaries or not.
-
-This can be specifically beneficial in some Asian languages, where an individual symbol can resemble a syllable rather than a word or letter,  most words are short (the most common length is 2 characters), and that, given the lack of standardization of word breaking in the writing system, it is not always clear where word boundaries should be placed.
-
-Punctuations are rare in certain languages!!
-
-Hence, at times, each character used is taken as a token in Chinese tokenization.
 
 \section{Motivation}
 
-For example, Transformer based models – the State of The Art (SOTA) Deep Learning architectures in NLP – process the raw text at the token level. Similarly, the most popular deep learning architectures for NLP like RNN, GRU, and LSTM also process the raw text at the token level.
 
 
 \section{Tokenization algorithm types}
@@ -56,6 +49,34 @@ For example, Transformer based models – the State of The Art (SOTA) Deep Learn
 Tokenization can be performed on word, character, or subword level.
 
 \subsection{Word level tokenization}
+
+Conceptually, splitting on whitespace can also split an element which should be regarded as a single token. This is mostly the case with names, borrowed foreign phrases, and compounds that are sometimes written as multiple words. In the case of information retrieval, splitting tokens on spaces can cause bad retrieval results. This problem can be mitigated by asking the user to write such words with a hyphen between them, but this requires user training.~\cite{manning2008introduction}.
+
+\paragraph{Word embeddings}
+
+As stated before, the goal of tokenization is to split the text into units with meaning. Typically, each token is assigned an embedding vector: Mikolov et al. \cite{mikolov2013efficient} introduced word2vec in 2013, as a way of encoding a word in a fixed-size vector of numbers that, viewed abstractly in its N dimensions, that word is close to similar words. As a simple example: 
+
+\begin{quote}
+    Word: smart, embedding: [2, 3, 1, 4]\\
+    Word: intelligent, embedding: [2, 3, 2, 3]\\
+    Word: stupid, embedding: [-2, -4, -1, -3]
+\end{quote}
+
+The embedding numbers are just as an example, to illustrate the distances between words. For example, \emph{smart} and \emph{intelligent} have a distance of 2, since the last 2 numbers in the vector differ by one respectively. If this was plotted in a 4 dimensional space, these words would be very close together. On the other hand, \emph{stupid} is almost the opposite of \emph{smart}. The distance in this case is much higher. In the plot, these words would be very far apart.
+
+Thus, with word embeddings, a sentence is transformed into a sequence of embedding vectors, which is very useful for NLP tasks. Word embeddings have some drawbacks however. In many cases, a word can have more than one meaning: \emph{well}, for example, can be used in these 2 scenarios.
+
+\begin{quote}
+    I 'm doing quite well.\\
+    The well was full of water.
+\end{quote}
+
+In the first case, well is an adverb while in the second it's a noun. \emph{well}'s embedding will probably be a mixture of the two, since word embeddings don't generalize to homonyms.
+
+Another drawback is that if word embeddings are created with a certain vocabulary size, and then a new word arrives which isn't present in the vocabulary, because it's a foreign word, or a misspelled word, it will be given an unknown <UNK> embedding, that will be the same for all unknown words.
+
+These problems are not to be mistaken with tokenization problems, tokenization is merely a way to an ends, they're mostly used to create embeddings. And if embeddings from word tokens are problematic, the tokenization method is changed in order to create different tokens, in order to create other types of embeddings.
+
 
 Word level tokenization was the first type that was created, and is also the most commonly used tokenization algorithm. It splits a piece of text into individual words based on a specific delimiter, usually whitespace ' ' or other punctuation signs. Depending on this delimiter, different word-level tokens are formed.
 
@@ -123,6 +144,17 @@ BPE, WordPiece, SentencePiece. since BPE is the basis of the thesis, it deserves
 \subsubsection{Subword level drawbacks}
 
 ...
+
+
+\subsection{Tokenization without word boundaries}
+
+Since there are many possible segmentations of character sequences and given the complications of dealing with different languages and the intricancies of each, there is no foolproof and/or unique tokenization. Another approach has been to abandon word-based indexing, and do all indexing from just short subsequences of characters (character -grams), regardless of whether particular sequences cross word boundaries or not.
+
+This can be specifically beneficial in some Asian languages, where an individual symbol can resemble a syllable rather than a word or letter,  most words are short (the most common length is 2 characters), and that, given the lack of standardization of word breaking in the writing system, it is not always clear where word boundaries should be placed.
+
+Punctuations are rare in certain languages!!
+
+Hence, at times, each character used is taken as a token in Chinese tokenization.
 
 \section{BPE}
 
