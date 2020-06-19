@@ -124,8 +124,8 @@ if __name__ == "__main__":
 		extract_alignments(input_mode=True)
 
 	if dropout > 0:
-		# create `dropout_repetitions` segmentations, to aggregate later
-		for i in range(dropout_repetitions):
+		# create `dropout_sampless` segmentations, to aggregate later
+		for i in range(dropout_sampless):
 			print(f"Iteration {i+1}")
 			extract_alignments(i)
 			print("\n\n\n\n")

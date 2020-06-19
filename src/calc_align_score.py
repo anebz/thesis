@@ -215,7 +215,7 @@ if __name__ == "__main__":
 		baseline_df = get_baseline_score(probs, surs, surs_count)
 
 	if dropout > 0:
-		score_dfs = [calc_align_scores(probs, surs, surs_count, baseline_df, i) for i in range(dropout_repetitions)]
+		score_dfs = [calc_align_scores(probs, surs, surs_count, baseline_df, i) for i in range(dropout_sampless)]
 		avg_scores(baseline_df, score_dfs)
 	else:
 		calc_align_scores(probs, surs, surs_count, baseline_df)

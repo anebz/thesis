@@ -9,7 +9,7 @@ source_bpe, target_bpe = False, False # both can't be true at the same time
 
 space = False
 dropout = 0.1
-dropout_repetitions = 19
+dropout_samples = 10
 num_all_symbols = 20000
 all_symbols = [100, 200, 500, 1000, 2000, 4000, 6000, 8000]
 merge_threshold = [0.3, 0.5, 0.7, 0.9] # if alignments are present in >X% of files, they're accepted

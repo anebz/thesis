@@ -2,12 +2,22 @@
 
 Master thesis repo
 
+* Alignment models: FastAlign, Eflomal
+* Datasets: eng_deu, eng_fra
+* Sampling methods: Dropout, (maybe something else?!)
+* Tokenization: space mode, Chaos mode
+
 ## tasks
 
+* [ ] merge results in ns mode with dropout=0, and how much dropout improves it. delete dashed lines in dropout=0, ns case, and in dropout case use the normal one as dashed
+* [ ] Effect of dropout rate on (4k, 5k, 8k) BPE samples in chaos mode. (baseline: the same BPE size, chaos mode alignment without dropout)
+* [ ] paper stuff, do after thesis
+  * no space is good language with no space tokenization
+  * eflomal instead of fastalign? https://github.com/robertostling/eflomal result will probably not be as good
+  * english - french, english - romanian (Masoud has datasets)
 * [ ] BPE algo is very slow, everyone uses [fastBPE](https://github.com/glample/fastBPE)
 * [ ] check SentencePiece
 * [ ] pipeline: if we discard `we _`, then all possibilities of `we_ X` won't be considered. Huge loss of merges
-* [X] pipeline: run again, higher dropout. 10k symbols? in ns mode. learn 20k symbols? Add 14k and 20k to dropout=0.5 results
 * [ ] extract_alignments: maybe do fast align in one big file?
 * [ ] learn_bpe: substitute number for digit when merging?
 * [ ] dropout only on one side? source_bpe -> source_dropout?
