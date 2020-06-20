@@ -49,9 +49,50 @@ Word level tokenization was the first tokenization type used, and is also the mo
 
 Conceptually, splitting on whitespace can also split an element which should be regarded as a single token, for example New York. This is mostly the case with names, borrowed foreign phrases, and compounds that are sometimes written as multiple words. Word level tokenization without word boundaries aims to address that problem.~\ref{subsec:wordtokwowb} on page~\pageref{subsec:wordtokwowb}
 
+\subsubsection{Word level algorithms}
+
+The most simple way to obtain word level tokenization is by simply splitting the sentence on the desired delimeter, whitespace usually. The \pyth{sentence.split()} function in Python or a Regex command \pyth{re.findall("[\w']+", text)} achieve this in a simple way.
+
+The \href{https://www.nltk.org/}{natural language toolkit (NLTK)} in python provides a \href{https://www.nltk.org/api/nltk.tokenize.html}{tokenize package} which includes a \emph{word\_tokenize} function, which requires the user to give in the language of the text. If none is given, English is taken as default.
+
+\begin{python}
+from nltk.tokenize import word_tokenize
+sentence = u'I spent $2 yesterday'
+sentence_tokenized = word_tokenize(sentence, language='English')
+>>> sentence_tokenized = ['I', 'spent', '$', '2', 'yesterday']
+\end{python}
+
+Similarly, SpaCy offers a similar functionality. It is possible to load the language model for a different language and model size.
+
+\begin{python}
+import spacy
+sp = spacy.load('en_core_web_sm')
+sentence = u'I spent $2 yesterday'
+sentence_tokenized = sp(sentence)
+>>> sentence_tokenized = ['I', 'spent', '$', '2', 'yesterday']
+\end{python}
+
+Keras also offers a similar functionality:
+
+\begin{python}
+from keras.preprocessing.text import text_to_word_sequence
+sentence_tokenized = text_to_word_sequence(sentence)
+\end{python}
+
+As does Gensim:
+
+\begin{python}
+from gensim.utils import tokenize
+sentence_tokenized = list(tokenize(sentence))
+\end{python}
+
 \paragraph{Word embeddings}\label{subsec:wordemb}
 
-As stated before, the goal of tokenization is to split the text into units with meaning. Typically, each token is assigned an embedding vector: Mikolov et al. \cite{mikolov2013efficient} introduced word2vec in 2013, as a way of encoding a word in a fixed-size vector of numbers that, viewed abstractly in its N dimensions, that word is close to similar words. As a simple example:
+As stated before, the goal of tokenization is to split the text into units with meaning. Typically, each token is assigned an embedding vector: Mikolov et al. \cite{mikolov2013efficient} introduced word2vec in 2013, as a way of transforming a word into a fixed-size vector representation, as shown in the picture below.
+
+\includegraphics[width=9cm]{figures/word_emb.png}
+
+If viewed abstractly in its N dimensions, each word's representation is close to similar words. As a simple example:
 
 \begin{quote}
     Word: smart, embedding: [2, 3, 1, 4]\\
@@ -61,25 +102,9 @@ As stated before, the goal of tokenization is to split the text into units with 
 
 The embedding numbers are just as an example, to illustrate the distances between words. For example, \emph{smart} and \emph{intelligent} have a distance of 2, since the last 2 numbers in the vector differ by one respectively. If this was plotted in a 4 dimensional space, these words would be very close together. On the other hand, \emph{stupid} is almost the opposite of \emph{smart}. The distance in this case is much higher. In the plot, these words would be very far apart.
 
-Thus, with word embeddings, a sentence is transformed into a sequence of embedding vectors, which is very useful for NLP tasks. 
+As well as word2vec, there are other word embedding algorithms such as GloVe or fasttext.
 
-\subsubsection{Word level algorithms}
-
-Pretrained Word Embeddings such as Word2Vec and GloVe comes under word tokenization.
-
-https://medium.com/@zafaralibagh6/simple-tutorial-on-word-embedding-and-word2vec-43d477624b6d
-https://www.analyticsvidhya.com/blog/2017/06/word-embeddings-count-word2veec/
-https://towardsdatascience.com/introduction-to-word-embedding-and-word2vec-652d0c2060fa
-
-split(), regex, nltk, spacy, keras, gensim
-
-https://www.analyticsvidhya.com/blog/2019/07/how-get-started-nlp-6-unique-ways-perform-tokenization/
-
-1. Penn TreeBank:
-
-It is a rule-based tokenization method that separates out clitics ( words that normally occur only in combination with another word, for example in I’m), keeps hyphenated words together, and separates out all punctuation.
-
-It is mainly used with treebanks http://faculty.washington.edu/fxia/lsa2011/slides/intro\_to\_treebanks.pdf released by Linguistic Data Consortium. https://www.ldc.upenn.edu/
+Thus, with word embeddings, a sentence is transformed into a sequence of embedding vectors, which is very useful for NLP tasks.
 
 \subsubsection{Word level drawbacks}
 
@@ -92,24 +117,11 @@ Word embeddings have some drawbacks however. In many cases, a word can have more
 
 In the first case, well is an adverb while in the second it's a noun. \emph{well}'s embedding will probably be a mixture of the two, since word embeddings don't generalize to homonyms.
 
-Another drawback is that word embeddings aren't well equiped to deal with out of vocabulary (oov) words.
+Another drawback is that word embeddings aren't well equipped to deal with out of vocabulary (oov) words. Word embeddings are created with a certain vocabulary size, that is, a certain number of words are known. If afterwards a new word arrives which isn't present in the vocabulary, because it's a foreign word, or a misspelled word, it will be given an unknown <UNK> embedding, that will be the same for all unknown words. Therefore all unknown words have the same embedding, that is, the NLP task will treat all these words as if they had the same meaning. The information within these words is lost due to the mapping from OOV to UNK.
 
-that if word embeddings are created with a certain vocabulary size, and then a new word arrives which isn't present in the vocabulary, because it's a foreign word, or a misspelled word, it will be given an unknown <UNK> embedding, that will be the same for all unknown words.
+Another issue with word tokens is related to the vocabulary size. Generally, pre-trained models are trained on a large volume of the text corpus. As such, if the vocabulary is built with all the unique words in such a large corpus, it creates a huge vocabulary. This opens the door to \emph{character tokenization}, since in this case the vocabulary depends on the number of characters, which is significantly lower than the number of all different words.
 
 These problems are not to be mistaken with tokenization problems, tokenization is merely a way to an ends, they're mostly used to create embeddings. And if embeddings from word tokens are problematic, the tokenization method is changed in order to create different tokens, in order to create other types of embeddings.
-
-
-One of the major issues with word tokens is dealing with Out Of Vocabulary (OOV) words. OOV words refer to the new words which are encountered at testing. These new words do not exist in the vocabulary. Hence, these methods fail in handling OOV words.
-
-But wait – don’t jump to any conclusions yet!
-
-    A small trick can rescue word tokenizers from OOV words. The trick is to form the vocabulary with the Top K Frequent Words and replace the rare words in training data with unknown tokens (UNK). This helps the model to learn the representation of OOV words in terms of UNK tokens
-    So, during test time, any word that is not present in the vocabulary will be mapped to a UNK token. This is how we can tackle the problem of OOV in word tokenizers.
-    The problem with this approach is that the entire information of the word is lost as we are mapping OOV to UNK tokens. The structure of the word might be helpful in representing the word accurately. And another issue is that every OOV word gets the same representation
-
-Another issue with word tokens is connected to the size of the vocabulary. Generally, pre-trained models are trained on a large volume of the text corpus. So, just imagine building the vocabulary with all the unique words in such a large corpus. This explodes the vocabulary!
-
-This opens the door to Character Tokenization.
     
 \subsection{Character level tokenization}
 
@@ -147,6 +159,8 @@ BPE, WordPiece, SentencePiece. since BPE is the basis of the thesis, it deserves
 
 ...
 
+
+[Huggingface tokenizers](https://github.com/huggingface/tokenizers)
 
 \subsection{Tokenization without word boundaries}\label{subsec:wordtokwowb}
 
