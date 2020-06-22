@@ -211,7 +211,10 @@ def learn_bpe(corpus, bpe_model):
     pairs, idx = get_stats(tokens)
 
     most_frequent_merges = []
-    for i in tqdm(range(num_all_symbols), desc=f"learn_bpe: num_symbols={num_all_symbols}, lang={lang}, space mode={space}"):
+    for i in tqdm(
+        range(num_all_symbols), 
+        desc=f"learn_bpe: num_symbols={num_all_symbols}, lang={lang}, space mode={space}"
+        ):
 
         try:
             most_frequent = pairs.most_common(1)[0][0]

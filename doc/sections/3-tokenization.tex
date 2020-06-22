@@ -90,7 +90,9 @@ sentence_tokenized = list(tokenize(sentence))
 
 As stated before, the goal of tokenization is to split the text into units with meaning. Typically, each token is assigned an embedding vector: Mikolov et al., 2013~\cite{mikolov2013efficient} introduced word2vec, as a way of transforming a word into a fixed-size vector representation, as shown in the picture below.
 
-\includegraphics[width=9cm]{figures/word_emb.png}
+\begin{center}
+\includegraphics[width=12cm]{figures/word_emb.png}
+\end{center}
 
 If viewed abstractly in its N dimensions, each word's representation is close to similar words. As a simple example:
 
@@ -179,28 +181,35 @@ An approach to handle this has been to abandon word-based indexing, and do all i
 
 \section{BPE}
 
-Byte Pair Encoding (BPE) is a widely used tokenization method among Transformer-based models. BPE addresses the issues of word and character tokenizers in the following ways: regarding OOV words, BPE segments OOV as subwords and represents the word in terms of these subwords. Regarding the longer sequence length which was one of the drawbacks of character tokenization, in this case the length of input and output sentences after BPE are shorter compared to character tokenization.
+Byte Pair Encoding (BPE), first introduced by Sennrich et al., 2015~\cite{sennrich2015neural}, is a widely used tokenization method among Transformer-based models. It's a word segmentation algorithm that merges the most frequently occurring character or character sequences iteratively. Here is an example of a sequence in its original form and after the BPE merges, much shorter than the original.
 
-BPE is a word segmentation algorithm that merges the most frequently occurring character or character sequences iteratively. These are the steps to learn BPE:
+\begin{center}
+\includegraphics[width=12cm]{figures/bpe.jpg}
+\end{center}
+
+BPE addresses the issues of word and character tokenizers in the following ways: regarding OOV words, BPE segments OOV as subwords and represents the word in terms of these subwords. Regarding the longer sequence length which was one of the drawbacks of character tokenization, in this case the length of input and output sentences after BPE are shorter compared to character tokenization.
+
+\subsection{Minimal algorithm to learn BPE segmentations}
+
+These are the steps to learn BPE segmentations:
 
 \begin{enumerate}
     \item Split the words in the corpus into characters after appending </w>, or another special symbol to show the beginning or end of the word.
-    \item Initialize the vocabulary with unique characters in the corpus
-    \item Compute the frequency of each pair of characters or character sequences in corpus.
-    \item Merge the most frequent pair in corpus.
+    \item Compute the frequency of each pair of characters or character sequences in corpus and obtain the most frequent one.
     \item Save the best pair to the vocabulary.
+    \item Merge the most frequent pair in corpus.
     \item Repeat steps 3 to 5 for a certain number of iterations.
 \end{enumerate}
 
 As an example, let's consider a simple corpus with a single line, and the character \emph{'\_'} to mark the beginning of each word, so as not to merge anything between different words later. The following code shows the first step of the algorithm.
 
 \begin{python}
-tokens = []
+def read_corpus(corpus):
+    tokens = [("_" + " ".join(token)) for token in corpus]
+    return tokens
+
 corpus = ['this is this.']
-for line in corpus:
-    for word in line.split():
-        tokens.append('_' + ' '.join(word))
-tokens = [' '.join(sent) for sent in tokens]
+tokens = read_corpus(corpus)
 >>> tokens = ['_t h i s _i s _t h i s .']
 \end{python}
 
@@ -212,48 +221,100 @@ from collections import Counter
 def get_stats(tokens):
     pairs = Counter()
     for sent in tokens:
-        for word in sent[1:].split( ' _'):
+        for word in sent[1:].split(' _'):
             symbols = ('_' + word).split()
             for j in range(len(symbols) - 1):
                 pairs[symbols[j], symbols[j+1]] += 1
     return pairs
 
-stats = get_stats(tokens)
->>> stats = Counter({('_t', 'h'): 2, ('h', 'i'): 2, ('i', 's'): 2, ('_i', 's'): 1, ('i', 's,'): 1, ('_', 'i'): 1, ('_i', 't'): 1, ('t', '?'): 1})
+merge_list = []
+pairs = get_stats(tokens)
+>>> pairs = Counter({('_t', 'h'): 2, ('h', 'i'): 2, ('i', 's'): 2, 
+                    ('_i', 's'): 1, ('i', 's,'): 1, ('_', 'i'): 1, 
+                    ('_i', 't'): 1, ('t', '?'): 1})
 
-most_frequent = stats.most_common(1)[0][0]
+most_frequent = pairs.most_common(1)[0][0]
+merge_list.append(most_frequent)
 >>> most_frequent = ('_t', 'h')
 \end{python}
 
-There we can see each bigram and its frequency. For example, ('\_t', 'h') occurs twice in the corpus, and it is taken as the most frequently occurring bigram.
+There we can see each bigram and its frequency. For example, ('\_t', 'h') occurs twice in the corpus, and it is taken as the most frequently occurring bigram, which we can save into the merge\_list. Now it's the time to merge this pair in the corpus.
 
-https://github.com/anebz/thesis/commit/11c72188bea139d82202d131372e034b6a1d8052
+\begin{python}
+import re
 
-Example in https://www.analyticsvidhya.com/blog/2020/05/what-is-tokenization-nlp/
+def merge_pair_in_corpus(tokens, pair):
+    # convert list of sentences into one big string 
+    # in order to do the substitution once
+    tokens = '\n'.join(tokens)
+    # regex to capture the pair
+    p = re.compile(r'(?<!\S)' + re.escape(' '.join(pair)) + r'(?!\S)')
+    # substitute the unmerged pair by the merged pair
+    tokens = p.sub(''.join(pair), tokens)
+    tokens = tokens.split('\n')
+    return tokens
 
-https://www.thoughtvector.io/blog/subword-tokenization/BPE.svg
+tokens = merge_pair_in_corpus(tokens, most_frequent)
+>>> tokens = ['_th i s _i s _th i s .']
+\end{python}
 
-Different subword tokenization strategies change this in subtle ways - BPE scores tokens simply with their count, and uses eager encoding, while character tokenization simple has a max n-gram size of 1. This strategy sounds strikingly similar to phrase extraction using collocation, which counts word n-grams, scores them, and exports a model in similar fashion, except the sequence items are words instead of characters. And it turns out, using a phrase extraction library, you can learn an effective BPE vocabulary for languages like Japanese which aren’t whitespace separated by simply changing the word-regex to single characters, helping give this connection some credibility.
+Now the only thing left to do is to iterate this a number of times, which is usually decided by the user, until a certain number of pairs have been found. At each step, the object \emph{pairs} is calculated again since there might be new pairs such as ('\_th', 'i') in this example. The whole minimal code would look like this:
+
+\begin{python}
+corpus = ['this is this.']
+merge_list = []
+num_merges = 10
+
+tokens = read_corpus(corpus)
+
+for _ in range(num_merges):
+
+    pairs = get_stats(tokens)
+    most_frequent = pairs.most_common(1)[0][0]
+    merge_list.append(most_frequent)
+    tokens = merge_pair_in_corpus(tokens, most_frequent)
+\end{python}
+
+In each step of the iteration, the \emph{get\_stats} function iterates all the characters in the corpus, so the complexity is O(len(corpus) * len(sent)), for an average sentence length. Obtaining the most frequent pair takes constant time, since the object \emph{pairs} is a Counter object and has a built-in function to retrieve the most frequent item. At the step of \emph{merge\_pair\_in\_corpus}, the corpus is iterated in its entirety again, with a complexity of O(len(corpus) * len(sent)). Therefore, the algorithm has a complexity of O(num\_merges * len(corpus) * len(sent)). The num\_merges part cannot be avoided, but operating through all the characters of the corpus is very computationally expensive. In this thesis this algorithm has been optimized, as will be shown below.
+
+\subsection{Applying BPE to OOV words}
+
+In the event of an OOV word, such as \emph{these}, which the corpus used in the previous example doesn't know, the BPE algorithm can create some subword units from the corpus used before. This is Sennrich et al.'s approach~\cite{sennrich2015neural}:
+
+\begin{enumerate}
+    \item Split the OOV word into characters after inserting '\_' in the beginning.
+    \item Compute the pair of character or character sequences in a word.
+    \item Select the pairs present in the learned operations.
+    \item Merge the most frequent pair.
+    \item Repeat steps 2 and 3 until merging is possible.
+\end{enumerate}
+
+And this is the code in Python for such an algorithm:
+
+\begin{python}
+oov = 'these'
+oov = ['_' + ' '.join(list(oov))]
+i = 0
+while True:
+    pairs = get_stats(oov)
+    # find the pairs available in the learned operations
+    idx = [merge_list.index(i) for i in pairs if i in merge_list]
+
+    if len(idx) == 0:
+        print("BPE completed")
+        break
+    # choose the most frequent learned operation
+    best = merges[min(idx)]
+
+    # merge the best pair
+    oov = merge_vocab(best, oov)
+\end{python}
+
+After some iteration, the OOV word \emph{these} is transformed into \emph{th e s e}, since \emph{th} is the only known merge in the merge\_list
+
+Different subword tokenization strategies change this in subtle ways: BPE scores tokens simply regarding their count or frequency in the corpus, and uses eager encoding, while character tokenization simple has a max n-gram size of 1. This strategy is very similar to phrase extraction using collocation, which counts word n-grams, scores them, and exports a model in similar fashion, except the sequence items are words instead of characters. As it turns out, using a phrase extraction library it's possible to learn an effective BPE vocabulary for languages like Japanese which aren't whitespace separated by simply changing the word-regex to single characters, helping give this connection some credibility.
 
 A finding like this begs the question - should BPE have a more intelligent scoring phase when choosing its vocab from n-gram counts? Mutual information as a scoring function was very valuable in achieving better phrase extraction, and it seems that it would be useful here as well. And even more than that, is there an abstract tokenizer we can define that fulfills each of these strategies and more via hyperparameters like n-gram length, scoring strategy, etc? Could this abstract tokenizer have a common implementation across platforms like Tensorflow, PyTorch, the web, etc?
-
-\paragraph{Applying BPE to OOV words}
-
-(see python code bpe\_10.py)
-
-But, how can we represent the OOV word at test time using BPE learned operations? Any ideas? Let’s answer this question now.
-
-    At test time, the OOV word is split into sequences of characters. Then the learned operations are applied to merge the characters into larger known symbols.
-
-    – Neural Machine Translation of Rare Words with Subword Units, 2016
-
-Here is a step by step procedure for representing OOV words:
-
-    Split the OOV word into characters after appending </w>
-    Compute pair of character or character sequences in a word
-    Select the pairs present in the learned operations
-    Merge the most frequent pair
-    Repeat steps 2 and 3 until merging is possible
 
 \subsection{BPE dropout}
 
@@ -297,6 +358,7 @@ https://github.com/google/sentencepiece
 
 Sentencepiece is a less common, but very beautiful strategy for subword tokenization. While conceptually similar to BPE, it strays from the eager encoding strategy to allow it to achieve higher quality tokenization and reduce error induced by location-dependence seen in BPE. The main difference is how Sentencepiece views ambiguity in character grouping, seeing it as a source of regularization for downstream models during training, as well as its use of a simple language model to evaluate the most likely character groupings instead of eagerly picking the longest recognized string like BPE does. This results in very high quality tokenization, but comes at great cost to performance, at times making it the slowest part of an NLP pipeline. While the assumption of ambiguity in tokenization seems natural, it appears the performance trade-off is not worth it, as Google itself opted not to use this strategy in their BERT language model.
 
+https://www.thoughtvector.io/blog/subword-tokenization/
 https://www.thoughtvector.io/blog/subword-tokenization/Sentencepiece.svg
 
 See medium link from wordpiece section
