@@ -88,7 +88,7 @@ sentence_tokenized = list(tokenize(sentence))
 
 \paragraph{Word embeddings}\label{subsec:wordemb}
 
-As stated before, the goal of tokenization is to split the text into units with meaning. Typically, each token is assigned an embedding vector: Mikolov et al. \cite{mikolov2013efficient} introduced word2vec in 2013, as a way of transforming a word into a fixed-size vector representation, as shown in the picture below.
+As stated before, the goal of tokenization is to split the text into units with meaning. Typically, each token is assigned an embedding vector: Mikolov et al., 2013~\cite{mikolov2013efficient} introduced word2vec, as a way of transforming a word into a fixed-size vector representation, as shown in the picture below.
 
 \includegraphics[width=9cm]{figures/word_emb.png}
 
@@ -111,7 +111,7 @@ Thus, with word embeddings, a sentence is transformed into a sequence of embeddi
 Word embeddings have some drawbacks however. In many cases, a word can have more than one meaning: \emph{well}, for example, can be used in these 2 scenarios.
 
 \begin{quote}
-    I 'm doing quite well.\\
+    I'm doing quite well.\\
     The well was full of water.
 \end{quote}
 
@@ -125,76 +125,119 @@ These problems are not to be mistaken with tokenization problems, tokenization i
     
 \subsection{Character level tokenization}
 
-Character Tokenization splits apiece of text into a set of characters. It overcomes the drawbacks we saw above about Word Tokenization.
+In this type of tokenization, instead of splitting a text into words, the splitting is done into characters, whereby \emph{smarter} becomes \emph{s-m-a-r-t-e-r} for instance. \href{https://github.com/karpathy/char-rnn}{Karpathy, 2015} was the first to introduce a character level language model.
 
-    Character Tokenizers handles OOV words coherently by preserving the information of the word. It breaks down the OOV word into characters and represents the word in terms of these characters
-    It also limits the size of the vocabulary. Want to talk a guess on the size of the vocabulary? 26 since the vocabulary contains a unique set of characters
+OOV words, misspellings or rare words, are handled better, since they're broken down into characters and these characters are usually known. In addition, the size of the vocabulary is significantly lower, namely 26 in the simple case where only the English characters are considered, though one might as well include all ASCII characters. Zhang et al., 2015~\cite{zhang2015text}, who introduced the character CNN, consider all the alphanumeric character, in addition to puctuation marks and some special symbols.
 
-https://www.lighttag.io/blog/character-level-NLP/
-https://github.com/fnl/segtok
-https://github.com/fnl/syntok
-https://towardsdatascience.com/besides-word-embedding-why-you-need-to-know-character-embedding-6096a34a3b10
+Character level models are unrestricted in their vocabulary and see the input "as-is". Since the vocabulary is much lower, the model's performance is much better than in the word tokens case. Tokenizing sequences at the character level has shown some impressive results, as stated below.
+
+Radfor et al., 2017~\cite{radford2017learning} from OpenAI showed that character level models can capture the semantic properties of text.
+
+Kalchbrenner et al., 2016~\cite{kalchbrenner2016neural} from Deepmind and Leet et al., 2017~\cite{lee-etal-2017-fully} both demonstrated translation at the character level. These are particularly compelling results as the task of translation captures the semantic understanding of the underlying text. Spelling mistakes, rare words and morphological aspects are very well handled with this type of tokenization.
 
 \subsubsection{Character level algorithms}
 
+The previous libraries explored in the case of word embeddings (native python libraries, nltk, spacy, keras) have their own version for character level tokenization.
+
 \subsubsection{Character level drawbacks}
 
-Character tokens solve the OOV problem but the length of the input and output sentences increases rapidly as we are representing a sentence as a sequence of characters. As a result, it becomes challenging to learn the relationship between the characters to form meaningful words.
+When tokenizing a text at the character level, the sequences are longer, which takes longer to compute since the neural net needs to have significantly more parameters to allow the model to perform the conceptual grouping internally, instead of being handed the groups upfront.
 
-This brings us to another tokenization known as Subword Tokenization which is in between a Word and Character tokenization.
+In addition, it becomes challenging to learn the relationship between the characters to form meaningful words. Besides, there is no semantic information among characters, characters are semantically void.
+
+Sometimes the NLP task doesn't need processing at the character level, such as when doing a sequence tagging task or name entity recognition, the character level model will output characters, which requires post processing.
+
+As an in-betweener between word and character tokenization, subword tokenization produces subword units, smaller than words but bigger than just characters.
 
 \subsection{Subword level tokenization}
 
-https://www.thoughtvector.io/blog/subword-tokenization/
+Subword tokenization is the task of splitting the text into subwords or n-gram characters. For example, words like lower can be segmented as low-er, smartest as smart-est, and so on. In the event of an OOV word such as \emph{eorner}, this tokenizer will divide it into \emph{eorn, er} and effectivey obtain some semantic information. Very common subwords such as \emph{ing}, \emph{ion}, usually with a morphological sense, are learnt through repetition. The word \emph{unfriendly} would be split into \emph{un, friend, ly}.
 
-Subword Tokenization splits the piece of text into subwords (or n-gram characters). For example, words like lower can be segmented as low-er, smartest as smart-est, and so on.
-
-Transformed based models – the SOTA in NLP – rely on Subword Tokenization algorithms for preparing vocabulary. Now, I will discuss one of the most popular Subword Tokenization algorithm known as Byte Pair Encoding (BPE).
+Nowadays, as of 2020, the most powerful deep learning architectures are based on Transformers, introduced by Vaswani et al., 2017~\cite{vaswani2017attention} and these rely on subword tokenization algorithms to prepare the vocabulary.
 
 \subsubsection{Subword level algorithms}
 
-BPE, WordPiece, SentencePiece. since BPE is the basis of the thesis, it deserves a section in itself.
+Since Transformers are a relatively architecture at the time of writing, subword tokenization is an active area of research. Nowadays three algorithms stand out: byte-pair encoding (BPE), WordPiece and SentencePiece.
+
+Since these algorithms are the basis of the thesis, it will be explained in depth in the following section.
+
+Huggingface tokenizers https://github.com/huggingface/tokenizers
 
 \subsubsection{Subword level drawbacks}
 
-...
-
-
-[Huggingface tokenizers](https://github.com/huggingface/tokenizers)
+TODO
 
 \subsection{Tokenization without word boundaries}\label{subsec:wordtokwowb}
 
-Since there are many possible segmentations of character sequences and given the complications of dealing with different languages and the intricancies of each, there is no foolproof and/or unique tokenization. Another approach has been to abandon word-based indexing, and do all indexing from just short subsequences of characters (character -grams), regardless of whether particular sequences cross word boundaries or not.
+Another type of tokenization, beyond word, character or subword, is tokenization without subword boundaries. The three types of tokenization explored until now cannot create units among words, that is, they consider words separatedly.
 
-This can be specifically beneficial in some Asian languages, where an individual symbol can resemble a syllable rather than a word or letter,  most words are short (the most common length is 2 characters), and that, given the lack of standardization of word breaking in the writing system, it is not always clear where word boundaries should be placed.
+Word and character level tokenization are deterministic, meaning that for a given word, its tokenization will always be the same. But in subword tokenization, a word like \emph{imagination} might have different tokenization, for example: \emph{im, agina, tion}, \emph{imagina, tion}, etc. It depends on the corpus that the subword tokenization algorithm is trained on, but there is no foolproff and/or unique tokenization.
 
-Punctuations are rare in certain languages!!
+Besides, when dealing with languages that don't include space tokenization, such as several Asian languages, an individual symbol can resemble a syllable rather than a word or letter. Additionally, most words are short (the most common length is 2 characters), and given the lack of standardization of word breaking in the writing system or lack of punctuation in certain languages, it is not always clear where word boundaries should be placed.
 
-Hence, at times, each character used is taken as a token in Chinese tokenization.
+An approach to handle this has been to abandon word-based indexing, and do all indexing from just short subsequences of characters (character -grams), regardless of whether particular sequences cross word boundaries or not. Hence, at times, each character used is taken as a token in Chinese tokenization.
 
 \section{BPE}
 
-https://medium.com/@makcedward/how-subword-helps-on-your-nlp-model-83dd1b836f46
+Byte Pair Encoding (BPE) is a widely used tokenization method among Transformer-based models. BPE addresses the issues of word and character tokenizers in the following ways: regarding OOV words, BPE segments OOV as subwords and represents the word in terms of these subwords. Regarding the longer sequence length which was one of the drawbacks of character tokenization, in this case the length of input and output sentences after BPE are shorter compared to character tokenization.
 
-Byte Pair Encoding (BPE) is a widely used tokenization method among transformer-based models. BPE addresses the issues of Word and Character Tokenizers:
+BPE is a word segmentation algorithm that merges the most frequently occurring character or character sequences iteratively. These are the steps to learn BPE:
 
-    BPE tackles OOV effectively. It segments OOV as subwords and represents the word in terms of these subwords
-    The length of input and output sentences after BPE are shorter compared to character tokenization
+\begin{enumerate}
+    \item Split the words in the corpus into characters after appending </w>, or another special symbol to show the beginning or end of the word.
+    \item Initialize the vocabulary with unique characters in the corpus
+    \item Compute the frequency of each pair of characters or character sequences in corpus.
+    \item Merge the most frequent pair in corpus.
+    \item Save the best pair to the vocabulary.
+    \item Repeat steps 3 to 5 for a certain number of iterations.
+\end{enumerate}
 
-BPE is a word segmentation algorithm that merges the most frequently occurring character or character sequences iteratively. Here is a step by step guide to learn BPE.
+As an example, let's consider a simple corpus with a single line, and the character \emph{'\_'} to mark the beginning of each word, so as not to merge anything between different words later. The following code shows the first step of the algorithm.
 
-Steps to learn BPE
+\begin{python}
+tokens = []
+corpus = ['this is this.']
+for line in corpus:
+    for word in line.split():
+        tokens.append('_' + ' '.join(word))
+tokens = [' '.join(sent) for sent in tokens]
+>>> tokens = ['_t h i s _i s _t h i s .']
+\end{python}
 
-    Split the words in the corpus into characters after appending </w>
-    Initialize the vocabulary with unique characters in the corpus
-    Compute the frequency of a pair of characters or character sequences in corpus
-    Merge the most frequent pair in corpus
-    Save the best pair to the vocabulary
-    Repeat steps 3 to 5 for a certain number of iterations
+After that, we can initialize the vocabulary, which for now consists solely of the unique characters in the corpus. The following code snippet shows the second and third step.
+
+\begin{python}
+from collections import Counter
+
+def get_stats(tokens):
+    pairs = Counter()
+    for sent in tokens:
+        for word in sent[1:].split( ' _'):
+            symbols = ('_' + word).split()
+            for j in range(len(symbols) - 1):
+                pairs[symbols[j], symbols[j+1]] += 1
+    return pairs
+
+stats = get_stats(tokens)
+>>> stats = Counter({('_t', 'h'): 2, ('h', 'i'): 2, ('i', 's'): 2, ('_i', 's'): 1, ('i', 's,'): 1, ('_', 'i'): 1, ('_i', 't'): 1, ('t', '?'): 1})
+
+most_frequent = stats.most_common(1)[0][0]
+>>> most_frequent = ('_t', 'h')
+\end{python}
+
+There we can see each bigram and its frequency. For example, ('\_t', 'h') occurs twice in the corpus, and it is taken as the most frequently occurring bigram.
+
+https://github.com/anebz/thesis/commit/11c72188bea139d82202d131372e034b6a1d8052
 
 Example in https://www.analyticsvidhya.com/blog/2020/05/what-is-tokenization-nlp/
 
-\subsection{Applying BPE to OOV words}
+https://www.thoughtvector.io/blog/subword-tokenization/BPE.svg
+
+Different subword tokenization strategies change this in subtle ways - BPE scores tokens simply with their count, and uses eager encoding, while character tokenization simple has a max n-gram size of 1. This strategy sounds strikingly similar to phrase extraction using collocation, which counts word n-grams, scores them, and exports a model in similar fashion, except the sequence items are words instead of characters. And it turns out, using a phrase extraction library, you can learn an effective BPE vocabulary for languages like Japanese which aren’t whitespace separated by simply changing the word-regex to single characters, helping give this connection some credibility.
+
+A finding like this begs the question - should BPE have a more intelligent scoring phase when choosing its vocab from n-gram counts? Mutual information as a scoring function was very valuable in achieving better phrase extraction, and it seems that it would be useful here as well. And even more than that, is there an abstract tokenizer we can define that fulfills each of these strategies and more via hyperparameters like n-gram length, scoring strategy, etc? Could this abstract tokenizer have a common implementation across platforms like Tensorflow, PyTorch, the web, etc?
+
+\paragraph{Applying BPE to OOV words}
 
 (see python code bpe\_10.py)
 
@@ -214,7 +257,15 @@ Here is a step by step procedure for representing OOV words:
 
 \subsection{BPE dropout}
 
+...
+
 \section{WordPiece}
+
+https://medium.com/@makcedward/how-subword-helps-on-your-nlp-model-83dd1b836f46
+https://stackoverflow.com/a/55416944/4569908
+
+% original tokens = ["John", "Johanson", "'s",  "house"]
+% bert_tokens == ["[CLS]", "john", "johan", "##son", "'", "s", "house", "[SEP]"]
 
 Byte Pair Encoding falter outs on rare tokens as it merges the token combination with maximum frequency.
 
@@ -240,7 +291,13 @@ Let’s explore the Unigram Language model now
 
 Read more in https://medium.com/data-science-in-your-pocket/tokenization-algorithms-in-natural-language-processing-nlp-1fceab8454af
 
-\section{{SentencePiece}}
+\section{SentencePiece}
+
+https://github.com/google/sentencepiece
+
+Sentencepiece is a less common, but very beautiful strategy for subword tokenization. While conceptually similar to BPE, it strays from the eager encoding strategy to allow it to achieve higher quality tokenization and reduce error induced by location-dependence seen in BPE. The main difference is how Sentencepiece views ambiguity in character grouping, seeing it as a source of regularization for downstream models during training, as well as its use of a simple language model to evaluate the most likely character groupings instead of eagerly picking the longest recognized string like BPE does. This results in very high quality tokenization, but comes at great cost to performance, at times making it the slowest part of an NLP pipeline. While the assumption of ambiguity in tokenization seems natural, it appears the performance trade-off is not worth it, as Google itself opted not to use this strategy in their BERT language model.
+
+https://www.thoughtvector.io/blog/subword-tokenization/Sentencepiece.svg
 
 See medium link from wordpiece section
 

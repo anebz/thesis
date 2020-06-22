@@ -47,7 +47,7 @@ def read_corpus(corpus: list) -> list:
 
         if space:
             # add word_sep to each beginning of word and join by space
-            tokens.append( ' '.join([word_sep + ' '.join(word) for word in line]))
+            tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
         else:
             # join all words by word_sep
             tokens.append(u' \u2581 '.join([' '.join(word) for word in line]))
