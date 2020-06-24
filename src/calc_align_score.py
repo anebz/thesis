@@ -7,6 +7,7 @@ import random
 import collections
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -98,11 +99,17 @@ def get_baseline_score(probs, surs, surs_count):
 
 def plot_scores(df, baseline_df, scoredir):
 
-	plt.clf()
-	# gca stands for 'get current axis'
-	ax = plt.gca()
+	# Use plot styling from seaborn.
+	sns.set(style='darkgrid')
 
-	colors = ['magenta', 'blue', 'green', 'red']
+	# Increase the plot size and font size.
+	sns.set(font_scale=1.5)
+	plt.rcParams["figure.figsize"] = (12, 6)
+
+	plt.clf()
+	ax = plt.gca() # gca stands for 'get current axis'
+
+	colors = ['magenta', 'tab:blue', 'tab:green', 'tab:red']
 
 	df = df.sort_values('num_symbols')
 	columns = list(df)
@@ -119,7 +126,6 @@ def plot_scores(df, baseline_df, scoredir):
 		for baseline_results, color in zip(list(baseline_df.iloc[0][1:]), colors):
 			plt.axhline(y=baseline_results, color=color, linestyle='dashed')
 
-	plt.grid()
 	#plt.ylim(ymax=1, ymin=0)
 	plt.savefig(join(scoredir+'.png'))
 	return

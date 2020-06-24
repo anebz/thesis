@@ -55,7 +55,7 @@ def merge_dropout_alignments():
 
 def calc_score_merges():
     probs, surs, surs_count = load_gold(goldpath)
-    baseline_df = pd.read_csv(join(scoredir, 'scores_'+source+'_'+target+'.csv'))
+    baseline_df = pd.read_csv(join(baselinedir, 'scores_'+source+'_'+target+('' if space else '_ns')+'.csv'))
     scorespath = join(scoredir, 'space' if space else 'no space', str(dropout))
     if not os.path.isdir(scorespath):
         os.mkdir(scorespath)

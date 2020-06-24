@@ -9,8 +9,8 @@ Master thesis repo
 
 ## tasks
 
-* [ ] merge results in ns mode with dropout=0, and how much dropout improves it. delete dashed lines in dropout=0, ns case, and in dropout case use the normal one as dashed
-* [ ] Effect of dropout rate on (4k, 5k, 8k) BPE samples in chaos mode. (baseline: the same BPE size, chaos mode alignment without dropout)
+* [X] merge results in ns mode with dropout=0, and how much dropout improves it. delete dashed lines in dropout=0, ns case, and in dropout case use the normal one as dashed
+* [X] Effect of dropout rate on (4k, 5k, 8k) BPE samples in chaos mode. (baseline: the same BPE size, chaos mode alignment without dropout)
 * [ ] paper stuff, do after thesis
   * no space is good language with no space tokenization
   * eflomal instead of fastalign? https://github.com/robertostling/eflomal result will probably not be as good
@@ -18,9 +18,15 @@ Master thesis repo
 * [ ] BPE algo is very slow, everyone uses [fastBPE](https://github.com/glample/fastBPE)
 * [ ] check SentencePiece
 * [ ] pipeline: if we discard `we _`, then all possibilities of `we_ X` won't be considered. Huge loss of merges
-* [ ] extract_alignments: maybe do fast align in one big file?
-* [ ] learn_bpe: substitute number for digit when merging?
-* [ ] dropout only on one side? source_bpe -> source_dropout?
+* [ ] extract_alignments: maybe do fast align in one big file? both ways seem to work
+* [ ] learn_bpe: substitute number for digit when merging? it's a good thing that these are rare. This way, we only merge a digit with a character only if it's frequent.
+* [ ] dropout only on one side? source_bpe -> source_dropout? Since they experiment on MT, the situation is totally different. It might be interesting to see if there's a difference or not. Alignments are bidirectional. If you want to try this, you should try it for both sides and merge them:
+  * Normal_source Sample_target_1
+  * Normal_source Sample_target_2
+  * Normal_source Sample_target_3
+  * Sample_source_1 Normal_target
+  * Sample_source_2 Normal_target
+  * Sample_source_3 Normal_target
 
 ### BPE improvement
 
