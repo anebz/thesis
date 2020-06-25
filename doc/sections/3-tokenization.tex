@@ -8,9 +8,7 @@
 
 \section{Introduction}
 
-Tokenization is the first major step in language processing. Once the corpus is obtained, before starting to process the text, because we're dealing with language, we want to understand the meaning of the text. \textbf{Tokens} in the language have a semantic meaning, be it words, phrases, symbols or other elements, whereby a meaning is assigned to each token. Tokenization is the process of breaking a stream of text up into tokens.~\cite{manning2008introduction}
-
-The main idea behind tokenization is simplifying or compressing the input text into meaningful units, tokens, creating a big vocabulary of tokens and a shorter sequence.
+Tokenization is the first major step in language processing. The main idea is simplifying or compressing the input text into meaningful units, called tokens, creating a big vocabulary of tokens and a shorter sequence.~\cite{manning2008introduction}
 
 \begin{figure}[!ht]
     \centering
@@ -18,50 +16,48 @@ The main idea behind tokenization is simplifying or compressing the input text i
     \caption{Tokenization of a sequence of text}
 \end{figure}
 
-The way to tokenize heavily depends on the task afterwards. Some applications might require different tokenization algorithms. Nowadays, most deep learning architectures in NLP process the raw text at the token level and as a first step, create embeddings for these tokens, which will be explained in more detail in the following sections.~\ref{subsec:wordemb} In short, the type of tokenization depends on the type of embedding. There are several, explained further in the following sections, and each has its advantages and drawbacks.~\ref{subsec:toktypes}
-
-\paragraph{What is a token?}
-
-A token is an instance of a sequence of characters in some particular document that are grouped together as a useful semantic unit for processing. Here is an example of tokenization.
+\textbf{Tokens} in language are defined as such units which have a semantic meaning, be it words, phrases, symbols or other elements. Here is an example of a simple way to tokenize text:
 
 \begin{quote}
-    Input: I ate a burger today, and it was good.\\
-    Output: ['I', 'ate', 'a', 'burger', 'today', 'and', 'it', 'was', 'good']
+    Raw text: I ate a burger today, and it was good.\\
+    Text after tokenization: ['I', 'ate', 'a', 'burger', 'today', 'and', 'it', 'was', 'good']
 \end{quote}
 
-In this example, the way to obtain tokens looks simple: just locate word boundaries, split by whitespace and get the symbols, and remove the punctuation marks, since punctuation marks have no definite meaning. However, this is not always the case.
+In this example, the way to obtain tokens looks simple: just locate word boundaries, split by whitespace and get the symbols, and remove the punctuation marks, since punctuation marks have no definite meaning. However, it's not always that easy. For example, some punctuation marks are relevant to the meaning of the words around them.
 
 \paragraph{How to deal with punctuation marks?}
 
-Each language has its own set of tricky cases, for example in English what is the correct approach when dealing with apostrophes for possession and contractions? For example words like \emph{aren't}, \emph{Sarah's} and \emph{O'Neill}. Because of this, it is imperative to know the language of the text to be tokenized. \textit{Language identification} is the task of identifying the language of the input text. From the initial k-gram algorithms used in cryptography (Konnheim, 1981), to more modern n-gram methods (Dunning, 1994) have been used. Once the language is known, we can follow the rules for each case and deal with punctuation marks appropriately.
+Each language has its tricky cases, for example in English there are possession and contractions, words like \emph{aren't}, \emph{Sarah's} and \emph{O'Neill}. Because of this, it is imperative to know the language of the text to be tokenized. \textit{Language identification} is the task of identifying the language of the input text. From the initial k-gram algorithms used in cryptography (Konnheim, 1981), to more modern n-gram methods (Dunning, 1994) have been used. Once the language is known, we can follow the rules for each case and deal with punctuation marks appropriately.
 
 \paragraph{Other types of tokens}
 
-Additionaly, tokens can be either characters or \textbf{subwords}. For example, the word \emph{smarter}:
+In the simple example above, tokens were words. Additionally, tokens can be groups of words, characters or subwords (parts of a word). For example, take the word \emph{smarter}:
 
-\begin{quote}
-    Sentence: the smarter computer
-    Word: the, smarter, computer\\
-    Word without word boundaries: the smart, er comput, er\\
-    Character tokens: t-h-e, s-m-a-r-t-e-r, c-o-m-p-u-t-e-r\\
-    Subword tokens: the, smart-er, comput-er
-\end{quote}
+\begin{itemize}
+    \item Sentence: the smarter computer
+    \item Word tokens: the, smarter, computer
+    \item Character tokens: t, h, e, s, m, a, r, t, e, r, c, o, m, p, u, t, e, r
+    \item Subword tokens: the, smart, er, comput, er
+    \item Subword tokens without word boundaries: the smart, er comput, er
+\end{itemize}
 
-The major question in the tokenization phase is: \textit{what are the correct tokens to use?}. The following section explores these 4 types of tokenization methods and delves into the algorithms and code libraries available.
+The major question in the tokenization phase is: \textbf{what are the correct tokens to use?}. The following section explores these 4 types of tokenization methods and delves into the algorithms and code libraries available.
 
-\section{Tokenization algorithm types}\label{subsec:toktypes}
+\section{Tokenization algorithm types}
+
+The way to tokenize heavily depends on the task afterwards. Different applications might require different tokenization algorithms. Nowadays, most deep learning architectures in NLP process the raw text at the token level and as a first step, create embeddings for these tokens, which will be explained in more detail in the following section. In short, \textit{the type of tokenization depends on the type of embedding}. There are several tokenization methods, explained further in the following sections, and each has its advantages and drawbacks.
 
 \subsection{Word level tokenization}
 
-Word level tokenization was the first tokenization type used, and is also the most common. It splits a piece of text into individual words based on word bounderies, usually a specific delimiter, mostly whitespace ' ' or other punctuation signs.
+Word level tokenization is the first type and most basic form of tokenization, and is also the most common. It splits a piece of text into individual words based on word boundaries, usually a specific delimiter, mostly whitespace ' ' or other punctuation signs.
 
-Conceptually, splitting on whitespace can also split an element which should be regarded as a single token, for example New York. This is mostly the case with names, borrowed foreign phrases, and compounds that are sometimes written as multiple words. Word level tokenization without word boundaries aims to address that problem.~\ref{subsec:wordtokwowb} on page~\pageref{subsec:wordtokwowb}
+Conceptually, splitting on whitespace can also split an element which should be regarded as a single token, for example New York. This is mostly the case with names, borrowed foreign phrases, and compounds that are sometimes written as multiple words. Tokenization without word boundaries aims to address that problem.~\ref{subsec:wordtokwowb} on page~\pageref{subsec:wordtokwowb}
 
 \subsubsection{Word level algorithms}
 
-The most simple way to obtain word level tokenization is by simply splitting the sentence on the desired delimeter, whitespace usually. The \pyth{sentence.split()} function in Python or a Regex command \pyth{re.findall("[\w']+", text)} achieve this in a simple way.
+The most simple way to obtain word level tokenization is by splitting the sentence on the desired delimeter, whitespace usually. The \pyth{sentence.split()} function in Python or a Regex command \pyth{re.findall("[\w']+", text)} achieve this in a simple way.
 
-The \href{https://www.nltk.org/}{natural language toolkit (NLTK)} in python provides a \href{https://www.nltk.org/api/nltk.tokenize.html}{tokenize package} which includes a \emph{word\_tokenize} function, which requires the user to give in the language of the text. If none is given, English is taken as default.
+The \href{https://www.nltk.org/}{natural language toolkit (NLTK)} in Python provides a \href{https://www.nltk.org/api/nltk.tokenize.html}{tokenize package} which includes a \emph{word\_tokenize} function. The user can give in the language of the text; if none is given, English is taken as default.
 
 \begin{python}
 from nltk.tokenize import word_tokenize
@@ -70,7 +66,7 @@ sentence_tokenized = word_tokenize(sentence, language='English')
 >>> sentence_tokenized = ['I', 'spent', '$', '2', 'yesterday']
 \end{python}
 
-Similarly, SpaCy offers a similar functionality. It is possible to load the language model for a different language and model size.
+Similarly, SpaCy offers a similar functionality. It is possible to load the language model for different languages and model size. In this case, the language is English and size 'sm', small.
 
 \begin{python}
 import spacy
@@ -94,6 +90,8 @@ from gensim.utils import tokenize
 sentence_tokenized = list(tokenize(sentence))
 \end{python}
 
+Depending on the applications and the frameworks the user is making use of, they might favor one algorithm over the other.
+
 \paragraph{Word embeddings}\label{subsec:wordemb}
 
 As stated before, the goal of tokenization is to split the text into units with meaning. Typically, each token is assigned an embedding vector: word2vec (Mikolov et al., 2013~\cite{mikolov2013efficient}) is a way of transforming a word into a fixed-size vector representation, as shown in the picture below.
@@ -104,36 +102,32 @@ As stated before, the goal of tokenization is to split the text into units with 
     \caption{Representation of word embeddings}
 \end{figure}
 
-If viewed abstractly in its N dimensions, each word's representation is close to similar words. As a simple example:
+As well as word2vec, there are other word embedding algorithms such as GloVe or fasttext. If viewed abstractly in its N dimensions, each word's representation is close to the representation of similar words. As a simple example with made up embedding numbers:
 
-\begin{quote}
-    Word: smart, embedding: [2, 3, 1, 4]\\
-    Word: intelligent, embedding: [2, 3, 2, 3]\\
-    Word: stupid, embedding: [-2, -4, -1, -3]
-\end{quote}
+\begin{itemize}
+    \item Word: smart. Embedding: [2, 3, 1, 4]
+    \item Word: intelligent. Embedding: [2, 3, 2, 3]
+    \item Word: stupid. Embedding: [-2, -4, -1, -3]
+\end{itemize}
 
-The embedding numbers are just as an example, to illustrate the distances between words. For example, \emph{smart} and \emph{intelligent} have a distance of 2, since the last 2 numbers in the vector differ by one respectively. If this was plotted in a 4 dimensional space, these words would be very close together. On the other hand, \emph{stupid} is almost the opposite of \emph{smart}. The distance in this case is much higher. In the plot, these words would be very far apart.
+For example, the embeddings of \emph{smart} and \emph{intelligent} have a distance of 2, since the last 2 numbers in the vector differ by one respectively. If this was plotted in a 4 dimensional space, these words would be very close together. On the other hand, \emph{stupid} is almost the opposite of \emph{smart}. The distance in this case is much higher. In the plot, these words would be roughly in the opposite direction. Thus, with word embeddings, a sentence is transformed into a sequence of embedding vectors, which is very useful for NLP tasks.
 
-As well as word2vec, there are other word embedding algorithms such as GloVe or fasttext.
+\subsubsection{Word level tokenization drawbacks}
 
-Thus, with word embeddings, a sentence is transformed into a sequence of embedding vectors, which is very useful for NLP tasks.
-
-\subsubsection{Word level drawbacks}
-
-Word embeddings have some drawbacks however. In many cases, a word can have more than one meaning: \emph{well}, for example, can be used in these 2 scenarios.
+Word embeddings have some drawbacks. In many cases, a word can have more than one meaning: \emph{well}, for example, can be used in these 2 scenarios.
 
 \begin{quote}
     I'm doing quite well.\\
     The well was full of water.
 \end{quote}
 
-In the first case, well is an adverb while in the second it's a noun. \emph{well}'s embedding will probably be a mixture of the two, since word embeddings don't generalize to homonyms.
+In the first case, well is an adverb while in the second it's a noun. \emph{well}'s embedding will probably be a mixture of the two, since word embeddings don't generalize to textbf{homonyms}. But it won't truly represent any of the two meanings.
 
-Another drawback is that word embeddings aren't well equipped to deal with out of vocabulary (oov) words. Word embeddings are created with a certain vocabulary size, that is, a certain number of words are known. If afterwards a new word arrives which isn't present in the vocabulary, because it's a foreign word, or a misspelled word, it will be given an unknown <UNK> embedding, that will be the same for all unknown words. Therefore all unknown words have the same embedding, that is, the NLP task will treat all these words as if they had the same meaning. The information within these words is lost due to the mapping from OOV to UNK.
+Another drawback is that word embeddings aren't well equipped to deal with \textbf{out of vocabulary (oov) words}. Word embeddings are created with a certain vocabulary size, that is, a certain number of words are known to the system. If afterwards a new word arrives which isn't present in the vocabulary, because it's a foreign word, or a misspelled word, it will be given an unknown <UNK> embedding, that will be the same for all unknown words. Therefore all unknown words have the same embedding, that is, the NLP task will treat all these words as if they had the same meaning. The information within these words is lost due to the mapping from OOV to UNK.
 
-Another issue with word tokens is related to the vocabulary size. Generally, pre-trained models are trained on a large volume of the text corpus. As such, if the vocabulary is built with all the unique words in such a large corpus, it creates a huge vocabulary. This opens the door to \emph{character tokenization}, since in this case the vocabulary depends on the number of characters, which is significantly lower than the number of all different words.
+Another issue with word tokens is related to the \textbf{vocabulary size}. Generally, pre-trained models are trained on a large volume of the text corpus. As such, if the vocabulary is built with all the unique words in such a large corpus, it creates a huge vocabulary. This opens the door to \emph{character tokenization}, since in this case the vocabulary depends on the number of characters, which is significantly lower than the number of all different words.
 
-These problems are not to be mistaken with tokenization problems, tokenization is merely a way to an ends, they're mostly used to create embeddings. And if embeddings from word tokens are problematic, the tokenization method is changed in order to create different tokens, in order to create other types of embeddings.
+These problems are not to be mistaken with tokenization problems, tokenization is merely a way to an ends. In most cases however, they're used to create embeddings. And if embeddings from word tokens have drawbacks, the tokenization method is changed in order to create different tokens, in order to create other types of embeddings.
     
 \subsection{Character level tokenization}
 
@@ -149,7 +143,7 @@ Radfor et al. (2017)~\cite{radford2017learning} from OpenAI showed that characte
 
 The previous libraries explored in the case of word embeddings (native python libraries, nltk, spacy, keras) have their own version for character level tokenization.
 
-\subsubsection{Character level drawbacks}
+\subsubsection{Character level tokenization drawbacks}
 
 When tokenizing a text at the character level, the sequences are longer, which takes longer to compute since the neural net needs to have significantly more parameters to allow the model to perform the conceptual grouping internally, instead of being handed the groups upfront.
 
@@ -425,4 +419,4 @@ Kudo (2018)~\cite{kudo-2018-subword} showed that BPE is a greedy algorithm that 
 
 This problem was solved by BPE Dropout~\cite{provilkov2019bpedropout}, which corrupts the segmentation process and produces several segmentations.
 
-%#TODO: improvements over bpe: end of blogpost https://www.thoughtvector.io/blog/subword-tokenization/
+%#TODO: improvements over bpe: end of blogpost https://www.thoughtvector.io/blog/subword-tokenization
