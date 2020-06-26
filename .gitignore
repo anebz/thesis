@@ -139,6 +139,7 @@ fastalign/
 # LaTeX
 *.aux
 *.bbl
+*.bcf
 *.blg
 *.fdb_latexmk
 *.fls
@@ -146,6 +147,7 @@ fastalign/
 *.lof
 *.lot
 *.nlo
-*.pdf
 *.out
 *.toc
+*.synctex(busy)
+*.xml
