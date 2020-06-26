@@ -1,15 +1,18 @@
 # Thesis document outline
 
 1. Introduction
-2. Goals
-3. State of the art
+2. Motivation
+3. Literature review
    1. Tokenization
       1. Tokenization methods
       2. BPE
       3. BPE dropout
    2. Translation
       1. NMT? open vocabulary problems?
-4. Development
+      2. https://arxiv.org/abs/2004.08728 section 5
+   3. fastalign, eflomal
+4. Methodology: Theoretical idea: what I want to do, how, algorithmic/mathematical
+5. Development: more technical
    1. Coding practices
    2. Implementation of BPE
       1. Learn BPEs
@@ -20,13 +23,14 @@
    4. Implementation of BPE dropout on source or target side
    5. Improvement over BPE dropout
    6. ...
-5. ...
-6. Future work
-7. Conclusion
+6. Results, experiments. challenges, how to choose a good baseline, figures
+7. ...
+8. Future work
+9.  Conclusion
 
-## tasks
+## learn_bpe algorithm
 
-* [X] summary of my learn_bpe vs. paper learn_bpe, differences, is this paper material? track algorithm performance in my computer, write in percentage. this algo is 1.4% faster than X.
+* summary of my learn_bpe vs. paper learn_bpe, differences, is this paper material? track algorithm performance in my computer, write in percentage. this algo is 1.4% faster than X.
 
 ## bpe dropout
 
@@ -49,54 +53,21 @@
 ## no_space learn_bpe results
 
 * space: 0.49/0:54/0:56/1:52 eng, 1:19/1:16/1:28/2:36 deu
-* no_space: 4/6:13 eng, 4:25/4:50 deu
+* no_space 10k symbols: 4/6:13 eng, 4:25/4:50 deu
+* no_space 20k symbols: 9:33 eng, 10:10 deu
 
-## latex cheatsheet
+## no space results
 
-```latex
+* results:
+  * at smallest threshold (0.3), recall=0.533 for all symbols, precision decreases for more symbols
+  * the bigger the threshold, the worse the recall. at thres=0.9, precision isn't bad.
+  * union score has very high recall, very low precision. makes sense, there's many-to-many alignment among words
+  * intersection score has very high precision, very low recall
+* we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
 
-\chapter{Checklists}
-
-\section{Language}
-\label{sec:structure}
-
-\href{http://www.sharelatex.com}{Something  Linky}
-
-~\ref{sec:appendix} on page~\pageref{sec:appendix}.
-
-for acronyms:  \acs{ISO}
-
-\bigskip
-
-\begin{labeling}{TeXnicCenter:~}
-  \item[MiKTeX:] from \url{http://www.miktex.org/} as a LaTeX back end (don't use the 64-bit version, problems with \textsf{biber})
- \item[SumatraPDF:] from \url{http://blog.kowalczyk.info/software/sumatrapdf/} as a PDF viewer
-  \item[TeXnicCenter:] from \url{http://www.texniccenter.org/} as a LaTeX front end
-  \item[JabRef:] from \url{http://jabref.sourceforge.net/} as a BibTeX editor
-  \item[TortoiseSVN:] from \url{http://tortoisesvn.net/} for version control
-  \item[XnView:] from \url{http://www.xnview.com/de/} for photo editing
-\end{labeling}
-
-\begin{itemize}
-   \item[$\Box$] for checkbox
-\end{itemize}
-\begin{enumerate}
-   \item[$\Box$] for checkbox
-\end{enumerate}
-
-\begin{table}
-  \caption{Page margins that have to be observed in the preparation of degree theses.}
-  \label{tab:margins}
-  \centering
-    \begin{tabular}{lS}
-      \toprule
-      Position    & {Margin (\si{\centi\meter})} \\
-      \midrule
-      left        &   2.5 \\
-      right       &   2.5 \\
-      top       	&   2.5 \\
-      bottom      &   2.0 \\
-      \bottomrule
-    \end{tabular}
-\end{table}
-```
+* dropout=0,   best result at merge_threshold=0.5, num_symbols=200, f1=0.477
+* dropout=0.1, best result at merge_threshold=0.7, num_symbols=200, f1=0.523
+* dropout=0.2, best result at merge_threshold=0.5, num_symbols=500, **f1=0.559**
+* dropout=0.3, best result at merge_threshold=0.5, num_symbols=500, f1=0.556
+* dropout=0.4, best result at merge_threshold=0.3, num_symbols=500, f1=0.532
+* dropout=0.5, best result at merge_threshold=0.3, **num_symbols=4000**, f1=0.529

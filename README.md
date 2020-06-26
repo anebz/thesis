@@ -2,12 +2,31 @@
 
 Master thesis repo
 
+* Alignment models: FastAlign, Eflomal
+* Datasets: eng_deu, eng_fra
+* Sampling methods: Dropout, (maybe something else?!)
+* Tokenization: space mode, Chaos mode
+
 ## tasks
 
+* [X] merge results in ns mode with dropout=0, and how much dropout improves it. delete dashed lines in dropout=0, ns case, and in dropout case use the normal one as dashed
+* [X] Effect of dropout rate on (4k, 5k, 8k) BPE samples in chaos mode. (baseline: the same BPE size, chaos mode alignment without dropout)
+* [ ] paper stuff, do after thesis
+  * no space is good language with no space tokenization
+  * eflomal instead of fastalign? https://github.com/robertostling/eflomal result will probably not be as good
+  * english - french, english - romanian (Masoud has datasets)
 * [ ] BPE algo is very slow, everyone uses [fastBPE](https://github.com/glample/fastBPE)
 * [ ] check SentencePiece
-* [ ] learn_bpe: substitute number for digit when merging?
-* [ ] dropout only on one side? source_bpe -> source_dropout?
+* [ ] pipeline: if we discard `we _`, then all possibilities of `we_ X` won't be considered. Huge loss of merges
+* [ ] extract_alignments: maybe do fast align in one big file? both ways seem to work
+* [ ] learn_bpe: substitute number for digit when merging? it's a good thing that these are rare. This way, we only merge a digit with a character only if it's frequent.
+* [ ] dropout only on one side? source_bpe -> source_dropout? Since they experiment on MT, the situation is totally different. It might be interesting to see if there's a difference or not. Alignments are bidirectional. If you want to try this, you should try it for both sides and merge them:
+  * Normal_source Sample_target_1
+  * Normal_source Sample_target_2
+  * Normal_source Sample_target_3
+  * Sample_source_1 Normal_target
+  * Sample_source_2 Normal_target
+  * Sample_source_3 Normal_target
 
 ### BPE improvement
 
@@ -18,16 +37,6 @@ Master thesis repo
   * book. bo ok -> book. min merge tree depth is 2. could also be 3, bo, boo, book. to get more meaningful chunks
   * t h, both 0, then th:1. th:1, e:0, the:2
   * un:1 accept:3 able:3. acceptable has higher score than unaccept. if 2 chunks have same score, join the larger ones.
-
-### no space
-
-* results:
-  * **best results at num_symbols=500, with prec=0.621, rec=0.456, f1=0.523. visible at thres=0.7 specifically**
-  * at smallest threshold (0.3), recall=0.533 for all symbols, precision decreases for more symbols
-  * the bigger the threshold, the worse the recall. at thres=0.9, precision isn't bad.
-  * union score has very high recall, very low precision. makes sense, there's many-to-many alignment among words
-  * intersection score has very high precision, very low recall
-* we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
 
 ## pipeline
 
@@ -44,23 +53,25 @@ Master thesis repo
 ├── data
 │   ├── input
 │   │   ├── eng_with_10k.txt                          # input txt file with 10k english sentences
-│   │   ├── deu_with_10k.txt
+│   │   └── deu_with_10k.txt
 │   ├── normal_bpe
 │   │   ├── fastalign                                 # files obtained from fastalign alignment algorithm
 │   │   │   └── *.wgdfa, *_deu.wgdfa
-│   │   ├── segmentations                             # files obtained by segmenting based on num_symbols
-│   │   │   └── .bpe
-│   │   └── scores.png, scores.csv
+│   │   └── segmentations                             # files obtained by segmenting based on num_symbols
+│   │       └── .bpe
 │   ├── dropout_bpe
 │   │   ├── fastalign
-│   │   │   └── *.wgdfa, *_deu.wgdfa, *_unionwgdfa, *_inter.wgdfa, *_thres.wgdfa
-│   │   ├── segmentations
-│   │   │   └── .bpe
-│   │   ├── test_scores
-│   │   │   └── .png, .csv
-│   │   └── scores.png, scores.csv
+│   │   │   └── *.wgdfa, *_deu.wgdfa, *_union.wgdfa, *_inter.wgdfa, *_thres.wgdfa
+│   │   └── segmentations
+│   │       └── .bpe
 │   ├── eng.model                                      # merge list for english
 │   └── deu.model
+├── doc
+├── reports
+│   ├── scores_dropout_bpe
+│   │   └── *.csv, *.png
+│   └── scores_normal_bpe
+│       └── *.csv, *.png
 ├── README.md
 ├── .py
 └── ...
