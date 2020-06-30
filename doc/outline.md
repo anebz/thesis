@@ -71,3 +71,14 @@
 * dropout=0.3, best result at merge_threshold=0.5, num_symbols=500, f1=0.556
 * dropout=0.4, best result at merge_threshold=0.3, num_symbols=500, f1=0.532
 * dropout=0.5, best result at merge_threshold=0.3, **num_symbols=4000**, f1=0.529
+
+## open questions
+
+* learn_bpe: substitute number for digit when merging? it's a good thing that these are rare. This way, we only merge a digit with a character only if it's frequent.
+* dropout only on one side? source_bpe -> source_dropout? Since they experiment on MT, the situation is totally different. It might be interesting to see if there's a difference or not. Alignments are bidirectional. If you want to try this, you should try it for both sides and merge them:
+  * Normal_source Sample_target_1
+  * Normal_source Sample_target_2
+  * Normal_source Sample_target_3
+  * Sample_source_1 Normal_target
+  * Sample_source_2 Normal_target
+  * Sample_source_3 Normal_target

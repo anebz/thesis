@@ -134,6 +134,7 @@ subword-nmt/
 pbc_utils/
 tools/
 fastalign/
+eflomal/
 *.bpe
 
 # LaTeX

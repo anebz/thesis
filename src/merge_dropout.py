@@ -19,7 +19,7 @@ def merge_dropout_alignments():
     for num_symbols in tqdm(all_symbols, desc=f"merge_dropout: dropout={dropout}, union, inter, thres"):
         union_merge[num_symbols], inter_merge[num_symbols], thres_merge[num_symbols] = [], [], []
 
-        for i in range(dropout_sampless):
+        for i in range(dropout_samples):
 
             for j, line in enumerate(open(str(num_symbols)+'_'+str(i)+'.wgdfa', 'r').readlines()):
                 al = frozenset(line.strip().split("\t")[1].split())

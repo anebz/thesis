@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     os.makedirs(join(bpedir, 'segmentations'), exist_ok=True)
     if dropout > 0:
-        # create `dropout_sampless` segmentations, to aggregate later
+        # create `dropout_samples` segmentations, to aggregate later
         for i in range(dropout_samples):
             print(f"Iteration {i+1}")
             apply_bpe(langs, bpe_models, corpora, i)

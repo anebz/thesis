@@ -30,6 +30,11 @@ def read_corpus(corpus: list) -> list:
     """
     Read corpus, strip index and new line characters.
     In space mode, each word has a word_sep symbol at the beginning to signal it's the beginning of the word.
+    example:
+    tokens = [
+        '▁w e ▁d o ▁n o t ▁b e l i e v e ▁t h a t ▁w e ▁s h o u l d ▁c h e r r y - p i c k ▁.',
+        ...
+    ]
     In no space mode, there's no signal at the beginning of the word but word are joined by word_sep.
     example:
     tokens = [
@@ -53,7 +58,7 @@ def read_corpus(corpus: list) -> list:
             tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
         else:
             # join all words by word_sep
-            tokens.append(u' \u2581 '.join([' '.join(word) for word in line]))
+            tokens.append(' '+word_sep+' '.join([' '.join(word) for word in line]))
 
     return tokens
 
@@ -91,7 +96,7 @@ def get_stats(tokens: list) -> (Counter, dict):
     for i, sent in enumerate(tokens):
         if space:
             # get stats for each word independently, no bigrams between different words
-            for word in sent[1:].split(u' \u2581'):
+            for word in sent[1:].split(' '+word_sep):
                 pairs, idx = get_pairs_idx(pairs, idx, word_sep + word)
         else:
             # get bigram stats for the whole sentence
@@ -201,7 +206,7 @@ def update_tokens(tokens, idx, pairs, pair):
 
 def learn_bpe(corpus, bpe_model):
     """
-    Learn num_all_symbols BPE operations from vocabulary, and write to bpe_model.
+    Learn BPE operations from vocabulary.
     Steps:
     1. split corpus into characters, count frequency
     2. count bigrams in corpus
@@ -213,11 +218,9 @@ def learn_bpe(corpus, bpe_model):
 
     pairs, idx = get_stats(tokens)
 
-    most_freq_merges = []
-    for i in tqdm(
-        range(num_all_symbols), 
-        desc=f"learn_bpe: num_symbols={num_all_symbols}, lang={lang}, space mode={space}"
-        ):
+    most_frequent_merges = []
+    for i in tqdm(range(num_all_symbols),
+                  desc=f"learn_bpe: num_symbols={num_all_symbols}, lang={lang}, space mode={space}"):
 
         try:
             most_frequent = pairs.most_common(1)[0][0]
