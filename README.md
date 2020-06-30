@@ -9,8 +9,7 @@ Master thesis repo
 
 ## tasks
 
-* [X] merge results in ns mode with dropout=0, and how much dropout improves it. delete dashed lines in dropout=0, ns case, and in dropout case use the normal one as dashed
-* [X] Effect of dropout rate on (4k, 5k, 8k) BPE samples in chaos mode. (baseline: the same BPE size, chaos mode alignment without dropout)
+* [X] apply_bpe: do until 8k, and at 100, 500, 1k, 2k. write to output. but not do until 500, then until 1000.
 * [ ] paper stuff, do after thesis
   * no space is good language with no space tokenization
   * eflomal instead of fastalign? https://github.com/robertostling/eflomal result will probably not be as good

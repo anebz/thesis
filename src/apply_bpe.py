@@ -32,40 +32,34 @@ def load_data():
     return langs, bpe_models, corpora
 
 
-def merge_corpus(corpus, bpe_model, lang, num_symbols):
-    '''
-    merge the bigrams found in the corpus iteratively
-    Inputs: 
-    * corpus in the style from read_corpus
-    * bpe_model read from the input file
-    Output:
-    * Merged corpus
-    '''
+def write_bpe(lang, num_symbols, merged_corpus, i=-1):
+    outputpath = join(bpedir, 'segmentations',
+                      lang+"_"+str(num_symbols) +
+                      ('' if space else '_ns') +
+                      ('_'+str(i) if i != -1 else '')+".bpe")
+    argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
+    argsoutput.write(merged_corpus)
+    return
 
-    str_corpus = '\n'.join(corpus)
-    for bigram in tqdm(bpe_model, desc=f"apply_bpe: dropout={dropout}, num_symbols={num_symbols}, lang={lang}"):
 
-        if random.uniform(0, 1) < dropout:
-            continue
-
-        str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
+def apply_bpe(langs, bpe_models, corpora, i=-1):
     
-    return str_corpus
+    for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
 
+        bpe_model = bpe_model[:max(all_symbols)]
+        all_symbols_copy = all_symbols.copy()
 
-def apply_bpe(i=-1):
-    os.chdir(datadir)
-    for num_symbols in all_symbols:
-        for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
+        str_corpus = '\n'.join(corpus)
+        for j, bigram in enumerate(tqdm(bpe_model, desc=f"apply_bpe: dropout={dropout}, num_symbols={max(all_symbols_copy)}, lang={lang}")):
 
-            # only get the desired amount of symbols
-            bpe_model = bpe_model[:num_symbols]
+            if random.uniform(0, 1) < dropout:
+                continue
 
-            merged_corpus = merge_corpus(corpus, bpe_model, lang, num_symbols)
+            str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
 
-            outputpath = join(bpedir, 'segmentations', lang+"_"+str(num_symbols)+('_'+str(i) if i != -1 else '')+".bpe")
-            argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
-            argsoutput.write(merged_corpus)
+            if j + 1 == all_symbols_copy[0]:
+                write_bpe(lang, all_symbols_copy.pop(0), str_corpus, i)
+
     return
 
 
@@ -73,10 +67,11 @@ if __name__ == "__main__":
 
     langs, bpe_models, corpora = load_data()
 
+    os.makedirs(join(bpedir, 'segmentations'), exist_ok=True)
     if dropout > 0:
         # create `dropout_sampless` segmentations, to aggregate later
-        for i in range(dropout_sampless):
+        for i in range(dropout_samples):
             print(f"Iteration {i+1}")
-            apply_bpe(i)
+            apply_bpe(langs, bpe_models, corpora, i)
     else:
-        apply_bpe()
+        apply_bpe(langs, bpe_models, corpora)

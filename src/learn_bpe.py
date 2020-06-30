@@ -213,7 +213,7 @@ def learn_bpe(corpus, bpe_model):
 
     pairs, idx = get_stats(tokens)
 
-    most_frequent_merges = []
+    most_freq_merges = []
     for i in tqdm(
         range(num_all_symbols), 
         desc=f"learn_bpe: num_symbols={num_all_symbols}, lang={lang}, space mode={space}"
@@ -225,10 +225,17 @@ def learn_bpe(corpus, bpe_model):
             # pairs is empty
             break
 
-        most_frequent_merges.append(most_frequent)
+        most_freq_merges.append(most_frequent)
         tokens, idx, pairs = update_tokens(tokens, idx, pairs, most_frequent)
 
-    return most_frequent_merges
+    return most_freq_merges
+
+
+def write_bpe(lang, most_freq_merges):
+    bpe_file = codecs.open(join(datadir, lang+('' if space else '_ns')+'.model'), 'w', encoding='utf-8')
+    bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
+    bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
+    return
 
 
 if __name__ == '__main__':
@@ -243,6 +250,4 @@ if __name__ == '__main__':
             continue
 
         most_freq_merges = learn_bpe(argsinput, bpe_model)
-        bpe_file = codecs.open(join(datadir, lang+('' if space else '_ns')+'.model'), 'w', encoding='utf-8')
-        bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
-        bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
+        write_bpe(lang, most_freq_merges)
