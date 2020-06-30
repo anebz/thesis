@@ -1,18 +1,11 @@
 # Thesis document outline
 
-1. Introduction
-2. Motivation
-3. Literature review
-   1. Tokenization
-      1. Tokenization methods
-      2. BPE
-      3. BPE dropout
-   2. Translation
-      1. NMT? open vocabulary problems?
-      2. https://arxiv.org/abs/2004.08728 section 5
-   3. fastalign, eflomal
-4. Methodology: Theoretical idea: what I want to do, how, algorithmic/mathematical
-5. Development: more technical
+1. [ ] Introduction
+2. [ ] Motivation
+3. [X] Tokenization
+4. [ ] Translation
+5. [~] Methodology
+6. [ ] Development: more technical
    1. Coding practices
    2. Implementation of BPE
       1. Learn BPEs
@@ -23,10 +16,10 @@
    4. Implementation of BPE dropout on source or target side
    5. Improvement over BPE dropout
    6. ...
-6. Results, experiments. challenges, how to choose a good baseline, figures
-7. ...
-8. Future work
-9.  Conclusion
+7. Results, experiments. challenges, how to choose a good baseline, figures
+8. ...
+9. Future work
+10.  Conclusion
 
 ## learn_bpe algorithm
 

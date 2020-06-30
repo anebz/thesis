@@ -1,0 +1,82 @@
+% Template for a Thesis
+%
+% 5-methodology.tex
+%
+% Translation
+
+\chapter{Methodology}\label{sec:methodology}
+
+Theoretical idea: what I want to do, how, algorithmic/mathematical
+
+This chapter explains the technical content of this thesis in broad strokes, the methodology used and the general idea of the methods employed. For a more in-depth analysis, refer to the next chapter.
+
+This thesis, first of all, aims to replicate the results of BPE and BPE dropout.
+
+\section{Replication of BPE results}
+
+Using Sennrich et al.'s~\cite{sennrich2015neural} \href{code on Github}{https://github.com/rsennrich/subword-nmt/}, the first goal was to check the gold standard's alignment scores. For that, these steps were undertaken:
+
+\begin{enumerate}
+	\item Write learn BPE from corpus algorithm
+	\item Write apply BPE to corpus algorithm
+	\item Write extract alignment script to align files from 2 different languages using fastalign/eflomal
+	\item Write a subword-word alignment script, since fastalign's output are subword alignments and we need word alignments
+	\item calculate alignment scores
+\end{enumerate}
+
+The actual code for each step can be found in the next section, Development.
+
+The corpus is a 10k sentence English-German corpus, containing an index number for each sentence. As an excerpt of English:
+
+\begin{quote}
+	21	The Committee on Transport and Tourism has adopted four amendments for the second reading .\\
+	22	They will certainly enhance the feeling of the right of movement by EU citizens and they will also certainly benefit disabled drivers .\\
+	23	The initial Commission proposal was adopted unamended by Parliament on first reading .
+\end{quote}
+
+And an excerpt of German:
+
+\begin{quote}
+	21	Der Transportausschuß hat für die zweite Lesung vier Änderungsanträge beschlossen .\\
+	22	Sie werden bei den EU-Bürgern gewiß das Gefühl für das Recht auf Freizügigkeit stärken , und sie werden gewiß auch behinderten Fahrern Vorteile bringen .\\
+	23	Der ursprüngliche Vorschlag der Kommission wurde vom Parlament in erster Lesung ohne Änderungen verabschiedet .
+\end{quote}
+
+\subsection{Learn BPE algorithm}
+
+Sennrich's repository's code has some additional parameters that weren't relevant for a minimal implementation of the BPE algorithm, so the script was adapted. These are the steps for a minimal learn BPE algorithm:
+
+\begin{enumerate}
+	\item Read corpus into tokens, parse index.
+	\item Count pair frequencies.
+	\item Start loop from 1 until desired vocabulary size. In our case, 10k merges.
+	\begin{enumerate}
+		\item Get most frequent pair.
+		\item Append most frequent pair to vocabulary.
+		\item Merge pair in corpus.
+		\item Count pair frequencies in corpus.
+	\end{enumerate}
+	\item Write vocabulary to a file.
+\end{enumerate}
+
+This step of the pipeline only has to be done once for each corpus, afterwards the vocabulary can be used in different ways. But this minimal algorithm, since it has to count all the pairs in the whole corpus in each iteration, takes a long time. An optimization came after this.
+
+\subsection{Apply BPE algorithm}
+
+Once the vocabulary has been learnt, it can be applied to a corpus. In this case, we use the same corpus for training and for applying. To generate different output files, different num\_merges are declared. For example, for 500 merges, only the first 500 merges of the vocabulary are considered, and there aren't many recognizable BPE units in the corpus. For bigger merge values, more and more subword units get merged. In this thesis, the following merges have been considered: [100, 200, 500, 1000, 2000, 4000, 6000, 8000]. These are the steps for this part:
+
+\begin{enumerate}
+	\item Load data, corpus and BPE vocabulary.
+	\item Start loop for all numbers of merges.
+	\begin{enumerate}
+		\item Start loop from 1 until desired amount of merges.
+		\begin{enumerate}
+			\item Merge corpus for current most frequent pair.
+		\end{enumerate}
+		\item Write to output.bpe file.
+	\end{enumerate}
+\end{enumerate}
+
+\begin{enumerate}
+	\item 
+\end{enumerate}
