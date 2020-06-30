@@ -2,7 +2,7 @@
 %
 % 5-methodology.tex
 %
-% Translation
+% Methodology
 
 \chapter{Methodology}\label{sec:methodology}
 
@@ -26,17 +26,14 @@ Using Sennrich et al.'s~\cite{sennrich2015neural} \href{code on Github}{https://
 
 The actual code for each step can be found in the next section, Development.
 
-The corpus is a 10k sentence English-German corpus, containing an index number for each sentence. As an excerpt of English:
+The corpus is a 10k sentence English-German corpus, containing an index number for each sentence. As an excerpt of the corpora:
 
 \begin{quote}
+	English\\
 	21	The Committee on Transport and Tourism has adopted four amendments for the second reading .\\
 	22	They will certainly enhance the feeling of the right of movement by EU citizens and they will also certainly benefit disabled drivers .\\
-	23	The initial Commission proposal was adopted unamended by Parliament on first reading .
-\end{quote}
-
-And an excerpt of German:
-
-\begin{quote}
+	23	The initial Commission proposal was adopted unamended by Parliament on first reading .\\\\
+	German\\
 	21	Der Transportausschuß hat für die zweite Lesung vier Änderungsanträge beschlossen .\\
 	22	Sie werden bei den EU-Bürgern gewiß das Gefühl für das Recht auf Freizügigkeit stärken , und sie werden gewiß auch behinderten Fahrern Vorteile bringen .\\
 	23	Der ursprüngliche Vorschlag der Kommission wurde vom Parlament in erster Lesung ohne Änderungen verabschiedet .
@@ -76,6 +73,42 @@ Once the vocabulary has been learnt, it can be applied to a corpus. In this case
 		\item Write to output.bpe file.
 	\end{enumerate}
 \end{enumerate}
+
+For example, this is what the excerpt from the corpora above look like after 100 merges:
+
+\begin{quote}
+	English\\
+	\_the \_Comm it t e e \_on \_T ran s p ort \_and \_T ouris m \_has \_a d o p t ed \_f our \_a m end ment s \_for \_the \_sec ond \_re a d ing \_.\\
+	\_the y \_w ill \_cer t a in ly \_en h an ce \_the \_f e e ling \_of \_the \_ri g h t \_of \_m o ve ment \_b y \_E U \_citi z en s \_and \_the y \_w ill \_al s o \_cer t a in ly \_ben e f it \_d is a bled \_d ri ver s \_.\\
+	\_the \_in iti al \_Commission \_pro p o s al \_w as \_a d o p t ed \_u n a m end ed \_b y \_P ar li a ment \_on \_f ir st \_re a d ing \_.\\\\
+	German\\
+	\_der \_T rans p or t a ussch u ß \_h at \_für \_die \_z w eite \_L es ung \_v ier \_Ä nder ung s ant r ä ge \_besch l o ss en \_.\\
+	\_s ie \_wer den \_bei \_den \_E U - B ür ger n \_ge w i ß \_das \_G e f ü h l \_für \_das \_Re ch t \_auf \_F r ei z ü g i g k eit \_st ä r k en \_, \_und \_s ie \_wer den \_ge w i ß \_au ch \_beh inder ten \_F a hr er n \_V or tei l e \_b r ingen \_.\\
+	\_der \_ur s p r ü ng lich e \_V or sch la g \_der \_Ko mm iss ion \_w ur de \_v o m \_P ar la ment \_in \_er ster \_L es ung \_o h n e \_Ä nder ungen \_vera b sch ie det \_.\\
+\end{quote}
+
+Only the 100 most common units in the language have been merged, so in English we can see the merge of \emph{\_the}, \emph{\_and}, \emph{ment}, and other very common words and affix/suffixes. As for German, we can see very common words being merged such as \emph{\_die}, \emph{\_das}, \emph{\_bei} and so on. When we do 4000 merges:
+
+\begin{quote}
+	English\\
+	\_the \_Committee \_on \_Transport \_and \_Tourism \_has \_adopted \_four \_amendments \_for \_the \_second \_reading \_.\\
+	\_they \_will \_certainly \_enhance \_the \_feeling \_of \_the \_right \_of \_movement \_by \_EU \_citizens \_and \_they \_will \_also \_certainly \_benefit \_dis abled \_drivers \_.\\
+	\_the \_initial \_Commission \_proposal \_was \_adopted \_un amended \_by \_Parliament \_on \_first \_reading \_.\\\\
+	German\\
+	\_der \_T ransp ortausschuß \_hat \_für \_die \_zweite \_Lesung \_vier \_Änderungsanträge \_beschlossen \_.\\
+	\_sie \_werden \_bei \_den \_EU-B ür gern \_gew iß \_das \_Ge fü hl \_für \_das \_Recht \_auf \_Freizügigkeit \_stärken \_, \_und \_sie \_werden \_gew iß \_auch \_behinderten \_Fahrern \_Vorteile \_bringen \_.\\
+	\_der \_ursprüngliche \_Vorschlag \_der \_Kommission \_wurde \_vom \_Parlament \_in \_erster \_Lesung \_ohne \_Änderungen \_verabschiedet \_.
+\end{quote}
+
+Most words are merged, except \emph{\_dis abled} in English, and \emph{\_T ransp ortausschuß} in German for instance.
+
+\subsection{Obtain alignments from fastalign or eflomal}
+
+
+
+\begin{quote}
+	a\\
+\end{quote}
 
 \begin{enumerate}
 	\item 

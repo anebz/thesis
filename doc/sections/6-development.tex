@@ -1,0 +1,239 @@
+% Template for a Thesis
+%
+% 6-development.tex
+%
+% Development
+
+\chapter{Development}\label{sec:development}
+
+This chapter talks more deeply about the code and algorithms previously explained in the Methodology section.~\ref{sec:methodology}
+
+\section{Coding practices}
+
+The parameters for the pipeline, such as num\_symbols, dropout, file paths, etc. have been written in \emph{settings.py}.
+
+\begin{python}
+# global variables
+import os
+from os.path import join
+import sys
+
+word_sep = u'\u2581'
+source, target = 'eng', 'deu'
+
+num_all_symbols = 20000
+all_symbols = [100, 200, 500, 1000, 2000, 4000, 6000, 8000]
+
+rootdir = os.getcwd()
+if rootdir.split(os.sep)[-1] == 'src':
+    rootdir = os.sep.join(rootdir.split(os.sep)[:-1])
+
+datadir = join(rootdir, 'data')
+inputdir = join(datadir, 'input')
+bpedir = join(datadir, 'dropout_bpe' if dropout > 0 else 'normal_bpe')
+baselinedir = join(rootdir, 'reports', 'scores_normal_bpe')
+scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 else 'normal_bpe'))
+goldpath = join(inputdir, 'eng_deu.gold')
+inputpath = {source: join(inputdir, source+'_with_10k.txt'),
+            target: join(inputdir, target+'_with_10k.txt')}
+
+fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
+atools_path = join(rootdir, "tools/fast_align/build/atools")
+    
+\end{python}
+
+\section{Replication of BPE results}
+
+\begin{enumerate}
+	\item Write learn BPE from corpus algorithm
+	\item Write apply BPE to corpus algorithm
+	\item Write extract alignment script to align files from 2 different languages using fastalign/eflomal
+	\item Write a subword-word alignment script, since fastalign's output are subword alignments and we need word alignments
+	\item calculate alignment scores
+\end{enumerate}
+
+\subsection{Learn BPE algorithm}
+
+\begin{python}
+#!/usr/bin/env python
+
+import os
+import re
+import sys
+import codecs
+from tqdm import tqdm
+from os.path import join
+from collections import defaultdict, Counter
+
+# import global variables from settings.py
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from settings import *
+
+def read_corpus(corpus: list) -> list:
+    """
+    Read corpus, strip index and new line characters.
+    In space mode, each word has a word_sep symbol at the beginning to signal it's the beginning of the word.
+    example:
+    tokens = [
+        '\_w e \_d o \_n o t \_b e l i e v e 
+        \_t h a t \_w e \_s h o u l d 
+        \_c h e r r y - p i c k \_.',
+        ...
+    ]
+    """
+
+    tokens = []
+    for line in corpus:
+        line = line.split('\t')[1].strip('\r\n ')
+        line = line.split()
+        line[0] = str.lower(line[0])
+
+        # add word_sep to each beginning of word and join by space
+        tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
+
+    return tokens
+
+def get_stats(tokens: list) -> Counter:
+    """
+    Count frequency of all bigrams and the frequency per index.
+    pairs = {
+        ('s', 'h'): 5,
+        ('h', 'e'): 6
+    }
+    The last token '.' or word_sep. isn't merged with anything.
+    """
+
+    pairs = Counter()
+    for i, sent in enumerate(tokens):
+        # get stats for each word independently, 
+        # no bigrams between different words
+        for word in sent[1:].split(' '+word_sep):
+        	symbols = symbols.split()
+        	for j in range(len(symbols) - 1):
+            	pairs[symbols[j], symbols[j + 1]] += 1
+
+    return pairs
+
+
+def merge_token(corpus, most_frequent):
+	str_corpus = '\n'.join(corpus)
+	str_corpus = str_corpus.replace(' '.join(most_frequent), ''.join(most_frequent))
+	return str_corpus.split('\n')
+
+
+def learn_bpe(argsinput, bpe_model):
+    """
+    Learn BPE operations from vocabulary.
+    Steps:
+    1. split corpus into characters, count frequency
+    2. count bigrams in corpus
+    3. merge most frequent symbols
+    4. Update bigrams in corpus 
+    """
+
+    corpus = read_corpus(argsinput)
+
+    most_frequent_merges = []
+    for i in range(num_all_symbols):
+
+	    pairs = get_stats(corpus)
+
+        try:
+            most_frequent = pairs.most_common(1)[0][0]
+        except:
+            # pairs is empty
+            break
+
+        most_frequent_merges.append(most_frequent)
+        corpus = merge_token(corpus, most_frequent)
+
+    return most_frequent_merges
+
+
+def write_bpe(lang, most_freq_merges):
+
+    bpe_file = codecs.open(join(datadir, lang+'.model'), 'w', encoding='utf-8')
+
+    bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
+    bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
+
+    return
+
+if __name__ == '__main__':
+
+    for lang in [source, target]:
+
+        argsinput = codecs.open(inputpath[lang], encoding='utf-8')
+        bpe_model = codecs.open(join(datadir, lang+'.model'), 'w', encoding='utf-8')
+        most_freq_merges = learn_bpe(argsinput, bpe_model)
+        write_bpe(lang, most_freq_merges)
+\end{python}
+
+\subsection{Apply BPE algorithm}
+
+\begin{python}
+import os
+from os.path import join
+import sys
+import codecs
+import random
+from tqdm import tqdm
+
+# import global variables from settings.py
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from settings import *
+from learn_bpe import read_bpe_model, read_corpus
+
+def load_data():
+
+    os.chdir(datadir)
+    langs = [source, target]
+    bpe_models = []
+    corpora = []
+    for lang in langs:
+
+        argsinput = codecs.open(inputpath[lang], encoding='utf-8')
+        corpora.append(read_corpus(argsinput))
+
+        bpe_model, _ = read_bpe_model(lang)
+        if not bpe_model:
+            print(f"No model found for lang={lang}")
+
+        bpe_model = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(bpe_model)]
+        bpe_models.append(bpe_model[1:])
+
+    return langs, bpe_models, corpora
+
+
+def write_bpe(lang, num_symbols, merged_corpus, i=-1):
+    outputpath = join(bpedir, 'segmentations', lang+"_"+str(num_symbols)+".bpe")
+    argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
+    argsoutput.write(merged_corpus)
+    return
+
+
+def apply_bpe(langs, bpe_models, corpora):
+    
+    for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
+
+        bpe_model = bpe_model[:max(all_symbols)]
+        all_symbols_copy = all_symbols.copy()
+
+        str_corpus = '\n'.join(corpus)
+        for j, bigram in enumerate(bpe_model):
+
+            str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
+
+            if j + 1 == all_symbols_copy[0]:
+                write_bpe(lang, all_symbols_copy.pop(0), str_corpus, i)
+
+    return
+
+
+if __name__ == "__main__":
+
+    os.makedirs(join(bpedir, 'segmentations'), exist_ok=True)
+    langs, bpe_models, corpora = load_data()
+    apply_bpe()
+
+\end{python}
