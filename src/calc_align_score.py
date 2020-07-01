@@ -87,7 +87,7 @@ def calc_score(input_path, probs, surs, surs_count):
 
 def get_baseline_score(probs, surs, surs_count):
 
-	alfile = join(bpedir, 'fastalign/input.wgdfa')
+	alfile = join(bpedir, mode, 'input.gdfa')
 
 	scores = []
 	score = [0]
@@ -135,11 +135,13 @@ def calc_align_scores(probs, surs, surs_count, baseline_df, i=-1):
 
 	scores = []
 	# calc score of num_symbols
-	os.chdir(join(bpedir, 'fastalign'))
+	os.chdir(join(bpedir, mode))
+	#TODO iterate num_symbols, not glob
 	for alfile in glob.glob('[0-9]*'+
 							('_'+str(i) if dropout else '')+
 							('_'+source if source_bpe else '')+
 							('_'+target if target_bpe else '')+'.wgdfa'):
+
 		if (not target_bpe and '_'+target in alfile) or (not source_bpe and '_'+source in alfile):
 			continue
 		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
@@ -150,55 +152,22 @@ def calc_align_scores(probs, surs, surs_count, baseline_df, i=-1):
 
 	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 
-	scorename = join(scoredir, 'scores')
-	if dropout:
-		scorename += '_' + str(i)
-	elif not (target_bpe or source_bpe):
-		scorename += '_' + source + '_' + target
+	scorename = scoredir +'/'
+	if not (target_bpe or source_bpe):
+		scorename += source + '_' + target
 	if not space:
 		scorename += '_ns'
 	if target_bpe:
 		scorename += '_' + target
 	if source_bpe:
 		scorename += '_' + source
+	scorename += '_' + mode
 
 	if not dropout:
 		print(f"Scores saved into {scorename}")
 		df.to_csv(scorename+'.csv', index=False)
 		plot_scores(df, baseline_df, scorename)
 	return df
-
-
-def avg_scores(baseline_df, score_dfs):
-
-	for avg in avgs:
-
-		# get random i indexes
-		random_idx = set()
-		while len(random_idx) < avg:
-			random_idx.add(random.randrange(10))
-		
-		df = pd.DataFrame()
-		for rd_idx in list(random_idx):
-
-			# first step of the iteration, just get the whole dataframe
-			if df.empty:
-				df = score_dfs[rd_idx]
-				continue
-
-			for col in list(score_dfs[rd_idx])[1:]:
-				df[col] += score_dfs[rd_idx][col]
-
-		# divide all by \# elements added, to get average
-		for col in list(df)[1:]:
-			df[col] = df[col].apply(lambda x: x/avg)
-
-		scoredir = join(scoredir, 'scores_avg_'+str(avg)+('_'+source if source_bpe else '')+('_'+target if target_bpe else ''))
-		print(f"Scores saved into {scoredir}")
-		df.round(decimals=3).to_csv(os.path.join(scoredir+'.csv'), index=False)
-		plot_scores(df, baseline_df, join(scoredir))
-
-	return
 
 
 if __name__ == "__main__":
@@ -210,18 +179,15 @@ if __name__ == "__main__":
 	Both gold file and input file are in the FastAlign format with sentence number at the start of line separated with TAB.
 	'''
 
-	print(f"Calculating alignment scores for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
+	print(f"Calculating alignment scores for source={source} and target={target}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
 
 	probs, surs, surs_count = load_gold(goldpath)
 
-	# dropout case: take normal BPE scores as baseline. if normal case, take gold standard
-	if dropout or not space:
-		baseline_df = pd.read_csv(join(rootdir, 'reports/scores_normal_bpe', 'scores_'+source+'_'+target+'.csv'))
+	# no space case: take normal BPE scores as baseline. if normal case, take gold standard
+	if not space:
+		baseline_df = pd.read_csv(join(rootdir, 'reports/scores_normal_bpe', source+'_'+target+'.csv'))
 	else:
 		baseline_df = get_baseline_score(probs, surs, surs_count)
 
-	if dropout > 0:
-		score_dfs = [calc_align_scores(probs, surs, surs_count, baseline_df, i) for i in range(dropout_sampless)]
-		avg_scores(baseline_df, score_dfs)
-	else:
-		calc_align_scores(probs, surs, surs_count, baseline_df)
+	# only for dropout=0 mode, if dropout>1 do merge_dropout.py
+	calc_align_scores(probs, surs, surs_count, baseline_df)

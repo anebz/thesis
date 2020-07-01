@@ -48,46 +48,32 @@ def extract_alignments(i=-1, input_mode=False):
 						('_deu' if target_bpe else '')
 					)
 
-		p = ""
-		m = "fast"
-
 		# create parallel text
-		if p == "" and m == "fast":
-			p = o + ".txt"
+		p = o + ".txt"
 
-			fa_file = codecs.open(p, "w", "utf-8")
-			fsrc = codecs.open(s, "r", "utf-8")
-			ftrg = codecs.open(t, "r", "utf-8")
+		fa_file = codecs.open(p, "w", "utf-8")
+		fsrc = codecs.open(s, "r", "utf-8")
+		ftrg = codecs.open(t, "r", "utf-8")
 
-			for sl, tl in zip(fsrc, ftrg):
-				sl = sl.strip().split("\t")[-1]
-				tl = tl.strip().split("\t")[-1]
+		for sl, tl in zip(fsrc, ftrg):
+			sl = sl.strip().split("\t")[-1]
+			tl = tl.strip().split("\t")[-1]
 
-				fa_file.write(sl + " ||| " + tl + "\n")
-			fa_file.close()
+			fa_file.write(sl + " ||| " + tl + "\n")
+		fa_file.close()
 
-		if m == "fast":
-			os.system("{} -i {} -v -d -o > {}.fwd".format(fastalign_path, p, o))
-			os.system("{} -i {} -v -d -o -r > {}.rev".format(fastalign_path, p, o))
-		elif m == "eflomal":
-			os.system(eflomal_path + "align.py -i {0} --model 3 -f {1}.fwd -r {1}.rev".format(p, o))
+		if mode == "fastalign":
+			os.system(f"{fastalign_path} -i {p} -v -d -o > {o}.fwd")
+			os.system(f"{fastalign_path} -i {p} -v -d -o -r > {o}.rev")
+		elif mode == "eflomal":
+			os.system(f"cd {eflomal_path}; python align.py -i {p} --model 3 -f {o}.fwd -r {o}.rev")
 
-		os.system("{0} -i {1}.fwd -j {1}.rev -c grow-diag-final-and > {1}_unnum.gdfa".format(atools_path, o))
+		os.system(f"{atools_path} -i {o}.fwd -j {o}.rev -c grow-diag-final-and > {o}_unnum.gdfa")
 		add_numbers(o + "_unnum.gdfa", o + ".gdfa")
-		os.system("rm {}_unnum.gdfa".format(o))
-		os.system("rm {}.fwd".format(o))
-		os.system("rm {}.rev".format(o))
-		os.system("rm {}.txt".format(o))
-
-		'''
-		with open(o + ".fwd", "r") as f1, open(o + ".rev", "r") as f2, open(o + ".inter", "w") as fo:
-			count = 0
-			for l1, l2 in zip(f1, f2):
-				l1 = set(l1.strip().split())
-				l2 = set(l2.strip().split())
-				fo.write(str(count) + "\t" + " ".join(sorted([x for x in l1 & l2])) + "\n")
-				count += 1
-		'''
+		os.system(f"rm {o}_unnum.gdfa")
+		os.system(f"rm {o}.fwd")
+		os.system(f"rm {o}.rev")
+		os.system(f"rm {o}.txt")
 
 		if input_mode:
 			break
@@ -102,7 +88,7 @@ def extract_alignments(i=-1, input_mode=False):
 		argsoutput = codecs.open(o+'.wgdfa', 'w', encoding='utf-8')
 		argsoutput.write(all_word_aligns)
 
-		print("\n\n\n\n")
+		print("\n\n")
 	return
 
 if __name__ == "__main__":
@@ -116,16 +102,15 @@ if __name__ == "__main__":
 	usage 2: ./extract_alignments.py -p parallel_file -o output_file
 	'''
 
-	eflomal_path = "/mounts/Users/student/masoud/tools/eflomal-master/"
-
 	print(f"Extracting alignments for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
 
+	os.makedirs(join(bpedir, 'fastalign'), exist_ok=True)
 	if not os.path.isfile(join(bpedir, 'fastalign/input.wgdfa')):
 		extract_alignments(input_mode=True)
 
 	if dropout > 0:
-		# create `dropout_sampless` segmentations, to aggregate later
-		for i in range(dropout_sampless):
+		# create `dropout_samples` segmentations, to aggregate later
+		for i in range(dropout_samples):
 			print(f"Iteration {i+1}")
 			extract_alignments(i)
 			print("\n\n\n\n")
