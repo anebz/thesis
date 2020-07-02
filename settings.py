@@ -27,7 +27,7 @@ goldpath = join(inputdir, source+'_'+target+'.gold')
 inputpath = {source: join(inputdir, source+'_with_10k.txt'),
             target: join(inputdir, target+'_with_10k.txt')}
 
-mode = "eflomal" #fastalign
+mode = "fastalign" #fastalign, eflomal
 fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 # https://github.com/robertostling/eflomal
 eflomal_path = join(rootdir, "tools/eflomal")

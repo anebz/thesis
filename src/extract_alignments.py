@@ -20,60 +20,64 @@ def add_numbers(input_file, output_file, start=0, max_num=-1):
 				break
 
 
+def create_parallel_text(sourcepath, targetpath, parallel):
+
+	sourceinput = codecs.open(sourcepath, "r", "utf-8")
+	targetinput = codecs.open(targetpath, "r", "utf-8")
+	fa_file = codecs.open(parallel, "w", "utf-8")
+
+	for sl, tl in zip(sourceinput, targetinput):
+		sl = sl.strip().split("\t")[-1]
+		tl = tl.strip().split("\t")[-1]
+
+		fa_file.write(sl + " ||| " + tl + "\n")
+	fa_file.close()
+	return
+
+
 def extract_alignments(i=-1, input_mode=False):
 
 	for num_symbols in all_symbols:
 
 		if input_mode:
 			print(f"Alignments for input files")
-			s = inputpath[source]
-			t = inputpath[target]
-			o = join(bpedir, "fastalign/input")
-
+			sourcepath = inputpath[source]
+			targetpath = inputpath[target]
+			outpath = join(bpedir, "fastalign/input")
 		else:
 			print(f"Alignments for {num_symbols} symbols")
 			if target_bpe:
-				s = inputpath[source]
+				sourcepath = inputpath[source]
 			else:
-				s = join(bpedir, 'segmentations', source+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
+				sourcepath = join(bpedir, 'segmentations', 
+							source+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
 			
 			if source_bpe:
-				t = inputpath[target]
+				targetpath = inputpath[target]
 			else:
-				t = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
+				targetpath = join(bpedir, 'segmentations', 
+							target+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
 
-			o = join(bpedir, "fastalign",
-						str(num_symbols) +
+			outpath = join(bpedir, "fastalign", str(num_symbols) +
 						('_'+str(i) if i != -1 else '') +
 						('_deu' if target_bpe else '')
 					)
-
-		# create parallel text
-		p = o + ".txt"
-
-		fa_file = codecs.open(p, "w", "utf-8")
-		fsrc = codecs.open(s, "r", "utf-8")
-		ftrg = codecs.open(t, "r", "utf-8")
-
-		for sl, tl in zip(fsrc, ftrg):
-			sl = sl.strip().split("\t")[-1]
-			tl = tl.strip().split("\t")[-1]
-
-			fa_file.write(sl + " ||| " + tl + "\n")
-		fa_file.close()
+		
+		parallel = outpath + ".txt"
+		create_parallel_text(sourcepath, targetpath, parallel)
 
 		if mode == "fastalign":
-			os.system(f"{fastalign_path} -i {p} -v -d -o > {o}.fwd")
-			os.system(f"{fastalign_path} -i {p} -v -d -o -r > {o}.rev")
+			os.system(f"{fastalign_path} -i {parallel} -v -d -o > {outpath}.fwd")
+			os.system(f"{fastalign_path} -i {parallel} -v -d -o -r > {outpath}.rev")
 		elif mode == "eflomal":
-			os.system(f"cd {eflomal_path}; python align.py -i {p} --model 3 -f {o}.fwd -r {o}.rev")
+			os.system(f"cd {eflomal_path}; python align.py -i {parallel} --model 3 -f {outpath}.fwd -r {outpath}.rev")
 
-		os.system(f"{atools_path} -i {o}.fwd -j {o}.rev -c grow-diag-final-and > {o}_unnum.gdfa")
-		add_numbers(o + "_unnum.gdfa", o + ".gdfa")
-		os.system(f"rm {o}_unnum.gdfa")
-		os.system(f"rm {o}.fwd")
-		os.system(f"rm {o}.rev")
-		os.system(f"rm {o}.txt")
+		os.system(f"{atools_path} -i {outpath}.fwd -j {outpath}.rev -c grow-diag-final-and > {outpath}_unnum.gdfa")
+		add_numbers(outpath + "_unnum.gdfa", outpath + ".gdfa")
+		os.system(f"rm {outpath}_unnum.gdfa")
+		os.system(f"rm {outpath}.fwd")
+		os.system(f"rm {outpath}.rev")
+		os.system(f"rm {outpath}.txt")
 
 		if input_mode:
 			break
@@ -81,11 +85,11 @@ def extract_alignments(i=-1, input_mode=False):
 		# map alignment from subword to word
 		bpes = load_and_map_segmentations(num_symbols, i)
 
-		argsalign = codecs.open(o+'.gdfa', encoding='utf-8')
+		argsalign = codecs.open(outpath+'.gdfa', encoding='utf-8')
 		all_word_aligns = bpe_word_align(bpes, argsalign)
-		os.system("rm {}.gdfa".format(o))
+		os.system("rm {}.gdfa".format(outpath))
 
-		argsoutput = codecs.open(o+'.wgdfa', 'w', encoding='utf-8')
+		argsoutput = codecs.open(outpath+'.wgdfa', 'w', encoding='utf-8')
 		argsoutput.write(all_word_aligns)
 
 		print("\n\n")
