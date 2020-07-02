@@ -45,11 +45,10 @@ atools_path = join(rootdir, "tools/fast_align/build/atools")
 \section{Replication of BPE results}
 
 \begin{enumerate}
-	\item Write learn BPE from corpus algorithm
-	\item Write apply BPE to corpus algorithm
-	\item Write extract alignment script to align files from 2 different languages using fastalign/eflomal
-	\item Write a subword-word alignment script, since fastalign's output are subword alignments and we need word alignments
-	\item calculate alignment scores
+    \item Write learn BPE from corpus algorithm
+    \item Write apply BPE to corpus algorithm
+    \item Write extract alignment script
+    \item Write calculate alignment scores script
 \end{enumerate}
 
 \subsection{Learn BPE algorithm}
@@ -70,49 +69,49 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
 def read_corpus(corpus: list) -> list:
-    """
-    Read corpus, strip index and new line characters.
-    In space mode, each word has a word_sep symbol at the beginning to signal it's the beginning of the word.
-    example:
-    tokens = [
-        '\_w e \_d o \_n o t \_b e l i e v e 
-        \_t h a t \_w e \_s h o u l d 
-        \_c h e r r y - p i c k \_.',
-        ...
-    ]
-    """
+  """
+  Read corpus, strip index and new line characters.
+  In space mode, each word has a word_sep symbol at the beginning to signal it's the beginning of the word.
+  example:
+  tokens = [
+      '\_w e \_d o \_n o t \_b e l i e v e 
+      \_t h a t \_w e \_s h o u l d 
+      \_c h e r r y - p i c k \_.',
+      ...
+  ]
+  """
 
-    tokens = []
-    for line in corpus:
-        line = line.split('\t')[1].strip('\r\n ')
-        line = line.split()
-        line[0] = str.lower(line[0])
+  tokens = []
+  for line in corpus:
+    line = line.split('\t')[1].strip('\r\n ')
+    line = line.split()
+    line[0] = str.lower(line[0])
 
-        # add word_sep to each beginning of word and join by space
-        tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
+    # add word_sep to each beginning of word and join by space
+    tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
 
-    return tokens
+  return tokens
 
 def get_stats(tokens: list) -> Counter:
-    """
-    Count frequency of all bigrams and the frequency per index.
-    pairs = {
-        ('s', 'h'): 5,
-        ('h', 'e'): 6
-    }
-    The last token '.' or word_sep. isn't merged with anything.
-    """
+  """
+  Count frequency of all bigrams and the frequency per index.
+  pairs = {
+    ('s', 'h'): 5,
+    ('h', 'e'): 6
+  }
+  The last token '.' or word_sep. isn't merged with anything.
+  """
 
-    pairs = Counter()
-    for i, sent in enumerate(tokens):
-        # get stats for each word independently, 
-        # no bigrams between different words
-        for word in sent[1:].split(' '+word_sep):
-        	symbols = symbols.split()
-        	for j in range(len(symbols) - 1):
-            	pairs[symbols[j], symbols[j + 1]] += 1
+  pairs = Counter()
+  for i, sent in enumerate(tokens):
+    # get stats for each word independently, 
+    # no bigrams between different words
+    for word in sent[1:].split(' '+word_sep):
+    	symbols = symbols.split()
+    	for j in range(len(symbols) - 1):
+        	pairs[symbols[j], symbols[j + 1]] += 1
 
-    return pairs
+  return pairs
 
 
 def merge_token(corpus, most_frequent):
@@ -122,51 +121,49 @@ def merge_token(corpus, most_frequent):
 
 
 def learn_bpe(argsinput, bpe_model):
-    """
-    Learn BPE operations from vocabulary.
-    Steps:
-    1. split corpus into characters, count frequency
-    2. count bigrams in corpus
-    3. merge most frequent symbols
-    4. Update bigrams in corpus 
-    """
+  """
+  Learn BPE operations from vocabulary.
+  Steps:
+  1. split corpus into characters, count frequency
+  2. count bigrams in corpus
+  3. merge most frequent symbols
+  4. Update bigrams in corpus 
+  """
 
-    corpus = read_corpus(argsinput)
+  corpus = read_corpus(argsinput)
 
-    most_frequent_merges = []
-    for i in range(num_all_symbols):
+  most_frequent_merges = []
+  for i in range(num_all_symbols):
 
-	    pairs = get_stats(corpus)
+    pairs = get_stats(corpus)
 
-        try:
-            most_frequent = pairs.most_common(1)[0][0]
-        except:
-            # pairs is empty
-            break
+      try:
+        most_frequent = pairs.most_common(1)[0][0]
+      except:
+        # pairs is empty
+        break
 
-        most_frequent_merges.append(most_frequent)
-        corpus = merge_token(corpus, most_frequent)
+      most_frequent_merges.append(most_frequent)
+      corpus = merge_token(corpus, most_frequent)
 
-    return most_frequent_merges
+  return most_frequent_merges
 
 
 def write_bpe(lang, most_freq_merges):
 
-    bpe_file = codecs.open(join(datadir, lang+'.model'), 'w', encoding='utf-8')
-
-    bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
-    bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
-
-    return
+  bpe_file = codecs.open(join(datadir, lang+'.model'), 'w', encoding='utf-8')
+  bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
+  bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
+  return
 
 if __name__ == '__main__':
 
-    for lang in [source, target]:
+  for lang in [source, target]:
 
-        argsinput = codecs.open(inputpath[lang], encoding='utf-8')
-        bpe_model = codecs.open(join(datadir, lang+'.model'), 'w', encoding='utf-8')
-        most_freq_merges = learn_bpe(argsinput, bpe_model)
-        write_bpe(lang, most_freq_merges)
+    argsinput = codecs.open(inputpath[lang], encoding='utf-8')
+    bpe_model = codecs.open(join(datadir, lang+'.model'), 'w', encoding='utf-8')
+    most_freq_merges = learn_bpe(argsinput, bpe_model)
+    write_bpe(lang, most_freq_merges)
 \end{python}
 
 \subsection{Apply BPE algorithm}
@@ -186,54 +183,132 @@ from learn_bpe import read_bpe_model, read_corpus
 
 def load_data():
 
-    os.chdir(datadir)
-    langs = [source, target]
-    bpe_models = []
-    corpora = []
-    for lang in langs:
+  os.chdir(datadir)
+  langs = [source, target]
+  bpe_models = []
+  corpora = []
+  for lang in langs:
 
-        argsinput = codecs.open(inputpath[lang], encoding='utf-8')
-        corpora.append(read_corpus(argsinput))
+    argsinput = codecs.open(inputpath[lang], encoding='utf-8')
+    corpora.append(read_corpus(argsinput))
 
-        bpe_model, _ = read_bpe_model(lang)
-        if not bpe_model:
-            print(f"No model found for lang={lang}")
+    bpe_model, _ = read_bpe_model(lang)
+    if not bpe_model:
+      print(f"No model found for lang={lang}")
 
-        bpe_model = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(bpe_model)]
-        bpe_models.append(bpe_model[1:])
+    bpe_model = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(bpe_model)]
+    bpe_models.append(bpe_model[1:])
 
-    return langs, bpe_models, corpora
+  return langs, bpe_models, corpora
 
 
 def write_bpe(lang, num_symbols, merged_corpus, i=-1):
-    outputpath = join(bpedir, 'segmentations', lang+"_"+str(num_symbols)+".bpe")
-    argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
-    argsoutput.write(merged_corpus)
-    return
+  outputpath = join(bpedir, 'segmentations', lang+"_"+str(num_symbols)+".bpe")
+  argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
+  argsoutput.write(merged_corpus)
+  return
 
 
 def apply_bpe(langs, bpe_models, corpora):
     
-    for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
+  for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
 
-        bpe_model = bpe_model[:max(all_symbols)]
-        all_symbols_copy = all_symbols.copy()
+    bpe_model = bpe_model[:max(all_symbols)]
+    all_symbols_copy = all_symbols.copy()
 
-        str_corpus = '\n'.join(corpus)
-        for j, bigram in enumerate(bpe_model):
+    str_corpus = '\n'.join(corpus)
+    for j, bigram in enumerate(bpe_model):
 
-            str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
+      str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
 
-            if j + 1 == all_symbols_copy[0]:
-                write_bpe(lang, all_symbols_copy.pop(0), str_corpus, i)
+      if j + 1 == all_symbols_copy[0]:
+        write_bpe(lang, all_symbols_copy.pop(0), str_corpus, i)
 
-    return
+  return
 
 
 if __name__ == "__main__":
 
-    os.makedirs(join(bpedir, 'segmentations'), exist_ok=True)
-    langs, bpe_models, corpora = load_data()
-    apply_bpe()
+  os.makedirs(join(bpedir, 'segmentations'), exist_ok=True)
+  langs, bpe_models, corpora = load_data()
+  apply_bpe()
+\end{python}
 
+\subsection{Extract alignments}
+
+\begin{python}
+from os.path import join
+import os
+import sys
+import codecs
+import argparse
+
+# import global variables from settings.py
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from settings import *
+from subword_word import *
+
+
+def add_numbers(input_file, output_file, start=0, max_num=-1):
+  with codecs.open(input_file, "r", "utf-8") as fi, codecs.open(output_file, "w", "utf-8") as fo:
+    count = start
+    for l in fi:
+      fo.write(str(count) + "\t" + l.strip() + "\n")
+      count += 1
+      if max_num > 0 and count >= max_num:
+        break
+
+def create_parallel_text(s, t, p):
+
+  fa_file = codecs.open(p, "w", "utf-8")
+  fsrc = codecs.open(s, "r", "utf-8")
+  ftrg = codecs.open(t, "r", "utf-8")
+
+  for sl, tl in zip(fsrc, ftrg):
+    sl = sl.strip().split("\t")[-1]
+    tl = tl.strip().split("\t")[-1]
+
+    fa_file.write(sl + " ||| " + tl + "\n")
+  fa_file.close()
+  return
+
+def extract_alignments():
+
+  for num_symbols in all_symbols:
+
+    s = join(bpedir, 'segmentations', source+"_"+str(num_symbols)+".bpe")
+    t = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+".bpe")
+    o = join(bpedir, "fastalign", str(num_symbols))
+
+    p = o + ".txt"
+    create_parallel_text(s, t, p)
+
+    if mode == "fastalign":
+        os.system(f"{fastalign_path} -i {p} -v -d -o > {o}.fwd")
+        os.system(f"{fastalign_path} -i {p} -v -d -o -r > {o}.rev")
+    elif mode == "eflomal":
+        os.system(f"cd {eflomal_path}; python align.py -i {p} --model 3 -f {o}.fwd -r {o}.rev")
+
+    os.system(f"{atools_path} -i {o}.fwd -j {o}.rev -c grow-diag-final-and > {o}_unnum.gdfa")
+    add_numbers(o + "_unnum.gdfa", o + ".gdfa")
+    os.system(f"rm {o}_unnum.gdfa")
+    os.system(f"rm {o}.fwd")
+    os.system(f"rm {o}.rev")
+    os.system(f"rm {o}.txt")
+
+    if input_mode:
+        break
+
+    # map alignment from subword to word
+    bpes = load_and_map_segmentations(num_symbols, i)
+
+    argsalign = codecs.open(o+'.gdfa', encoding='utf-8')
+    all_word_aligns = bpe_word_align(bpes, argsalign)
+    os.system("rm {}.gdfa".format(o))
+
+    argsoutput = codecs.open(o+'.wgdfa', 'w', encoding='utf-8')
+    argsoutput.write(all_word_aligns)
+
+    print("\n\n")
+  return
 \end{python}

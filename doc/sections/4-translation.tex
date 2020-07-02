@@ -59,3 +59,22 @@ Word alignment is an important task for most methods of statistical machine tran
 This approach is an example of unsupervised learning, meaning that the system has no knowledge of the kind of output desired, but tries to find values for the unobserved model and alignments which best explain the observed parallel text. In some cases, a small number of manually aligned sentences, in a way to explore supervised learning.~\cite{varga2007parallel} These models are usually able to more easily take advantage of combining many features within the data, such as context, syntactic structure, part-of-speech or translation lexicon information, which are difficult to integrate into the unsupervised models generally used.
 
 For training, historically IBM models have been used.~\cite{koehn2009statistical} These models are used in statistical machine translation to train a) a translation model, and b) an alignment model. They make use of the expectation-maximization algorithm explained above: in the expectation step, the translation probabilities within each sentence are computed; in the maximization step, these probabilities are accumulated to global translation probabilities.
+
+\subsection{Fastalign algorithm}
+
+Fastalign algorithm~\cite{dyer-etal-2013-simple}
+
+is a simple log-linear reparametrization of IBM Model 2 that overcomes problems from both Model 1 and Model 2. Training this model is consistently ten times faster than Model 4.
+
+An open-source implementation of the alignment model described in this paper is available in \href{http://github.com/clab/fast align}{Github}.
+
+Fastalign is a variation of the lexical translation. Lexican translation works as follows: given a source sentence \emph{f} with length \emph{n}, first generate the length of the target sentence \emph{m}, where the target sentence is \emph{e}. Then generate an alignment vector of length \emph{m} that indicates which source word (or null token) each target word will be a translation of. Lastly, generate the \emph{m} output words, where each word in \emph{e} depends only on the word in \emph{f} it's aligned with.
+
+Fastalign's modification is that the distribution over alignments is parametrized by a null alignment probability and a precision parameter, which controls how strongly the model favors alignment points close to the diagonal (if we use the word alignment matrix like in the example above).
+
+The paper~\cite{dyer-etal-2013-simple} has more detailed information on training, inference and results.
+
+\subsection{Eflomal algorithm}
+
+https://github.com/robertostling/eflomal
+https://content.sciendo.com/view/journals/pralin/106/1/article-p125.xml
