@@ -3,35 +3,46 @@ from os.path import join
 import os
 import sys
 import codecs
-import argparse
 
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 from subword_word import *
 
-def add_numbers(input_file, output_file, start=0, max_num=-1):
-	with codecs.open(input_file, "r", "utf-8") as fi, codecs.open(output_file, "w", "utf-8") as fo:
-		count = start
-		for l in fi:
-			fo.write(str(count) + "\t" + l.strip() + "\n")
-			count += 1
-			if max_num > 0 and count >= max_num:
-				break
 
-
-def create_parallel_text(sourcepath, targetpath, parallel):
+def create_parallel_text(sourcepath, targetpath, outpath):
 
 	sourceinput = codecs.open(sourcepath, "r", "utf-8")
 	targetinput = codecs.open(targetpath, "r", "utf-8")
-	fa_file = codecs.open(parallel, "w", "utf-8")
+	fa_file = codecs.open(outpath + '.txt', "w", "utf-8")
 
 	for sl, tl in zip(sourceinput, targetinput):
 		sl = sl.strip().split("\t")[-1]
 		tl = tl.strip().split("\t")[-1]
-
-		fa_file.write(sl + " ||| " + tl + "\n")
+		fa_file.write(f"{sl} ||| {tl}\n")
 	fa_file.close()
+	return
+
+def create_fwd_rev_files(outpath):
+	if mode == "fastalign":
+		os.system(f"{fastalign_path} -i {outpath}.txt -v -d -o > {outpath}.fwd")
+		os.system(f"{fastalign_path} -i {outpath}.txt -v -d -o -r > {outpath}.rev")
+	elif mode == "eflomal":
+		os.system(f"cd {eflomal_path}; python align.py -i {outpath}.txt --model 3 -f {outpath}.fwd -r {outpath}.rev")
+	return
+
+
+def create_gdfa_file(outpath):
+	# create gdfa file from .fwd and .rev
+	os.system(f"{atools_path} -i {outpath}.fwd -j {outpath}.rev -c grow-diag-final-and > {outpath}_unnum.gdfa")
+
+	# parse _unnum.gdfa to .gdfa with "\t" separator
+	with codecs.open(f"{outpath}_unnum.gdfa", "r", "utf-8") as fi, codecs.open(f"{outpath}.gdfa", "w", "utf-8") as fo:
+		for i, line in enumerate(fi):
+			fo.write(f"{i}\t{line.strip()}\n")
+
+	# delete unnecessary files
+	os.system(f"rm {outpath}_unnum.gdfa; rm {outpath}.fwd; rm {outpath}.rev; rm {outpath}.txt")
 	return
 
 
@@ -62,22 +73,10 @@ def extract_alignments(i=-1, input_mode=False):
 						('_'+str(i) if i != -1 else '') +
 						('_deu' if target_bpe else '')
 					)
-		
-		parallel = outpath + ".txt"
-		create_parallel_text(sourcepath, targetpath, parallel)
 
-		if mode == "fastalign":
-			os.system(f"{fastalign_path} -i {parallel} -v -d -o > {outpath}.fwd")
-			os.system(f"{fastalign_path} -i {parallel} -v -d -o -r > {outpath}.rev")
-		elif mode == "eflomal":
-			os.system(f"cd {eflomal_path}; python align.py -i {parallel} --model 3 -f {outpath}.fwd -r {outpath}.rev")
-
-		os.system(f"{atools_path} -i {outpath}.fwd -j {outpath}.rev -c grow-diag-final-and > {outpath}_unnum.gdfa")
-		add_numbers(outpath + "_unnum.gdfa", outpath + ".gdfa")
-		os.system(f"rm {outpath}_unnum.gdfa")
-		os.system(f"rm {outpath}.fwd")
-		os.system(f"rm {outpath}.rev")
-		os.system(f"rm {outpath}.txt")
+		create_parallel_text(sourcepath, targetpath, outpath)
+		create_fwd_rev_files(outpath)
+		create_gdfa_file(outpath)
 
 		if input_mode:
 			break
@@ -87,7 +86,7 @@ def extract_alignments(i=-1, input_mode=False):
 
 		argsalign = codecs.open(outpath+'.gdfa', encoding='utf-8')
 		all_word_aligns = bpe_word_align(bpes, argsalign)
-		os.system("rm {}.gdfa".format(outpath))
+		os.system(f"rm {outpath}.gdfa")
 
 		argsoutput = codecs.open(outpath+'.wgdfa', 'w', encoding='utf-8')
 		argsoutput.write(all_word_aligns)

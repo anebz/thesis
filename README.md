@@ -9,6 +9,7 @@ Master thesis repo
 
 ## tasks
 
+* [ ] QUESTION: does eflomal use gdfa algorithm as well? atools from fastalign
 * [ ] paper stuff, do after thesis
   * no space is good language with no space tokenization
   * eflomal instead of fastalign. result will probably not be as good
