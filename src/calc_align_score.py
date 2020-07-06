@@ -134,17 +134,13 @@ def plot_scores(df, baseline_df, scoredir):
 def calc_align_scores(probs, surs, surs_count, baseline_df, i=-1):
 
 	scores = []
-	# calc score of num_symbols
-	os.chdir(join(bpedir, mode))
-	#TODO iterate num_symbols, not glob
-	for alfile in glob.glob('[0-9]*'+
-							('_'+str(i) if dropout else '')+
-							('_'+source if source_bpe else '')+
-							('_'+target if target_bpe else '')+'.wgdfa'):
+	for num_symbols in all_symbols:
+		alfile = join(bpedir, mode, 
+			f"{num_symbols}{'_'+str(i) if dropout else ''}\
+			{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}.wgdfa")
 
 		if (not target_bpe and '_'+target in alfile) or (not source_bpe and '_'+source in alfile):
 			continue
-		num_symbols = alfile.split('/')[-1].split('.')[0].split('_')[0]
 
 		score = [int(num_symbols)]
 		score.extend(list(calc_score(alfile, probs, surs, surs_count)))
