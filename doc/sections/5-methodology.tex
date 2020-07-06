@@ -57,6 +57,36 @@ Sennrich's repository's code has some additional parameters that weren't relevan
 
 This step of the pipeline only has to be done once for each corpus, afterwards the vocabulary can be used in different ways. But this minimal algorithm, since it has to count all the pairs in the whole corpus in each iteration, takes a long time. An optimization came after this.
 
+With the given corpus, these are the 10 most frequent merges in the English language:
+
+\begin{enumerate}
+	\item \_t h
+	\item \_th e
+	\item o n
+	\item r e
+	\item t i
+	\item e n
+	\item e r
+	\item i n
+	\item i s
+	\item n d
+\end{enumerate}
+
+And the 10 most frequent merges in German:
+
+\begin{enumerate}
+	\item e n
+	\item e r
+	\item c h
+	\item i e
+	\item e i
+	\item n d
+	\item n g
+	\item \_d ie
+	\item s t
+	\item i ch
+\end{enumerate}
+
 \subsection{Apply BPE algorithm}
 
 Once the vocabulary has been learnt, it can be applied to a corpus. In this case, we use the same corpus for training and for applying. To generate different output files, different num\_merges are declared. For example, for 500 merges, only the first 500 merges of the vocabulary are considered, and there aren't many recognizable BPE units in the corpus. For bigger merge values, more and more subword units get merged. In this thesis, the following merges have been considered: [100, 200, 500, 1000, 2000, 4000, 6000, 8000]. These are the steps for this part:
@@ -101,7 +131,7 @@ Only the 100 most common units in the language have been merged, so in English w
 
 Most words are merged, except \emph{\_dis abled} in English, and \emph{\_T ransp ortausschuß} in German for instance.
 
-\subsection{Extract alignments}
+\subsection{Extract alignments}\label{subsec:extractalign}
 
 Write extract alignment script to align files from 2 different languages using fastalign/eflomal
 
@@ -129,7 +159,7 @@ In our case however, the input files aren't composed by words, but rather by sub
 	Alignment: 0-0 1-1 2-1 3-1 4-1 5-1 1-2 2-2 3-2 4-2 5-2 1-3 2-3 3-3 4-3 5-3 6-4 7-11 8-9 9-10 10-5 11-6 12-7 13-8 14-12
 \end{quote}
 
-Since the German word \emph{Transportausschuß} is divided into three, namely \emph{T ransp ortausschuß}, the many-to-one alignment from the previous case is now a many-to-many alignment. Now there are subword alignments as opposed to word alignments. The number of alignment has grown from last example.
+Since the German word \emph{Transportausschuß} is divided into three words, namely \emph{T ransp ortausschuß}, the many-to-one alignment from the previous case is now a many-to-many alignment. Now there are subword alignments as opposed to word alignments. The number of alignment has grown from last example.
 
 Because the gold standard against which the system is being evaluated consists of word alignments, it's necesssary to map subword alignments into word alignments.
 
@@ -143,6 +173,49 @@ This script takes English and German corpora and the alignment file as inputs, a
 \end{quote}
 
 The challenge here lies in the fact that if the BPEs are of good quality, the alignment algorithm will align subword items correctly, and therefore in the subword-to-word mapping, the word alignments will be correct.
+
+\subsection{Calculate alignment scores}
+
+In the final step, the alignment scores are computed, against the gold standard. Once loading the gold dataset, each alignment file (for each number of symbols computed in BPE previously) is matched against this dataset, obtaining precision, recall, F1 score and AER metrics. Therefore, for the case of 100 learnt symbols, there will be an associated score. And so on for other numbers of learnt symbols. Additionally, the gold standard's scores are also computed as a baseline. To make it more visual, the scores are plotted and saved into a \emph{.png} image file as well as \emph{.csv} file with the exact numbers.
+
+\subsection{Conclusion}
+
+The results show that BPE increases word alignment results, specifically the F1 score is increased by 0.5\% on average for different number of symbols, the most notable improvement being with 1000 BPE symbols, and a F1 score improvement of 0.9\%.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=14cm]{figures/eng_deu_fastalign.png}
+    \caption{Scores of BPE over baseline}
+\end{figure}
+
+\section{Replication of BPE dropout}
+
+BPE dropout's difference with regards to normal BPE is the fact that some merges don't take place. Based on this randomness, each time this system is carried out, new BPE merges are created. For example, if the most merge in English \emph{(\_t, h)} wasn't merged, the resulting file of BPE merges would be vastly different than if the 10th most frequent merge didn't take place. In order to maintain some balance, the dropout algorithm is run a number of times, in this case 10 times, and then the alignments aggregated, which will be explained below. The algorithm to create the merge list remains unchanged, the first slight change occurs when applying the BPE algorithm to the corpus.
+
+\subsection{Apply BPE to corpus with dropout}
+
+\begin{python}
+
+
+if __name__ == "__main__":
+
+    langs, bpe_models, corpora = load_data()
+
+    if dropout > 0:
+        # create `dropout_sampless` segmentations, to aggregate later
+        for i in range(dropout_sampless):
+            print(f"Iteration {i+1}")
+            apply_bpe(i)
+    else:
+        apply_bpe()
+\end{python}
+
+
+
+
+\begin{python}
+
+\end{python}
 
 \begin{quote}
 	a\\

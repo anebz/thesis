@@ -107,17 +107,17 @@ def get_stats(tokens: list) -> Counter:
     # get stats for each word independently, 
     # no bigrams between different words
     for word in sent[1:].split(' '+word_sep):
-    	symbols = symbols.split()
-    	for j in range(len(symbols) - 1):
-        	pairs[symbols[j], symbols[j + 1]] += 1
+      symbols = symbols.split()
+      for j in range(len(symbols) - 1):
+        pairs[symbols[j], symbols[j + 1]] += 1
 
   return pairs
 
 
 def merge_token(corpus, most_frequent):
-	str_corpus = '\n'.join(corpus)
-	str_corpus = str_corpus.replace(' '.join(most_frequent), ''.join(most_frequent))
-	return str_corpus.split('\n')
+  str_corpus = '\n'.join(corpus)
+  str_corpus = str_corpus.replace(' '.join(most_frequent), ''.join(most_frequent))
+  return str_corpus.split('\n')
 
 
 def learn_bpe(argsinput, bpe_model):
@@ -201,13 +201,11 @@ def load_data():
 
   return langs, bpe_models, corpora
 
-
 def write_bpe(lang, num_symbols, merged_corpus, i=-1):
   outputpath = join(bpedir, 'segmentations', lang+"_"+str(num_symbols)+".bpe")
   argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
   argsoutput.write(merged_corpus)
   return
-
 
 def apply_bpe(langs, bpe_models, corpora):
     
@@ -223,9 +221,7 @@ def apply_bpe(langs, bpe_models, corpora):
 
       if j + 1 == all_symbols_copy[0]:
         write_bpe(lang, all_symbols_copy.pop(0), str_corpus, i)
-
   return
-
 
 if __name__ == "__main__":
 
@@ -236,12 +232,25 @@ if __name__ == "__main__":
 
 \subsection{Extract alignments}
 
+In the next step, the extract alignments script takes two files as input: English BPE file, German BPE file, and outputs an alignment file, with the extension .wgdfa.
+
+First of all, it's necessary to iterate through the different merge types that have been done before. There are BPE files with 100 merges, 200, 500, etc for both languages. At each iteration, a different alignment file is created.
+
+Alignment algorithms work on parallel data, that is, they expect text in the following format:
+
+\begin{quote}
+  Hello from England ||| Hallo aus Deutschland
+\end{quote}
+
+Since the BPE files don't have this format, first of all the function \emph{create\_parallel\_text} creates a \emph{.txt} file in the appropriate format. Afterwards, both \emph{fastalign} and \emph{eflomal} generate forward and reverse alignments. This is handled by the \emph{create\_fwd\_rev\_files} function, which creates \emph{.fwd} and \emph{.rev} files. Afterwards, given these \emph{.fwd} and \emph{.rev} files, the alignment algorithm creates a type of union between these two, called \emph{grow-diag-final-and}, with the extension \emph{.gdfa}. This is handled by the \emph{create\_gdfa\_file} function.
+
+As explained in the \textit{Extract alignment} subsection in the Methodology chapter~\ref{subsec:extractalign}, the script up until now has only aligned BPE units. Those alignments need to be transformed into word alignments. The function \emph{load\_and\_map\_segmentations} loads the BPE files and maps each BPE unit to its corresponding word. For an example, see the comments on the function. This is an auxiliary function in order to map the alignments later. Afterwards, by calling \emph{bpe\_word\_align}, the mapping from subword alignments to word alignments is made. Lastly, the new alignments are saved in a file with the extension \emph{.wgdfa}.
+
 \begin{python}
 from os.path import join
 import os
 import sys
 import codecs
-import argparse
 
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -249,66 +258,340 @@ from settings import *
 from subword_word import *
 
 
-def add_numbers(input_file, output_file, start=0, max_num=-1):
-  with codecs.open(input_file, "r", "utf-8") as fi, codecs.open(output_file, "w", "utf-8") as fo:
-    count = start
-    for l in fi:
-      fo.write(str(count) + "\t" + l.strip() + "\n")
-      count += 1
-      if max_num > 0 and count >= max_num:
-        break
+def create_parallel_text(sourcepath, targetpath, outpath):
 
-def create_parallel_text(s, t, p):
-
-  fa_file = codecs.open(p, "w", "utf-8")
-  fsrc = codecs.open(s, "r", "utf-8")
-  ftrg = codecs.open(t, "r", "utf-8")
+  fa_file = codecs.open(outpath + '.txt', "w", "utf-8")
+  fsrc = codecs.open(sourcepath, "r", "utf-8")
+  ftrg = codecs.open(targetpath, "r", "utf-8")
 
   for sl, tl in zip(fsrc, ftrg):
     sl = sl.strip().split("\t")[-1]
     tl = tl.strip().split("\t")[-1]
-
-    fa_file.write(sl + " ||| " + tl + "\n")
+    fa_file.write(f"{sl} ||| {tl}\n")
   fa_file.close()
   return
+
+
+def create_fwd_rev_files(outpath):
+  if mode == "fastalign":
+    os.system(f"{fastalign_path} -i {outpath}.txt -v -d -o > {outpath}.fwd")
+    os.system(f"{fastalign_path} -i {outpath}.txt -v -d -o -r > {outpath}.rev")
+  elif mode == "eflomal":
+    os.system(f"cd {eflomal_path}; python align.py -i {outpath}.txt --model 3 -f {outpath}.fwd -r {outpath}.rev")
+  return
+
+
+def create_gdfa_file(outpath):
+  # create gdfa file from .fwd and .rev
+  os.system(f"{atools_path} -i {outpath}.fwd -j {outpath}.rev -c grow-diag-final-and > {outpath}_unnum.gdfa")
+
+  # parse _unnum.gdfa to .gdfa with "\t" separator
+  with codecs.open(f"{outpath}_unnum.gdfa", "r", "utf-8") as fi, codecs.open(f"{outpath}.gdfa", "w", "utf-8") as fo:
+    for i, line in enumerate(fi):
+      fo.write(f"{i}\t{line.strip()}\n")
+
+  # delete unnecessary files
+  os.system(f"rm {outpath}_unnum.gdfa; rm {outpath}.fwd; rm {outpath}.rev; rm {outpath}.txt")
+  return
+
+
+def load_and_map_segmentations(num_symbols):
+
+    '''
+    Given a .bpe file composed of the corpus made of subword units such as
+    corpus_eng =  [
+        '_We _do _no t _be li eve _.',
+        '_Thi s _is _a _sent ence _.',
+        ...
+    ]
+    Output: dictionary of each language and 
+    a list of indexes pointing to which word each element (_do) belongs to
+    bpes = {
+        'eng':
+        [
+            [0, 1, 2, 2, 3, 3, 3, 4],
+            [0, 0, 1, 2, 3, 4, 5],
+            ...
+        ],
+        'deu':
+        [
+            ...
+        ],
+    } 
+    '''
+
+    bpes = {}
+    for lang in [source, target]:
+
+        bpes[lang] = []
+        corpus = codecs.open(lang+'_'+str(num_symbols)+'.bpe', encoding='utf-8')
+        for sent in corpus:
+          mapping = [0]
+          i = 0
+          for subw in sent.split()[1:]:
+              if subw[0] == word_sep:
+                i += 1
+              mapping.append(i)
+          bpes[lang].append(mapping)
+    return bpes
+
+
+def bpe_word_align(bpes, bpe_aligns):
+    '''
+    Input: dictionary of bpes obtained as output of map_subword_to_word()
+    Output: list of word alignments and their indexes
+        "
+            0   0-0 0-1 1-1 1-2 3-1 2-4 \n
+            1   0-0 1-0 1-1 2-1 \n
+            ...
+        "
+    '''
+    all_word_aligns = ''
+    for i, (sent1, sent2, bpe_al) in enumerate(zip(bpes[source], bpes[target], bpe_aligns)):
+        word_aligns = set()
+        # iterate each alignment
+        for al in bpe_al.split('\t')[1].split():
+            firstal, secondal = al.split('-')
+            new_al = str(sent1[int(firstal)]) + '-' + str(sent2[int(secondal)])
+            word_aligns.add(new_al)
+        all_word_aligns += str(i) + "\t" + ' '.join(word_aligns) + "\n"
+    return all_word_aligns
+
 
 def extract_alignments():
 
   for num_symbols in all_symbols:
 
-    s = join(bpedir, 'segmentations', source+"_"+str(num_symbols)+".bpe")
-    t = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+".bpe")
-    o = join(bpedir, "fastalign", str(num_symbols))
+    sourcepath = join(bpedir, 'segmentations', source+"_"+str(num_symbols)+".bpe")
+    targetpath = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+".bpe")
+    outpath = join(bpedir, "fastalign", str(num_symbols))
 
-    p = o + ".txt"
-    create_parallel_text(s, t, p)
-
-    if mode == "fastalign":
-        os.system(f"{fastalign_path} -i {p} -v -d -o > {o}.fwd")
-        os.system(f"{fastalign_path} -i {p} -v -d -o -r > {o}.rev")
-    elif mode == "eflomal":
-        os.system(f"cd {eflomal_path}; python align.py -i {p} --model 3 -f {o}.fwd -r {o}.rev")
-
-    os.system(f"{atools_path} -i {o}.fwd -j {o}.rev -c grow-diag-final-and > {o}_unnum.gdfa")
-    add_numbers(o + "_unnum.gdfa", o + ".gdfa")
-    os.system(f"rm {o}_unnum.gdfa")
-    os.system(f"rm {o}.fwd")
-    os.system(f"rm {o}.rev")
-    os.system(f"rm {o}.txt")
-
-    if input_mode:
-        break
+    create_parallel_text(sourcepath, targetpath, outpath)
+    create_fwd_rev_files(outpath)
+    create_gdfa_file(outpath)
 
     # map alignment from subword to word
-    bpes = load_and_map_segmentations(num_symbols, i)
+    bpes = load_and_map_segmentations(num_symbols)
 
     argsalign = codecs.open(o+'.gdfa', encoding='utf-8')
     all_word_aligns = bpe_word_align(bpes, argsalign)
-    os.system("rm {}.gdfa".format(o))
+    os.system(f"rm {outpath}.gdfa")
 
-    argsoutput = codecs.open(o+'.wgdfa', 'w', encoding='utf-8')
+    argsoutput = codecs.open(outpath+'.wgdfa', 'w', encoding='utf-8')
     argsoutput.write(all_word_aligns)
 
     print("\n\n")
   return
+
+if __name__ == "__main__":
+
+  os.makedirs(join(bpedir, 'fastalign'), exist_ok=True)
+  extract_alignments()
+\end{python}
+
+\subsection{Calculate alignment scores}
+
+The last script calculates the alignment scores. These are the steps of the script:
+
+\begin{enumerate}
+  \item Load gold dataset
+  \item Calculate precision, recall, F1 score and AER metrics
+  \item Plot and save into \emph{.png} and \emph{.csv}
+\end{enumerate}
+
+\begin{python}
+#!/usr/bin/env python3
+import os
+from os.path import join
+import sys
+import glob
+import random
+import collections
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# import global variables from settings.py
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from settings import *
+
+def load_gold(g_path):
+
+  gold_f = open(g_path, "r")
+  pros = {}
+  surs = {}
+  all_count = 0.
+  surs_count = 0.
+
+  for line in gold_f:
+    line = line.strip().split("\t")
+    line[1] = line[1].split()
+
+    pros[line[0]] = set()
+    surs[line[0]] = set()
+
+    for al in line[1]:
+      pros[line[0]].add(al.replace('p', '-'))
+      if 'p' not in al:
+        surs[line[0]].add(al)
+
+    all_count += len(pros[line[0]])
+    surs_count += len(surs[line[0]])
+
+  return pros, surs, surs_count
+
+
+def calc_score(input_path, probs, surs, surs_count):
+
+  total_hit = 0.
+  p_hit = 0.
+  s_hit = 0.
+  target_f = open(input_path, "r")
+
+  for line in target_f:
+    line = line.strip().split("\t")
+
+    if line[0] not in probs: continue
+    if len(line) < 2: continue
+
+    line[1] = line[1].split()
+    for pair in line[1]:
+      if pair in probs[line[0]]:
+        p_hit += 1
+      if pair in surs[line[0]]:
+        s_hit += 1
+
+      total_hit += 1
+
+  target_f.close()
+
+  y_prec = round(p_hit / max(total_hit, 1.), 3)
+  y_rec = round(s_hit / max(surs_count, 1.), 3)
+  y_f1 = round(2. * y_prec * y_rec / max((y_prec + y_rec), 0.01), 3)
+  aer = round(1 - (s_hit + p_hit) / (total_hit + surs_count), 3)
+
+  return y_prec, y_rec, y_f1, aer
+
+
+def get_baseline_score(probs, surs, surs_count):
+
+  alfile = join(bpedir, mode, 'input.wgdfa')
+
+  scores = []
+  score = [0]
+  score.extend(list(calc_score(alfile, probs, surs, surs_count)))
+  scores.append(score)
+  baseline_df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+  return baseline_df
+
+def calc_align_scores(probs, surs, surs_count):
+
+  scores = []
+  for num_symbols in all_symbols:
+    alfile = join(bpedir, mode, f"{num_symbols}.wgdfa")
+    
+    score = [int(num_symbols)]
+    score.extend(list(calc_score(alfile, probs, surs, surs_count)))
+    scores.append(score)
+
+  df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+  return df
+
+
+def plot_scores(df, baseline_df, scoredir):
+
+  # Use plot styling from seaborn.
+  sns.set(style='darkgrid')
+
+  # Increase the plot size and font size.
+  sns.set(font_scale=1.5)
+  plt.rcParams["figure.figsize"] = (12, 6)
+
+  plt.clf()
+  ax = plt.gca() # gca stands for 'get current axis'
+
+  colors = ['magenta', 'tab:blue', 'tab:green', 'tab:red']
+
+  df = df.sort_values('num_symbols')
+  columns = list(df)
+  for column, color in zip(columns[1:], colors):
+    df.plot(kind='line', x=columns[0], y=column, color=color, ax=ax)
+
+  for baseline_results, color in zip(list(baseline_df.iloc[0][1:]), colors):
+      plt.axhline(y=baseline_results, color=color, linestyle='dashed')
+
+  plt.savefig(join(scoredir+'.png'))
+  return
+
+
+if __name__ == "__main__":
+  '''
+  Calculate alignment quality scores based on the gold standard.
+  The output contains Precision, Recall, F1, and AER.
+  '''
+
+  probs, surs, surs_count = load_gold(goldpath)
+  baseline_df = get_baseline_score(probs, surs, surs_count)
+  df = calc_align_scores(probs, surs, surs_count, baseline_df)
+
+  scorename = join(scoredir, 'scores')
+  print(f"Scores saved into {scorename}")
+  df.to_csv(scorename+'.csv', index=False)
+  plot_scores(df, baseline_df, scorename)
+
+\end{python}
+
+\section{Replication of BPE dropout}
+
+change settings.py
+
+\begin{python}
+#settings.py
+
+dropout = 0.1
+dropout_samples = 10
+\end{python}
+
+\subsection{Apply BPE to corpus with dropout}
+
+skip some merges, and repeat process 10 times.
+
+\begin{python}
+# apply_bpe.py
+import random
+
+def apply_bpe(langs, bpe_models, corpora):
+    
+  for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
+
+    bpe_model = bpe_model[:max(all_symbols)]
+    all_symbols_copy = all_symbols.copy()
+
+    str_corpus = '\n'.join(corpus)
+    for j, bigram in enumerate(bpe_model):
+
+        if random.uniform(0, 1) < dropout:
+            continue
+
+      str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
+
+      if j + 1 == all_symbols_copy[0]:
+        write_bpe(lang, all_symbols_copy.pop(0), str_corpus, i)
+  return
+
+if __name__ == "__main__":
+
+  langs, bpe_models, corpora = load_data()
+
+  if dropout > 0:
+    # create `dropout_samples` segmentations, to aggregate later
+    for i in range(dropout_samples):
+      apply_bpe()
+  else:
+      apply_bpe()
+\end{python}
+
+
+\begin{python}
+
 \end{python}
