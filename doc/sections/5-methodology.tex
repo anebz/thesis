@@ -188,30 +188,34 @@ The results show that BPE increases word alignment results, specifically the F1 
     \caption{Scores of BPE over baseline}
 \end{figure}
 
-\section{Replication of BPE dropout}
+\section{Replication of BPE dropout}\label{sec:replbpedrop}
 
 BPE dropout's difference with regards to normal BPE is the fact that some merges don't take place. Based on this randomness, each time this system is carried out, new BPE merges are created. For example, if the most merge in English \emph{(\_t, h)} wasn't merged, the resulting file of BPE merges would be vastly different than if the 10th most frequent merge didn't take place. In order to maintain some balance, the dropout algorithm is run a number of times, in this case 10 times, and then the alignments aggregated, which will be explained below. The algorithm to create the merge list remains unchanged, the first slight change occurs when applying the BPE algorithm to the corpus.
 
-\subsection{Apply BPE to corpus with dropout}
+In the apply BPE algorithm, a random variable is created for every merge: if it falls below a threshold, the merge in question is discarded. And this function is repeated a number of times, creating a number of BPE files.
 
-\begin{python}
+When extracting alignments, since now there are 10 BPE files instead of a single one, the whole algorithm is run 10 times, and alignments for all numbers of merges x all dropout repetitions are saved.
 
+At this point, there are a number of alignments for each dropout case. Which alignment file to pick, or which ones, is the next step to be resolved. Three methods are selected:
 
-if __name__ == "__main__":
+\begin{itemize}
+	\item Create the union of all alignments.
+	\item Create the intersection of all alignments.
+	\item Create a threshold parameter, for example 0.5. If an alignment is present in 50\% of the alignment files, it's added to the aggregated file.
+\end{itemize}
 
-    langs, bpe_models, corpora = load_data()
+To illustrate this with a example:
 
-    if dropout > 0:
-        # create `dropout_sampless` segmentations, to aggregate later
-        for i in range(dropout_sampless):
-            print(f"Iteration {i+1}")
-            apply_bpe(i)
-    else:
-        apply_bpe()
-\end{python}
+\begin{itemize}
+	\item File 1: 0-0 0-1 1-1 1-2 2-3
+	\item File 2: 0-0 0-1 1-2
+	\item File 3: 0-0 1-1 1-3
+	\item Union file: 0-0 0-1 1-1 1-2 1-3 2-3
+	\item Intersection file: 0-0
+	\item Aggregated file: 0-0 0-1 1-1 1-2
+\end{itemize}
 
-
-
+As it's visible in the example, the union case takes all alignments into account. By brute force, possibly most of the correct alignments will be present in the alignment (high recall), but the majority of the alignments in the union file will be incorrect (low precision). By contrast, the intersection file is the opposite. The file is much shorter since only the alignments present in \textbf{all} files are considered, these alignments will mostly be correct. But also many of the correct alignments will be missed. The aggregated file with the threshold aims to alleviate this problem by creating a sort of middle point between union and intersection.
 
 \begin{python}
 

@@ -169,6 +169,8 @@ if __name__ == '__main__':
 \subsection{Apply BPE algorithm}
 
 \begin{python}
+# apply_bpe.py
+
 import os
 from os.path import join
 import sys
@@ -201,8 +203,8 @@ def load_data():
 
   return langs, bpe_models, corpora
 
-def write_bpe(lang, num_symbols, merged_corpus, i=-1):
-  outputpath = join(bpedir, 'segmentations', lang+"_"+str(num_symbols)+".bpe")
+def write_bpe(lang, num_symbols, merged_corpus):
+  outputpath = join(bpedir, 'segmentations', f"{lang}_{num_symbols}.bpe")
   argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
   argsoutput.write(merged_corpus)
   return
@@ -220,7 +222,7 @@ def apply_bpe(langs, bpe_models, corpora):
       str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
 
       if j + 1 == all_symbols_copy[0]:
-        write_bpe(lang, all_symbols_copy.pop(0), str_corpus, i)
+        write_bpe(lang, all_symbols_copy.pop(0), str_corpus)
   return
 
 if __name__ == "__main__":
@@ -246,7 +248,11 @@ Since the BPE files don't have this format, first of all the function \emph{crea
 
 As explained in the \textit{Extract alignment} subsection in the Methodology chapter~\ref{subsec:extractalign}, the script up until now has only aligned BPE units. Those alignments need to be transformed into word alignments. The function \emph{load\_and\_map\_segmentations} loads the BPE files and maps each BPE unit to its corresponding word. For an example, see the comments on the function. This is an auxiliary function in order to map the alignments later. Afterwards, by calling \emph{bpe\_word\_align}, the mapping from subword alignments to word alignments is made. Lastly, the new alignments are saved in a file with the extension \emph{.wgdfa}.
 
+The alignment algorithm is run for two types of files. Firstly, for the corpus itself, the fastalign/eflomal algorithm is run to align the corpus, which will serve as baseline to check how good the BPE merges are. And then, the fastalign/eflomal algorithm is run for the BPE files themselves.
+
 \begin{python}
+# extract_alignments.py
+
 from os.path import join
 import os
 import sys
@@ -256,7 +262,6 @@ import codecs
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 from subword_word import *
-
 
 def create_parallel_text(sourcepath, targetpath, outpath):
 
@@ -271,7 +276,6 @@ def create_parallel_text(sourcepath, targetpath, outpath):
   fa_file.close()
   return
 
-
 def create_fwd_rev_files(outpath):
   if mode == "fastalign":
     os.system(f"{fastalign_path} -i {outpath}.txt -v -d -o > {outpath}.fwd")
@@ -279,7 +283,6 @@ def create_fwd_rev_files(outpath):
   elif mode == "eflomal":
     os.system(f"cd {eflomal_path}; python align.py -i {outpath}.txt --model 3 -f {outpath}.fwd -r {outpath}.rev")
   return
-
 
 def create_gdfa_file(outpath):
   # create gdfa file from .fwd and .rev
@@ -293,7 +296,6 @@ def create_gdfa_file(outpath):
   # delete unnecessary files
   os.system(f"rm {outpath}_unnum.gdfa; rm {outpath}.fwd; rm {outpath}.rev; rm {outpath}.txt")
   return
-
 
 def load_and_map_segmentations(num_symbols):
 
@@ -335,7 +337,6 @@ def load_and_map_segmentations(num_symbols):
           bpes[lang].append(mapping)
     return bpes
 
-
 def bpe_word_align(bpes, bpe_aligns):
     '''
     Input: dictionary of bpes obtained as output of map_subword_to_word()
@@ -357,14 +358,20 @@ def bpe_word_align(bpes, bpe_aligns):
         all_word_aligns += str(i) + "\t" + ' '.join(word_aligns) + "\n"
     return all_word_aligns
 
-
-def extract_alignments():
+def extract_alignments(input_mode=False):
 
   for num_symbols in all_symbols:
 
-    sourcepath = join(bpedir, 'segmentations', source+"_"+str(num_symbols)+".bpe")
-    targetpath = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+".bpe")
-    outpath = join(bpedir, "fastalign", str(num_symbols))
+    if input_mode:
+      print("Alignments for input files")
+      sourcepath = inputpath[source]
+      targetpath = inputpath[target]
+      outpath = join(bpedir, mode, "input")
+    else:
+      print(f"Alignments for {num_symbols} symbols")
+      sourcepath = join(bpedir, 'segmentations', f"{source}_{num_symbols}.bpe")
+      targetpath = join(bpedir, 'segmentations', f"{target}_{num_symbols}.bpe")
+      outpath = join(bpedir, mode, str(num_symbols))
 
     create_parallel_text(sourcepath, targetpath, outpath)
     create_fwd_rev_files(outpath)
@@ -380,12 +387,14 @@ def extract_alignments():
     argsoutput = codecs.open(outpath+'.wgdfa', 'w', encoding='utf-8')
     argsoutput.write(all_word_aligns)
 
-    print("\n\n")
   return
 
 if __name__ == "__main__":
 
-  os.makedirs(join(bpedir, 'fastalign'), exist_ok=True)
+  os.makedirs(join(bpedir, mode), exist_ok=True)
+  if not os.path.isfile(join(bpedir, mode, 'input.wgdfa')):
+    extract_alignments(input_mode=True)
+
   extract_alignments()
 \end{python}
 
@@ -400,7 +409,8 @@ The last script calculates the alignment scores. These are the steps of the scri
 \end{enumerate}
 
 \begin{python}
-#!/usr/bin/env python3
+# calc_align_scores.py
+
 import os
 from os.path import join
 import sys
@@ -440,7 +450,6 @@ def load_gold(g_path):
 
   return pros, surs, surs_count
 
-
 def calc_score(input_path, probs, surs, surs_count):
 
   total_hit = 0.
@@ -471,7 +480,6 @@ def calc_score(input_path, probs, surs, surs_count):
   aer = round(1 - (s_hit + p_hit) / (total_hit + surs_count), 3)
 
   return y_prec, y_rec, y_f1, aer
-
 
 def get_baseline_score(probs, surs, surs_count):
 
@@ -518,7 +526,7 @@ def plot_scores(df, baseline_df, scoredir):
     df.plot(kind='line', x=columns[0], y=column, color=color, ax=ax)
 
   for baseline_results, color in zip(list(baseline_df.iloc[0][1:]), colors):
-      plt.axhline(y=baseline_results, color=color, linestyle='dashed')
+    plt.axhline(y=baseline_results, color=color, linestyle='dashed')
 
   plt.savefig(join(scoredir+'.png'))
   return
@@ -543,10 +551,12 @@ if __name__ == "__main__":
 
 \section{Replication of BPE dropout}
 
-change settings.py
+The previous section has laid the backbone of the algorithms. In this and the following sections, some modifications are introduced. For the sake of simplicity, the code snippets that follow only include the new changes, or the functions from the last section with new modifications. The functions that remain unaltered aren't shown.
+
+Two new parameters come into play in the pipeline, namely \textbf{dropout} rate and \textbf{dropout\_samples}, that is, how many samples of the dropout system are considered. These values are saved into \emph{settings.py}
 
 \begin{python}
-#settings.py
+# settings.py
 
 dropout = 0.1
 dropout_samples = 10
@@ -554,20 +564,27 @@ dropout_samples = 10
 
 \subsection{Apply BPE to corpus with dropout}
 
-skip some merges, and repeat process 10 times.
+The first modifications are in \emph{apply\_bpe.py}, where we skip some merges, and repeat the process 10 times. The function \emph{apply\_bpe} includes two new lines where a random number between 0 and 1 is generated. If this number is smaller than the \emph{dropout} rate saved in \emph{settings.py}, then that merge isn't considered and the loop skips it. Additionally, in the main function, the function \emph{apply\_bpe} is called \emph{dropout\_samples} times. To save the files accordingly, a new variable is introduced, namely \emph{i}, that does nothing in the case where dropout=0, but when repeating the process, for instance if lang=eng, num\_symbols=2000, and first iteration of dropout, that is, i=0, the files are saved as \emph{eng\_2000\_0.bpe} instead.
 
 \begin{python}
 # apply_bpe.py
 import random
 
-def apply_bpe(langs, bpe_models, corpora):
+def write_bpe(lang, num_symbols, merged_corpus, i=-1):
+
+  outputpath = join(bpedir, 'segmentations', f"{lang}_{num_symbols}{f'_{i}' if i != -1 else ''}.bpe")
+  argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
+  argsoutput.write(merged_corpus)
+  return
+
+def apply_bpe(langs, bpe_models, corpora, i=-1):
     
   for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
 
     bpe_model = bpe_model[:max(all_symbols)]
     all_symbols_copy = all_symbols.copy()
-
     str_corpus = '\n'.join(corpus)
+
     for j, bigram in enumerate(bpe_model):
 
         if random.uniform(0, 1) < dropout:
@@ -584,11 +601,165 @@ if __name__ == "__main__":
   langs, bpe_models, corpora = load_data()
 
   if dropout > 0:
-    # create `dropout_samples` segmentations, to aggregate later
     for i in range(dropout_samples):
-      apply_bpe()
+      apply_bpe(i)
   else:
       apply_bpe()
+\end{python}
+
+\subsection{Extract alignments with dropout}
+
+The only change here is that the \emph{extract\_alignment} function is called \emph{dropout\_samples} times, which changes the function to write the alignments in the new format, namely, changing the variables \emph{sourcepath} and \emph{targetpath}. The rest, the alignment algorithm, remains unchanged.
+
+\begin{python}
+# extract_alignments.py
+
+def extract_alignments(i=-1, input_mode=False):
+
+  for num_symbols in all_symbols:
+
+    if input_mode:
+      print("Alignments for input files")
+      sourcepath = inputpath[source]
+      targetpath = inputpath[target]
+      outpath = join(bpedir, mode, "input")
+    else:
+      print(f"Alignments for {num_symbols} symbols")
+      sourcepath = join(bpedir, 'segmentations', f"{source}_{num_symbols}_{'_'+str(i) if dropout else ''}.bpe")
+      targetpath = join(bpedir, 'segmentations', f"{target}_{num_symbols}_{'_'+str(i) if dropout else ''}.bpe")
+      outpath = join(bpedir, mode, str(num_symbols))
+
+    create_parallel_text(sourcepath, targetpath, outpath)
+    create_fwd_rev_files(outpath)
+    create_gdfa_file(outpath)
+
+    # map alignment from subword to word
+    bpes = load_and_map_segmentations(num_symbols)
+
+    argsalign = codecs.open(o+'.gdfa', encoding='utf-8')
+    all_word_aligns = bpe_word_align(bpes, argsalign)
+    os.system(f"rm {outpath}.gdfa")
+
+    argsoutput = codecs.open(outpath+'.wgdfa', 'w', encoding='utf-8')
+    argsoutput.write(all_word_aligns)
+
+  return
+
+if __name__ == "__main__":
+
+  os.makedirs(join(bpedir, mode), exist_ok=True)
+  if not os.path.isfile(join(bpedir, mode, 'input.wgdfa')):
+    extract_alignments(input_mode=True)
+
+  if dropout > 0:
+    for i in range(dropout_samples):
+      extract_alignments(i)
+  else:
+    extract_alignments()
+\end{python}
+
+\subsection{Calculate alignment scores with dropout}
+
+As explained in the Methodology section~\ref{sec:replbpedrop}, variants of union, intersection and threshold are created. This is introduced with a new algorithm, namely \emph{merge\_dropout.py}. First of all, the function \emph{merge\_dropout\_alignments} opens all alignment files and creates a dictionary data structure with the union, intersection and threshold alignment files and saves them into \emph{X\_union.wgdfa}, \emph{X\_inter.wgdfa}, \emph{X\_thres.wgdfa} respectively. Afterwards, the function \emph{calc\_score\_merges} opens these files and calculates the score, much in the way as the \emph{calc\_align\_score} algorithm from the previous section.
+
+\begin{python}
+# merge_dropout.py
+import os
+from os.path import join
+import sys
+import codecs
+import pandas as pd
+from tqdm import tqdm
+from collections import Counter
+
+# import global variables from settings.py
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from settings import *
+from calc_align_score import *
+
+def merge_dropout_alignments():
+  union_merge, inter_merge, thres_merge = {}, {}, {}
+
+  os.chdir(join(bpedir, mode))
+  for num_symbols in tqdm(all_symbols, desc=f"merge_dropout: dropout={dropout}, union, inter, thres"):
+    union_merge[num_symbols], inter_merge[num_symbols], thres_merge[num_symbols] = [], [], []
+
+    for i in range(dropout_sampless):
+
+      for j, line in enumerate(open(f'{num_symbols}_{i}.wgdfa', 'r').readlines()):
+        al = frozenset(line.strip().split("\t")[1].split())
+
+        # at the first iteration, just append the alignment
+        if i == 0:
+          union_merge[num_symbols].append(al)
+          inter_merge[num_symbols].append(al)
+          thres_merge[num_symbols].append(Counter(al))
+          continue
+        
+        # do union, intersection or frequency addition
+        union_merge[num_symbols][j] |= al
+        inter_merge[num_symbols][j] &= al
+        thres_merge[num_symbols][j] += Counter(al)
+
+    # write to output
+    unionfile = codecs.open(f'{num_symbols}_union.wgdfa', 'w')
+    interfile = codecs.open(f'{num_symbols}_inter.wgdfa', 'w')
+    thresfiles = {merge_t: codecs.open(f'{num_symbols}_thres_{merge_t}.wgdfa', 'w') for merge_t in merge_threshold}
+
+    for i in range(len(union_merge[num_symbols])):
+      unionfile.write(f"{i}\t{' '.join(union_merge[num_symbols][i])}\n")
+      interfile.write(f"{i}\t{' '.join(inter_merge[num_symbols][i])}\n")
+
+      # get alignments more common than the merge_threshold %
+      for merge_t in merge_threshold:
+        common_aligns = [k for k in thres_merge[num_symbols][i] 
+                        if thres_merge[num_symbols][i][k] > merge_t * dropout_samples]
+        thresfiles[merge_t].write(f"{i}\t{' '.join(common_aligns)}\n")
+  return
+
+
+def calc_score_merges():
+  probs, surs, surs_count = load_gold(goldpath)
+  baseline_df = pd.read_csv(join(baselinedir, f'scores_{source}_{target}.csv'))
+  scorespath = join(scoredir, str(dropout))
+  if not os.path.isdir(scorespath):
+      os.mkdir(scorespath)
+
+  for merge_type in ['union', 'inter']:
+    scores = []
+    for num_symbols in all_symbols:
+      mergefilepath = join(bpedir, mode, f'{num_symbols}_{merge_type}.wgdfa')
+      score = [int(num_symbols)]
+      score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
+      scores.append(score)
+
+    df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+    scorename = join(scorespath, 'scores', merge_type)
+
+    print(f"Scores saved into {scorename}")
+    df.to_csv(scorename+'.csv', index=False)
+    plot_scores(df, baseline_df, scorename)
+
+  # threshold case, iterate all merge_thresholds saved
+  for merge_t in merge_threshold:
+    scores = []
+    for num_symbols in all_symbols:
+      mergefilepath = join(bpedir, mode, f'{num_symbols}_thres_{merge_t}.wgdfa')
+      score = [int(num_symbols)]
+      score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
+      scores.append(score)
+
+    df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+    scorename = join(scorespath, 'scores', f"{merge_t}_thres")
+    
+    print(f"Scores saved into {scorename}")
+    df.to_csv(scorename+'.csv', index=False)
+    plot_scores(df, baseline_df, scorename)
+  return
+
+if __name__ == "__main__":
+    merge_dropout_alignments()
+    calc_score_merges()
 \end{python}
 
 
