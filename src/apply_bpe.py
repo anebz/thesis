@@ -34,9 +34,7 @@ def load_data():
 
 def write_bpe(lang, num_symbols, merged_corpus, i=-1):
     outputpath = join(bpedir, 'segmentations',
-                      lang+"_"+str(num_symbols) +
-                      ('' if space else '_ns') +
-                      ('_'+str(i) if i != -1 else '')+".bpe")
+                      f"{lang}_{num_symbols}{'' if space else '_ns'}{'_'+str(i) if i != -1 else ''}.bpe")
     argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
     argsoutput.write(merged_corpus)
     return
@@ -47,18 +45,19 @@ def apply_bpe(langs, bpe_models, corpora, i=-1):
     for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
 
         bpe_model = bpe_model[:max(all_symbols)]
-        all_symbols_copy = all_symbols.copy()
+        k = 0
 
         str_corpus = '\n'.join(corpus)
-        for j, bigram in enumerate(tqdm(bpe_model, desc=f"apply_bpe: dropout={dropout}, num_symbols={max(all_symbols_copy)}, lang={lang}")):
+        for j, bigram in enumerate(tqdm(bpe_model, desc=f"apply_bpe: dropout={dropout}, lang={lang}")):
 
             if random.uniform(0, 1) < dropout:
                 continue
 
             str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
 
-            if j + 1 == all_symbols_copy[0]:
-                write_bpe(lang, all_symbols_copy.pop(0), str_corpus, i)
+            if j + 1 == all_symbols[k]:
+                write_bpe(lang, all_symbols[k], str_corpus, i)
+                k += 1
 
     return
 

@@ -54,25 +54,20 @@ def extract_alignments(i=-1, input_mode=False):
 			print(f"Alignments for input files")
 			sourcepath = inputpath[source]
 			targetpath = inputpath[target]
-			outpath = join(bpedir, "fastalign/input")
+			outpath = join(bpedir, mode, "input")
 		else:
 			print(f"Alignments for {num_symbols} symbols")
 			if target_bpe:
 				sourcepath = inputpath[source]
 			else:
-				sourcepath = join(bpedir, 'segmentations', 
-							source+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
-			
+				sourcepath = join(bpedir, 'segmentations', f"{source}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
+
 			if source_bpe:
 				targetpath = inputpath[target]
 			else:
-				targetpath = join(bpedir, 'segmentations', 
-							target+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
+				targetpath = join(bpedir, 'segmentations', f"{target}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
 
-			outpath = join(bpedir, "fastalign", str(num_symbols) +
-						('_'+str(i) if i != -1 else '') +
-						('_deu' if target_bpe else '')
-					)
+			outpath = join(bpedir, mode, f"{num_symbols}{'_'+str(i) if i != -1 else ''}{'_deu' if target_bpe else ''}")
 
 		create_parallel_text(sourcepath, targetpath, outpath)
 		create_fwd_rev_files(outpath)
@@ -108,7 +103,7 @@ if __name__ == "__main__":
 	print(f"Extracting alignments for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
 
 	os.makedirs(join(bpedir, 'fastalign'), exist_ok=True)
-	if not os.path.isfile(join(bpedir, 'fastalign/input.wgdfa')):
+	if not os.path.isfile(join(bpedir, mode, 'input.wgdfa')):
 		extract_alignments(input_mode=True)
 
 	if dropout > 0:
