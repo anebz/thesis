@@ -233,6 +233,29 @@ if __name__ == "__main__":
 
 \subsection{Extract alignments}
 
+In order to do this step, the softwares for \emph{fast\_align} and \emph{eflomal} must be installed. These are the steps to install \emph{fast\_align}, in bash. It's necessary to \href{https://cmake.org/install/}{install Cmake} if it's not present.
+
+\begin{quote}
+  sudo apt-get install libgoogle-perftools-dev libsparsehash-dev\\
+  cd ../path/to/project\\
+  git clone https://github.com/clab/fast\_align.git\\
+  cd fast\_align\\
+  mkdir build\\
+  cd build\\
+  cmake ..\\
+  make
+\end{quote}
+
+And for eflomal:
+
+\begin{quote}
+  git clone https://github.com/robertostling/eflomal.git\\
+  cd eflomal\\
+  make\\
+  sudo make install\\
+  python3 setup.py install
+\end{quote}
+
 In the next step, the extract alignments script takes two files as input: English BPE file, German BPE file, and outputs an alignment file, with the extension .wgdfa.
 
 First of all, it's necessary to iterate through the different merge types that have been done before. There are BPE files with 100 merges, 200, 500, etc for both languages. At each iteration, a different alignment file is created.

@@ -8,7 +8,7 @@
 	a4paper,%							A4 paper
 	oneside,%							oneside (left and right margin are equal
 	bibliography=totoc,%	add the bibliography to the table of contents
-	%listof=totoc,%				add the list of figures and list of tables to the table of contents
+	listof=totoc,%				add the list of figures and list of tables to the table of contents
 	numbers=noenddot,%		no dot at the end of heading numbers (see the comment below)
 	headsepline,%					line after the page head
 	footsepline,%					line before the page foot
@@ -229,7 +229,7 @@
 \usepackage{xfrac}
 
 % set page margin with the geometry package
-\usepackage[margin=2.5cm]{geometry}
+\usepackage[left=2cm,right=1.75cm,top=2.5cm,bottom=2.5cm,footskip=.25in]{geometry}
 
 % set the hyphenation for certain words
 \hyphenation{op-tic-al net-works semi-con-duc-tor}
@@ -300,5 +300,16 @@
 
 % listings for code listings
 \usepackage{listings}
+\lstset{
+  basicstyle=\footnotesize,
+  numbers=left,
+  stepnumber=1,
+  firstnumber=1,
+  numberfirstline=true,
+  showstringspaces=false,
+  tabsize=1,
+  breaklines=false,
+  breakatwhitespace=false,
+}
 \usepackage{pythonhighlight}
 % end of file
