@@ -4,7 +4,7 @@
 %
 % Development
 
-\chapter{Development}\label{sec:development}
+\chapter{Development}\label{ch:development}
 
 This chapter talks more deeply about the code and algorithms previously explained in the Methodology section.~\ref{sec:methodology}
 
@@ -30,16 +30,15 @@ if rootdir.split(os.sep)[-1] == 'src':
 
 datadir = join(rootdir, 'data')
 inputdir = join(datadir, 'input')
-bpedir = join(datadir, 'dropout_bpe' if dropout > 0 else 'normal_bpe')
+bpedir = join(datadir, normal_bpe')
 baselinedir = join(rootdir, 'reports', 'scores_normal_bpe')
-scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 else 'normal_bpe'))
+scoredir = join(rootdir, 'reports', 'scores_normal_bpe')
 goldpath = join(inputdir, 'eng_deu.gold')
 inputpath = {source: join(inputdir, source+'_with_10k.txt'),
             target: join(inputdir, target+'_with_10k.txt')}
 
 fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 atools_path = join(rootdir, "tools/fast_align/build/atools")
-    
 \end{python}
 
 \section{Replication of BPE results}
@@ -51,7 +50,7 @@ atools_path = join(rootdir, "tools/fast_align/build/atools")
     \item Write calculate alignment scores script
 \end{enumerate}
 
-\subsection{Learn BPE algorithm}
+\subsection{Learn BPE algorithm}\label{subsec:learnbpe}
 
 \begin{python}
 #!/usr/bin/env python
@@ -553,13 +552,17 @@ if __name__ == "__main__":
 
 The previous section has laid the backbone of the algorithms. In this and the following sections, some modifications are introduced. For the sake of simplicity, the code snippets that follow only include the new changes, or the functions from the last section with new modifications. The functions that remain unaltered aren't shown.
 
-Two new parameters come into play in the pipeline, namely \textbf{dropout} rate and \textbf{dropout\_samples}, that is, how many samples of the dropout system are considered. These values are saved into \emph{settings.py}
+Three new parameters come into play in the pipeline, namely \textbf{dropout} rate and \textbf{dropout\_samples}, that is, how many samples of the dropout system are considered. Besides, \emph{merge\_threshold} serves its function when dealing with alignments later on. These values are saved into \emph{settings.py}
 
 \begin{python}
 # settings.py
 
 dropout = 0.1
 dropout_samples = 10
+merge_threshold = [0.3, 0.5, 0.7, 0.9]
+
+bpedir = join(datadir, 'dropout_bpe' if dropout > 0 else 'normal_bpe')
+scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 else 'normal_bpe'))
 \end{python}
 
 \subsection{Apply BPE to corpus with dropout}
@@ -609,7 +612,7 @@ if __name__ == "__main__":
 
 \subsection{Extract alignments with dropout}
 
-The only change here is that the \emph{extract\_alignment} function is called \emph{dropout\_samples} times, which changes the function to write the alignments in the new format, namely, changing the variables \emph{sourcepath} and \emph{targetpath}. The rest, the alignment algorithm, remains unchanged.
+The only change here is that the \emph{extract\_alignment} function is called \emph{dropout\_samples} times, which changes the function to write the alignments in the new format, namely, changing the variables \emph{sourcepath} and \emph{targetpath}. Additionally, the gold standard's alignments don't need to be calculated since the baseline are the BPE scores rather than the gold standard scores. The rest, the alignment algorithm, remains unchanged.
 
 \begin{python}
 # extract_alignments.py
@@ -648,7 +651,7 @@ def extract_alignments(i=-1, input_mode=False):
 if __name__ == "__main__":
 
   os.makedirs(join(bpedir, mode), exist_ok=True)
-  if not os.path.isfile(join(bpedir, mode, 'input.wgdfa')):
+  if not dropout and not os.path.isfile(join(bpedir, mode, 'input.wgdfa')):
     extract_alignments(input_mode=True)
 
   if dropout > 0:
@@ -762,6 +765,183 @@ if __name__ == "__main__":
     calc_score_merges()
 \end{python}
 
+\section{Improvement of learn BPEs algorithm}
+
+As explained in the methodology~\ref{sec:improvlearnbpe}, the main improvement in the learn BPE algorithm is to only update previous and next tokens to the merged pair, as well as saving the indexes where each pair occurs. These improvements are built on top of the code shown in~\ref{subsec:learnbpe}. 
+
+In the \emph{learn\_bpe} function, the new \emph{update\_tokens} returns the updated pairs and the merged tokens, all in one step. The function \emph{get\_stats}, which is the function that iterates the whole corpus, only has to be performed once. This is however a modification of the previous \emph{get\_stats} function, since it computes the indexes of the pairs as well.
+
+\begin{python}
+def learn_bpe(corpus, bpe_model):
+  """
+  Learn BPE operations from vocabulary.
+  Steps:
+  1. split corpus into characters, count frequency
+  2. count bigrams in corpus
+  3. merge most frequent symbols
+  4. Update bigrams in corpus 
+  """
+
+  tokens = read_corpus(corpus)
+
+  pairs, idx = get_stats(tokens)
+
+  most_frequent_merges = []
+  for i in range(num_all_symbols):
+
+    try:
+      most_frequent = pairs.most_common(1)[0][0]
+    except:
+      # pairs is empty
+      break
+
+    most_freq_merges.append(most_frequent)
+    tokens, idx, pairs = update_tokens(tokens, idx, pairs, most_frequent)
+
+  return most_freq_merges
+\end{python}
+
+These are the modifications introduced in the \emph{get\_stats} function so that it saves the pair indexes. In the \emph{idx} data structure, not only is the index saved, but also the amount of appearances of each pair in that sentence. This is done to ensure that if the pair ('t', 'h') in index 0 now becomes ('t', 'he') because of the ('h', 'e') merge, and the frequency of ('t', 'h') is reduced by one, we might assume that ('t', 'h') no longer appears in that sentence. But this would be a mistake, since there might be other instances of ('t', 'h') in the sentence that aren't altered by this merge. We only want to say that ('t', 'h') no longer appears in index 0 when all instances of ('t', 'h') have been merged with other sequences.
+
+\begin{python}
+def get_stats(tokens: list) -> (Counter, dict):
+  """
+  Count frequency of all bigrams, the indexes where they occur and the frequency per index.
+  pairs = {
+      ('s', 'h'): 5,
+      ('h', 'e'): 6
+  }
+  idx = {
+      ('t', 'h'): {
+          # keys are indexes in corpus, values are frequency of appearance
+          0: 2,
+          1: 3,
+          ...
+      }
+      ...
+  }
+  """
+
+  def get_pairs_idx(pairs, idx, symbols):
+    symbols = symbols.split()
+    for j in range(len(symbols) - 1):
+      new_pair = symbols[j], symbols[j + 1]
+      pairs[new_pair] += 1
+      idx[new_pair][i] += 1
+    return pairs, idx
+
+  pairs = Counter()
+  idx = defaultdict(lambda: defaultdict(int))
+  for i, sent in enumerate(tokens):
+    # get stats for each word independently, no bigrams between different words
+    for word in sent[1:].split(' '+word_sep):
+      pairs, idx = get_pairs_idx(pairs, idx, word_sep + word)
+
+  return pairs, idx
+\end{python}
+
+And for the case of updating only the previous and after tokens, the \emph{update\_tokens} function handles this. Comments are included in the code for readability.
+
+\begin{python}
+def update_tokens(tokens, idx, pairs, pair):
+
+  def update_freqs(pairs, idx, pair, new_pair=-1):
+
+    # decrease freq from pairs
+    pairs[pair] -= 1
+    if pairs[pair] <= 0: del pairs[pair]
+
+    # decrease freq from idx
+    idx[pair][i] -= 1
+    if idx[pair][i] <= 0: del idx[pair][i]
+    if len(idx[pair]) <= 0: del idx[pair]
+
+    if new_pair != -1:
+      pairs[new_pair] += 1
+      idx[new_pair][i] += 1
+    return pairs, idx
+
+  merged_pair = ''.join(pair)
+  p = re.compile(r'(?<!\S)' + re.escape(' '.join(pair)) + r'(?!\S)')
+
+  # only iterate the corpus indexes where the pair to be merged is present
+  for i in list(idx[pair]).copy():
+
+    # merge pair in the sentence
+    sent = p.sub(merged_pair, tokens[i])
+
+    # sentence remains unchanged. Delete pair from pairs and idx and continue
+    if sent == tokens[i]:
+      del pairs[pair]
+      del idx[pair][i]
+      if len(idx[pair]) <= 0:
+        del idx[pair]
+      continue
+
+    tokens[i] = sent
+
+    '''
+    iterate sent by the position the merged_pair occurs. 
+    in each position, we need to reduce freq of previous and after tokens
+    sentence before merge: 'h e l l o', pair: ('e', 'l')
+    merged sent = 'h el l o'
+    sent.split(merged_pair) -> ['h ', ' l o']
+    we iterate the splitted sentence and in each occasion
+    * decrease freq of previous token ('h', 'e')
+        * create new token ('h', 'el')
+    * decrease freq of after token ('l', 'l')
+        * create new token ('el', 'l')
+    * decrease freq of merged pair ('e', 'l')
+    '''
+    sent = sent.split(merged_pair)
+    for k in range(len(sent[:-1])):
+
+      if sent[k].split() and sent[k][-1] == ' ' and word_sep not in pair[0][0]:
+        '''
+        conditions to update the **previous** token:
+        * if sent[k] isn't empty. if it is, there's no previous token to update.
+        * if the merged_pair isn't the beginning of the word.
+          * in this case, we don't want the last letter from the prev word to be merged with
+          * our current pair. ... e _t h ... we don't want to consider ('e', '_t')
+        '''
+        prev = (sent[k].split()[-1], pair[0])
+        new_pair = (prev[0], merged_pair)
+        pairs, idx = update_freqs(pairs, idx, prev, new_pair)
+
+      if not sent[k+1].split() and word_sep not in pair[0][0]:
+        '''
+        conditions to update the **after** token when merged bigrams are consecutive:
+        * when the pair's first character isn't the beginning of the word
+        * and when the next token is empty
+        * we're dealing with consecutive merged pairs, merged_pair = ('ssi'), sent= 'm i ssi ssi p p i'
+            * in this case, we delete the token between the merged_pair: ('i', 's')
+            * and create a new pair ('ssi', 'ssi')
+        '''
+        if sent[k] and sent[k][-1] == word_sep:
+            after = (word_sep+merged_pair, pair[0])
+            new_pair = -1
+        else:
+            after = (pair[1], pair[0])
+            new_pair = (merged_pair, merged_pair)
+            pairs, idx = update_freqs(pairs, idx, after, new_pair)
+
+      elif sent[k+1].split() and word_sep not in sent[k+1].split()[0]:
+        '''
+        conditions to update the **after** token in a more general case:
+        * if sent[k] isn't empty. if it is, there's no after token to update.
+        * if the after token is a new word, we don't want to consider it.
+        '''
+        after = (pair[1], sent[k+1].split()[0])
+        new_pair = (merged_pair, after[1])
+        pairs, idx = update_freqs(pairs, idx, after, new_pair)
+
+      # decrease freq of merged bigram
+      pairs, idx = update_freqs(pairs, idx, pair)
+
+  return tokens, idx, pairs
+\end{python}
+
+The performance improvements of this approach can be seen in the Results section.
 
 \begin{python}
 

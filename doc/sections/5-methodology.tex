@@ -4,17 +4,13 @@
 %
 % Methodology
 
-\chapter{Methodology}\label{sec:methodology}
+\chapter{Methodology}\label{ch:methodology}
 
-Theoretical idea: what I want to do, how, algorithmic/mathematical
+This chapter explains the technical content of this thesis in broad strokes, the methodology used and the general idea of the methods employed. For a more in-depth analysis and code snippets and explanations, refer to the Development chapter~\ref{ch:development}. The results, plots and graphs are displayed in the Results chapter~\ref{ch:results}. This thesis, first of all, aims to replicate the results of BPE and BPE dropout.
 
-This chapter explains the technical content of this thesis in broad strokes, the methodology used and the general idea of the methods employed. For a more in-depth analysis, refer to the next chapter.
+\section{Replication of BPE}
 
-This thesis, first of all, aims to replicate the results of BPE and BPE dropout.
-
-\section{Replication of BPE results}
-
-Using Sennrich et al.'s~\cite{sennrich2015neural} \href{code on Github}{https://github.com/rsennrich/subword-nmt/}, the first goal was to check the gold standard's alignment scores. For that, these steps were undertaken:
+Using Sennrich et al.'s~\cite{sennrich2015neural} \href{code on Github}{https://github.com/rsennrich/subword-nmt/}, the first goal was to replicate the BPE algorithm, and gauge how good the BPE units are by using an alignment algorithm and matching it against a gold standard. For that, these steps were undertaken:
 
 \begin{enumerate}
 	\item Write learn BPE from corpus algorithm
@@ -23,9 +19,7 @@ Using Sennrich et al.'s~\cite{sennrich2015neural} \href{code on Github}{https://
 	\item Write calculate alignment scores script
 \end{enumerate}
 
-The actual code for each step can be found in the next section, Development.
-
-The corpus is a 10k sentence English-German corpus, containing an index number for each sentence. As an excerpt of the corpora:
+The corpus employed in this thesis is a 10k sentence English-German corpus. As an excerpt of three sentences from the corpora:
 
 \begin{quote}
 	English\\
@@ -38,14 +32,16 @@ The corpus is a 10k sentence English-German corpus, containing an index number f
 	23	Der ursprüngliche Vorschlag der Kommission wurde vom Parlament in erster Lesung ohne Änderungen verabschiedet .
 \end{quote}
 
+Each step of the pipeline will be detailed as follows.
+
 \subsection{Learn BPE algorithm}
 
-Sennrich's repository's code has some additional parameters that weren't relevant for a minimal implementation of the BPE algorithm, so the script was adapted. These are the steps for a minimal learn BPE algorithm:
+Sennrich's repository's code has some additional parameters that were not relevant for a minimal implementation of the BPE algorithm, so the script was adapted. These are the steps for a minimal algorithm to learn BPE units:
 
 \begin{enumerate}
 	\item Read corpus into tokens, parse index.
 	\item Count pair frequencies.
-	\item Start loop from 1 until desired vocabulary size. In our case, 10k merges.
+	\item Start loop from 1 until desired vocabulary size. In this case, 10k merges.
 	\begin{enumerate}
 		\item Get most frequent pair.
 		\item Append most frequent pair to vocabulary.
@@ -55,51 +51,21 @@ Sennrich's repository's code has some additional parameters that weren't relevan
 	\item Write vocabulary to a file.
 \end{enumerate}
 
-This step of the pipeline only has to be done once for each corpus, afterwards the vocabulary can be used in different ways. But this minimal algorithm, since it has to count all the pairs in the whole corpus in each iteration, takes a long time. An optimization came after this.
-
-With the given corpus, these are the 10 most frequent merges in the English language:
-
-\begin{enumerate}
-	\item \_t h
-	\item \_th e
-	\item o n
-	\item r e
-	\item t i
-	\item e n
-	\item e r
-	\item i n
-	\item i s
-	\item n d
-\end{enumerate}
-
-And the 10 most frequent merges in German:
-
-\begin{enumerate}
-	\item e n
-	\item e r
-	\item c h
-	\item i e
-	\item e i
-	\item n d
-	\item n g
-	\item \_d ie
-	\item s t
-	\item i ch
-\end{enumerate}
+This step of the pipeline only has to be done once for each corpus, afterwards the vocabulary can be used in different ways. But this minimal algorithm, since it has to count all the pairs in the whole corpus in each iteration, takes a long time. One of the improvements of this thesis is optimizing the runtime of this algorithm, which will be explained further down. With the given corpus, these are the 10 most frequent merges in the English language are: \_t h, \_th e, o n, r e, t i, e n, e r, i n, i s, n d. And the 10 most frequent merges in German: e n, e r, c h, i e, e i, n d, n g, \_d ie, s t, i ch
 
 \subsection{Apply BPE algorithm}
 
-Once the vocabulary has been learnt, it can be applied to a corpus. In this case, we use the same corpus for training and for applying. To generate different output files, different num\_merges are declared. For example, for 500 merges, only the first 500 merges of the vocabulary are considered, and there aren't many recognizable BPE units in the corpus. For bigger merge values, more and more subword units get merged. In this thesis, the following merges have been considered: [100, 200, 500, 1000, 2000, 4000, 6000, 8000]. These are the steps for this part:
+Once the vocabulary has been learnt, it can be applied to a corpus. In this case, we use the same corpus for training and for applying. To generate different output files, different num\_merges are declared. For example, for 500 merges, only the first 500 merges of the vocabulary are considered, and there is barely any recognizable BPE units in the corpus. For bigger merge values, more and more subword units get merged. In this thesis, merges ranging from 500 up to 8000 have been considered. These are the steps for this part:
 
 \begin{enumerate}
 	\item Load data, corpus and BPE vocabulary.
-	\item Start loop for all numbers of merges.
+	\item Start loop for all numbers of merges: 500 merges, 2000 merges, 8000 merges.
 	\begin{enumerate}
 		\item Start loop from 1 until desired amount of merges.
 		\begin{enumerate}
-			\item Merge corpus for current most frequent pair.
+			\item Merge the current most frequent pair in corpus.
 		\end{enumerate}
-		\item Write to output.bpe file.
+		\item Write merged corpus to .bpe file.
 	\end{enumerate}
 \end{enumerate}
 
@@ -116,7 +82,20 @@ For example, this is what the excerpt from the corpora above look like after 100
 	\_der \_ur s p r ü ng lich e \_V or sch la g \_der \_Ko mm iss ion \_w ur de \_v o m \_P ar la ment \_in \_er ster \_L es ung \_o h n e \_Ä nder ungen \_vera b sch ie det \_.
 \end{quote}
 
-Only the 100 most common units in the language have been merged, so in English we can see the merge of \emph{\_the}, \emph{\_and}, \emph{ment}, and other very common words and affix/suffixes. As for German, we can see very common words being merged such as \emph{\_die}, \emph{\_das}, \emph{\_bei} and so on. When we do 4000 merges:
+Only the 100 most common units in the language have been merged, so in English we can see the merge of \emph{\_the}, \emph{\_and}, \emph{ment}, and other very common words and affix/suffixes. As for German, we can see very common words being merged such as \emph{\_die}, \emph{\_das}, \emph{\_bei} and so on. The same sentences after 1000 merges:
+
+\begin{quote}
+	English\\
+	\_the \_Committee \_on \_T rans p ort \_and \_T ourism \_has \_adop ted \_four \_amendments \_for \_the \_second \_reading \_.\\
+	\_they \_will \_certain ly \_en h ance \_the \_feeling \_of \_the \_right \_of \_mo vement \_by \_EU \_citizens \_and \_they \_will \_also \_certain ly \_bene f it \_dis abled \_d rivers \_.\\
+	\_the \_initi al \_Commission \_proposal \_was \_adop ted \_un amended \_by \_Parliament \_on \_first \_reading \_.\\\\
+	German\\
+	\_der \_T ransp ort aussch uß \_hat \_für \_die \_zweite \_L esung \_v ier \_Änderungsant räge \_beschlossen \_.\\
+	\_sie \_werden \_bei \_den \_EU - B ür gern \_gew iß \_das \_Ge fü hl \_für \_das \_Recht \_auf \_Freiz ü g igkeit \_st är ken \_, \_und \_sie \_werden \_gew iß \_auch \_beh inderten \_F ahrern \_Vorteile \_b ringen \_.\\
+	\_der \_ur sp rüngliche \_Vorschlag \_der \_Kommission \_wurde \_vom \_Parlament \_in \_erster \_L esung \_ohne \_Änderungen \_verab schiedet \_.
+\end{quote}
+
+We can see bigger subwords being merged, such as \emph{reading}, \emph{first}, \emph{zweite} and so on. And the sentences after 4000 merges:
 
 \begin{quote}
 	English\\
@@ -129,15 +108,11 @@ Only the 100 most common units in the language have been merged, so in English w
 	\_der \_ursprüngliche \_Vorschlag \_der \_Kommission \_wurde \_vom \_Parlament \_in \_erster \_Lesung \_ohne \_Änderungen \_verabschiedet \_.
 \end{quote}
 
-Most words are merged, except \emph{\_dis abled} in English, and \emph{\_T ransp ortausschuß} in German for instance.
+Most words are merged, except \emph{\_dis abled} in English, and \emph{\_T ransp ortausschuß} in German for instance. At this point, the corpus isn't composed of words anymore, but rather of subwords.
 
 \subsection{Extract alignments}\label{subsec:extractalign}
 
-Write extract alignment script to align files from 2 different languages using fastalign/eflomal
-
-To evaluate if the BPE units are good, bilingual corpora are aligned, and then compared against a gold standard. On the first step, alignment, two algorithms have been used, fastalign and eflomal. The software installation guides can be found in the development section.
-
-These algorithms take English text and German as input and create an alignment file as output. For the example above:
+To evaluate if the BPE units are good, bilingual corpora are aligned, and then compared against a gold standard. The motivation behind alignment and how it works can be found in~\ref{ch:translation}. On the first step, alignment, two algorithms have been used, namely fastalign and eflomal. The software installation guides can be found in the development section~\ref{ch:development}. These algorithms take English text and German as input and create an alignment file as output. For the example above:
 
 \begin{quote}
 	English sentence: The Committee on Transport and Tourism has adopted four amendments for the second reading .\\
@@ -149,7 +124,7 @@ These algorithms take English text and German as input and create an alignment f
 	Alignment: 0-0 1-1 2-4 3-2 3-3 4-5 5-13 6-11 6-12 7-6 8-7 9-8 10-9 11-10 12-14
 \end{quote}
 
-Many words have one-to-one alignment, such as \emph{four}-\emph{vier}, \emph{adopted}-\emph{verabschiedet} and many others. Some others have many-to-one alignments, such as \emph{Committee on Transport and Tourism}-\emph{Transportausschuß} and one-to-many alignments such as \emph{unamended}-\emph{ohne Änderungen}.
+Many words have one-to-one alignment, such as \emph{four}-\emph{vier} and \emph{adopted}-\emph{verabschiedet}. Some others have many-to-one alignments, such as \emph{Committee on Transport and Tourism}-\emph{Transportausschuß} and one-to-many alignments such as \emph{unamended}-\emph{ohne Änderungen}.
 
 In our case however, the input files aren't composed by words, but rather by subwords. And the alignments are done among subwords. As with the example with 4000 merges:
 
@@ -178,25 +153,11 @@ The challenge here lies in the fact that if the BPEs are of good quality, the al
 
 In the final step, the alignment scores are computed, against the gold standard. Once loading the gold dataset, each alignment file (for each number of symbols computed in BPE previously) is matched against this dataset, obtaining precision, recall, F1 score and AER metrics. Therefore, for the case of 100 learnt symbols, there will be an associated score. And so on for other numbers of learnt symbols. Additionally, the gold standard's scores are also computed as a baseline. To make it more visual, the scores are plotted and saved into a \emph{.png} image file as well as \emph{.csv} file with the exact numbers.
 
-\subsection{Conclusion}
-
-The results show that BPE increases word alignment results, specifically the F1 score is increased by 0.5\% on average for different number of symbols, the most notable improvement being with 1000 BPE symbols, and a F1 score improvement of 0.9\%.
-
-\begin{figure}[!ht]
-    \centering
-    \includegraphics[width=14cm]{figures/eng_deu_fastalign.png}
-    \caption{Scores of BPE over baseline}
-\end{figure}
-
 \section{Replication of BPE dropout}\label{sec:replbpedrop}
 
 BPE dropout's difference with regards to normal BPE is the fact that some merges don't take place. Based on this randomness, each time this system is carried out, new BPE merges are created. For example, if the most merge in English \emph{(\_t, h)} wasn't merged, the resulting file of BPE merges would be vastly different than if the 10th most frequent merge didn't take place. In order to maintain some balance, the dropout algorithm is run a number of times, in this case 10 times, and then the alignments aggregated, which will be explained below. The algorithm to create the merge list remains unchanged, the first slight change occurs when applying the BPE algorithm to the corpus.
 
-In the apply BPE algorithm, a random variable is created for every merge: if it falls below a threshold, the merge in question is discarded. And this function is repeated a number of times, creating a number of BPE files.
-
-When extracting alignments, since now there are 10 BPE files instead of a single one, the whole algorithm is run 10 times, and alignments for all numbers of merges x all dropout repetitions are saved.
-
-At this point, there are a number of alignments for each dropout case. Which alignment file to pick, or which ones, is the next step to be resolved. Three methods are selected:
+In the apply BPE algorithm, a random variable is created for every merge: if it falls below a threshold, the merge in question is discarded. And this function is repeated a number of times, creating a number of BPE files. When extracting alignments, since now there are 10 BPE files instead of a single one, the whole algorithm is run 10 times, and alignments for all numbers of merges x all dropout repetitions are saved. At this point, there are a number of alignments for each dropout case. Which alignment file to pick, or which ones, is the next step to be resolved. Three methods are selected:
 
 \begin{itemize}
 	\item Create the union of all alignments.
@@ -215,11 +176,63 @@ To illustrate this with a example:
 	\item Aggregated file: 0-0 0-1 1-1 1-2
 \end{itemize}
 
-As it's visible in the example, the union case takes all alignments into account. By brute force, possibly most of the correct alignments will be present in the alignment (high recall), but the majority of the alignments in the union file will be incorrect (low precision). By contrast, the intersection file is the opposite. The file is much shorter since only the alignments present in \textbf{all} files are considered, these alignments will mostly be correct. But also many of the correct alignments will be missed. The aggregated file with the threshold aims to alleviate this problem by creating a sort of middle point between union and intersection.
+As it's visible in the example, the union case takes all alignments into account. By brute force, possibly most of the correct alignments will be present in the alignment (high recall), but the majority of the alignments in the union file will be incorrect (low precision). By contrast, the intersection file is the opposite. The file is much shorter since only the alignments present in \textbf{all} files are considered, these alignments will mostly be correct. But also many of the correct alignments will be missed. The aggregated file with the threshold aims to alleviate this problem by creating a sort of middle point between union and intersection. Taking a threshold value closer to 0 will mean that almost all alignments will be accepted, and therefore the score will be closer to the score of the union. In the opposite end of the spectrum, a threshold value close to 1 means that only alignments present in most alignment files will be accepted, and this resembles the intersection. Many experiments have been done with threshold values ranging from 0.3 to 0.9.
 
-\begin{python}
+\section{Improvement of learn BPEs algorithm}\label{sec:improvlearnbpe}
 
-\end{python}
+One of the drawbacks of the method employed for learning BPE units is that every time a pair of sequences is merged in the corpus, the sequence pairs and their frequencies had to be computed from scratch. This requires iterating over all characters in the corpus, for each iteration.
+
+\subsection{Updating only neighboring sequences}
+
+Let's explore the step of merging a pair in the corpus with the following small corpus:
+
+\begin{quote}
+	0	The ant and the end .\\
+	1 	The index of the document .\\
+	2 	My name is Bob .
+\end{quote}
+
+In the foremost step, all characters are separated into individual tokens
+
+\begin{quote}
+	0	\_T h e \_a n t \_a n d \_t h e \_e n d .\\
+	1 	\_T h e \_i n d e x \_o f \_t h e \_d o c u m e n t .\\
+	2 	\_M y \_n a m e \_i s \_B o b .
+\end{quote}
+
+When merging ('n', 'd'), the corpus is altered:
+
+\begin{quote}
+	0	\_T h e \_a n t \_a nd \_t h e \_e nd .\\
+	1 	\_T h e \_i nd e x \_o f \_t h e \_d o c u m e n t .\\
+	2 	\_M y \_n a m e \_i s \_B o b .
+\end{quote}
+
+In the brute force approach, each pair's frequencies are computed again: the frequency of ('\_T', 'h'), ('h', 'e'), etc are all revisited and their frequencies accumulated. But actually the only pairs that need to be updated are the ones surrounding ('n', 'd'). These are the changes that occur in the pairs of tokens:
+
+\begin{itemize}
+	\item ('a', 'n') in sentence 0 now becomes ('a', 'nd')
+	\item ('e', 'n') in sentence 0 now becomes ('e', 'nd')
+	\item ('i', 'n') in sentence 1 now becomes ('i', 'nd')
+	\item ('d', 'e') in sentence 1 now becomes ('nd', 'e')
+\end{itemize}
+
+Therefore, only the following frequency updates must be made:
+
+\begin{itemize}
+	\item Reduce frequency of ('a', 'n') by 1, increase frequency of ('a', 'nd') by 1.
+	\item Reduce frequency of ('e', 'n') by 1, increase frequency of ('e', 'nd') by 1.
+	\item Reduce frequency of ('i', 'n') by 1, increase frequency of ('i', 'nd') by 1.
+	\item Reduce frequency of ('d', 'e') by 1, increase frequency of ('n', 'de') by 1.
+\end{itemize}
+
+All the other pairs remain unchanged. This is the major improvement of this thesis regarding the learn BPE algorithm, \textbf{the fact that only neighboring tokens of the merged pair need to be updated}. Now, instead of updating each pair in each sentence, it's only necessary to locate the merged pair in the sentence, and update the previous and next tokens.
+
+\subsection{Saving indexes of pairs}
+
+If a pair is very frequent, it is safe to assume that it will be present in the majority of the sentences in the corpus. In the example above, the last sentence does not contain the ('n', 'd') pair. In a bigger corpus, the more merges are done, the rarer they become. It is therefore useful to only visit those sentences where the pair is present. If the merged pair only appears in 10\% of the corpus' sentences, it's a waste of resources to visit all sentences. This can be solved by saving the index where each pair appears. This way, each pair has its frequency associated to it, as well as a list of indexes where it is present. Creating this index list can be done in the initial step of the algorithm when the corpus is read and iterated completely, each pair's frequencies computed for the first time, and the indexes recorded.
+
+This way, when accessing the most frequent pair in the corpus, we can also access to the sentences they're present in, and iterate only those.
 
 \begin{quote}
 	a\\
