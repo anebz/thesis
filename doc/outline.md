@@ -5,21 +5,16 @@
 3. [X] Tokenization
 4. [ ] Translation
 5. [~] Methodology
-6. [ ] Development: more technical
-   1. Coding practices
-   2. Implementation of BPE
-      1. Learn BPEs
-      2. Apply BPEs
-      3. Align BPEs
-      4. Calculate BPE scores
-   3. Implementation of BPE dropout
-   4. Implementation of BPE dropout on source or target side
-   5. Improvement over BPE dropout
-   6. ...
+6. [~] Development: more technical
+   1. Implementation of BPE dropout on source or target side
+   2. BPE without spaces
 7. Results, experiments. challenges, how to choose a good baseline, figures
+   1. BPE results
+   2. BPE dropout results
+   3. learn_bpe improvement performance
 8. ...
 9. Future work
-10.  Conclusion
+10. Conclusion
 
 ## learn_bpe algorithm
 
