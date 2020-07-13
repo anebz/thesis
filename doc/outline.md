@@ -8,7 +8,7 @@
 6. [~] Development: more technical
    1. Implementation of BPE dropout on source or target side
    2. BPE without spaces
-7. Results, experiments. challenges, how to choose a good baseline, figures
+7. Results, experiments, analysis, challenges, how to choose a good baseline, figures
    1. BPE results
    2. BPE dropout results
    3. learn_bpe improvement performance

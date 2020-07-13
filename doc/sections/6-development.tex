@@ -966,6 +966,354 @@ def update_tokens(tokens, idx, pairs, pair):
 
 The performance improvements of this approach can be seen in the Results section.
 
+\section{BPE without word boundaries}
+
+As explained in the Methodology chapter, this addition considers BPE units between different words. The only change occurs when learning these BPE units and mapping multiple-word-units to multiple-word-units, the rest of the pipeline remains as is, other than changing the filenames of the alignments and scores. A new boolean variable is introduced in \emph{settings.py}, so that by changing it to True will make the whole pipeline act in space mode, that is, setting the space boundary and only allowing merges between words. On the contrary, no space mode allows merges between different words.
+
+\begin{python}
+# settings.py
+
+space = False
+\end{python}
+
+The following codes for learning BPEs and extracting and mapping alignments are generalized in the sense that just by changing the boolean variable in the settings file, the pipeline runs automatically and no further changes need to be done. The code snippets below display these functionality, accepting both modes.
+
+In \emph{learn\_bpe.py}, the way to parse and tokenize the corpus is slightly different, now instead of having a special token to denote the beginning of a word, the special token denotes the whitespace.
+
+\begin{python}
+# learn_bpe.py
+
+def read_corpus(corpus: list) -> list:
+  """
+  Read corpus, strip index and new line characters.
+  In space mode, each word has a word_sep symbol at the beginning to signal it's the beginning of the word.
+  example:
+  tokens = [
+      'w e \_d o \_n o t \_b e l i e v e \_t h a t \_w e \_s h o u l d \_c h e r r y - p i c k \_.',
+      ...
+  ]
+  In no space mode, there's no signal at the beginning of the word but word are joined by word_sep.
+  example:
+  tokens = [
+      'w e \_ d o \_ n o t \_ b e l i e v e \_ t h a t \_ w e \_ s h o u l d \_ c h e r r y - p i c k \_ .',
+      ...
+  ]
+  """
+
+  tokens = []
+  for line in corpus:
+    line = line.split('\t')[1].strip('\r\n ')
+
+    line = line.split()
+    line[0] = str.lower(line[0])
+
+    if space:
+      # add word_sep to each beginning of word and join by space
+      tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
+    else:
+      # join all words by word_sep
+      tokens.append(u' \u2581 '.join([' '.join(word) for word in line]))
+
+  return tokens
+\end{python}
+
+When analyzing pairs and their frequencies, each word's last character and the following whitespace has to be considered, as well as this whitespace and the following word's first character. This changes the \emph{get\_stats} function slightly.
+
+\begin{python}
+# learn_bpe.py
+
+def get_stats(tokens: list) -> (Counter, dict):
+  """
+  Count frequency of all bigrams, the indexes where they occur and the frequency per index.
+  pairs = {
+    ('s', 'h'): 5,
+    ('h', 'e'): 6
+  }
+
+  idx = {
+    ('t', 'h'): {
+        # keys are indexes in corpus, values are frequency of appearance
+        0: 2,
+        1: 3,
+        ...
+    }
+    ...
+  }
+  In space mode, the last token '.' or word_sep. isn't merged with anything.
+  """
+
+  def get_pairs_idx(pairs, idx, symbols):
+    symbols = symbols.split()
+    for j in range(len(symbols) - 1):
+      new_pair = symbols[j], symbols[j + 1]
+      pairs[new_pair] += 1
+      idx[new_pair][i] += 1
+    return pairs, idx
+
+  pairs = Counter()
+  idx = defaultdict(lambda: defaultdict(int))
+  for i, sent in enumerate(tokens):
+    if space:
+      # get stats for each word independently, no bigrams between different words
+      for word in sent[1:].split(u' \u2581'):
+      pairs, idx = get_pairs_idx(pairs, idx, word_sep + word)
+    else:
+      # get bigram stats for the whole sentence
+      pairs, idx = get_pairs_idx(pairs, idx, sent)
+
+  return pairs, idx
+\end{python}
+
+And finally, after merging a pair in the corpus, when updating the tokens and the pairs, the fact that space boundaries exist or not also plays a role. Specifically, the no space mode is freer, in the sense that no matter which pair is merged, the pair immediately before and the pair immediately after are merged, no matter what. In space mode however, this cannot be done if the previous or next pair belong to another word, which puts some restrictions. There are comments in the code for readability.
+
+\begin{python}
+# learn_bpe.py
+
+def update_tokens(tokens, idx, pairs, pair):
+
+  def update_freqs(pairs, idx, pair, new_pair=-1):
+    # decrease freq from pairs
+    pairs[pair] -= 1
+    if pairs[pair] <= 0: del pairs[pair]
+
+    # decrease freq from idx
+    idx[pair][i] -= 1
+    if idx[pair][i] <= 0: del idx[pair][i]
+    if len(idx[pair]) <= 0: del idx[pair]
+
+    if new_pair != -1:
+        pairs[new_pair] += 1
+        idx[new_pair][i] += 1
+
+    return pairs, idx
+
+  merged_pair = ''.join(pair)
+  p = re.compile(r'(?<!\S)' + re.escape(' '.join(pair)) + r'(?!\S)')
+
+  # only iterate the corpus indexes where the pair to be merged is present
+  for i in list(idx[pair]).copy():
+
+    # merge pair in the sentence
+    sent = p.sub(merged_pair, tokens[i])
+
+    # sentence remains unchanged. Delete pair from pairs and idx and continue
+    if sent == tokens[i]:
+        del pairs[pair]
+        del idx[pair][i]
+        if len(idx[pair]) <= 0:
+            del idx[pair]
+        continue
+
+    tokens[i] = sent
+
+    '''
+    iterate sent by the position the merged_pair occurs. 
+    in each position, we need to reduce freq of previous and after tokens
+    sentence before merge: 'h e l l o', pair: ('e', 'l')
+    merged sent = 'h el l o'
+    sent.split(merged_pair) -> ['h ', ' l o']
+    we iterate the splitted sentence and in each occasion
+    * decrease freq of previous token ('h', 'e')
+        * create new token ('h', 'el')
+    * decrease freq of after token ('l', 'l')
+        * create new token ('el', 'l')
+    * decrease freq of merged pair ('e', 'l')
+    '''
+    sent = sent.split(merged_pair)
+    for k in range(len(sent[:-1])):
+
+      if sent[k].split() and (sent[k][-1] == ' ' and word_sep not in pair[0][0] if space else True):
+        '''
+        conditions to update the **previous** token:
+        * if sent[k] isn't empty. if it is, there's no previous token to update.
+        * in space mode, if the merged_pair isn't the beginning of the word.
+            * in this case, we don't want the last letter from the prev word to be merged with
+            * our current pair. ... e _t h ... we don't want to consider ('e', '_t')
+        '''
+        prev = (sent[k].split()[-1], pair[0])
+        new_pair = (prev[0], merged_pair)
+        pairs, idx = update_freqs(pairs, idx, prev, new_pair)
+
+      if space and not sent[k+1].split() and word_sep not in pair[0][0]:
+        '''
+        conditions to update the **after** token when merged bigrams are consecutive:
+        * in space mode specifically, when the pair's first character isn't the beginning of the word
+        * and when the next token is empty
+        * we're dealing with consecutive merged pairs, merged_pair = ('ssi'), sent= 'm i ssi ssi p p i'
+            * in this case, we delete the token between the merged_pair: ('i', 's')
+            * and create a new pair ('ssi', 'ssi')
+        '''
+        if sent[k] and sent[k][-1] == word_sep:
+          after = (word_sep+merged_pair, pair[0])
+          new_pair = -1
+        else:
+          after = (pair[1], pair[0])
+          new_pair = (merged_pair, merged_pair)
+          pairs, idx = update_freqs(pairs, idx, after, new_pair)
+
+      elif sent[k+1].split() and (word_sep not in sent[k+1].split()[0] if space else True):
+        '''
+        conditions to update the **after** token in a more general case:
+        * if sent[k] isn't empty. if it is, there's no after token to update.
+        * in space mode, if the after token is a new word, we don't want to consider it.
+        '''
+        after = (pair[1], sent[k+1].split()[0])
+        new_pair = (merged_pair, after[1])
+        pairs, idx = update_freqs(pairs, idx, after, new_pair)
+
+      # decrease freq of merged bigram
+      pairs, idx = update_freqs(pairs, idx, pair)
+
+  return tokens, idx, pairs
+\end{python}
+
+The \emph{apply\_bpe.py} remains unchanged, aligning BPE files as well with the Fastalign or Eflomal algorithm as well. However, since now the alignments are among many words, the mapping is different than in the space case. The mapping is divided into subword to word mapping (map\_subword\_.to\_word function) and multiword to word (map\_multiword\_to\_word).
+
+\begin{python}
+# extract_alignmens.py
+
+def map_subword_to_word(corpus, bpes, lang):
+  '''
+  SPACE MODE
+  Input: list of sentences with subword separation
+  corpus =  [
+      '_We _do _no t _be li eve _.',
+      '_Thi s _is _a _sent ence _.',
+      ...
+  ]
+  Output: dictionary of each language and 
+  a list of indexes pointing to which word each element (_do) belongs to
+  bpe = {
+    source:
+    [
+      [0, 1, 2, 2, 3, 3, 3, 4],
+      [0, 0, 1, 2, 3, 4, 5],
+      ...
+    ],
+    target:
+    [
+      ...
+    ],
+  }
+      
+  '''
+  bpes[lang] = []
+  for sent in corpus:
+    mapping = [0]
+    i = 0
+    for subw in sent.split()[1:]:
+      if subw[0] == word_sep:
+        i += 1
+      mapping.append(i)
+    bpes[lang].append(mapping)
+  return bpes
+
+def map_multiple_to_word(corpus, bpes, lang):
+  '''
+  NO SPACE MODE
+  Input: list of sentences with subword separation
+  corpus =  [
+      'b u t▁this▁is▁no t▁w hat▁hap pen s▁.',
+      'th e▁ ice▁cre am_.',
+      ...
+  ]
+  Output: dictionary of each language and 
+  a list of indexes pointing to which word each element (t▁w) belongs to
+  bpes = {
+    source:
+    [
+      [[0], [0], [0,1,2,3], [3,4], [4,5], [5], [5,6]],
+      [[0], [0], [1,2], [2]],
+      ...
+    ],
+    target:
+    [
+      ...
+    ],
+  }
+      
+  '''
+
+  bpes[lang] = []
+  for sent in corpus:
+    sent_bpes = []
+    j = 0
+    for word in sent.split():
+
+      if word == word_sep:
+        # word is simply '_', doesn't belong to anything
+        j += 1
+        sent_bpes.append([])
+        continue
+
+      word_count = word.count(word_sep)
+      if word_count == 0:
+        sent_bpes.append([j])
+        continue
+
+      # multiple words in the element: t▁this▁is▁no -> [0,1,2,3]
+      if word[0] == word_sep:
+        # word starts with '_' but there are no elements of the previous word in it
+        j += 1
+        word_count -= 1
+
+      if word[-1] == word_sep:
+        # word ends with '_' but there are no elements of the next word in it
+        sent_bpes.append(list(range(j, j + word_count)))
+      else:
+        sent_bpes.append(list(range(j, j + word_count + 1)))
+      j += word_count
+    bpes[lang].append(sent_bpes)
+  return bpes
+
+def load_and_map_segmentations(num_symbols, i=-1):
+
+  bpes = {}
+  for lang in [source, target]:
+    segmentpath = lang+'_'+str(num_symbols)+('_'+str(i) if i != -1 else '')+'.bpe'
+    argsinput = codecs.open(segmentpath, encoding='utf-8')
+    if space:
+        bpes = map_subword_to_word(argsinput, bpes, lang)
+    else:
+        bpes = map_multiple_to_word(argsinput, bpes, lang)
+  return bpes
+\end{python}
+
+Besidesthe function bpe\_word\_align is also altered to account for the fact that if a multiword unit such as \emph{from\_the} is aligned with \emph{aus\_dem}, each one-to-one alignment must be considered, that is, from-aus, from-dem, the-aus, and the-dem.
+
+\begin{python}
+
+def bpe_word_align(bpes, bpe_aligns):
+  '''
+  Input: dictionary of bpes obtained as output of map_subword_to_word()
+  Output: list of word alignments and their indexes
+    "
+      0   0-0 0-1 1-1 1-2 3-1 2-4 \n
+      1   0-0 1-0 1-1 2-1 \n
+      ...
+    "
+  '''
+  all_word_aligns = ''
+  for i, (sent1, sent2, bpe_al) in enumerate(zip(bpes[source], bpes[target], bpe_aligns)):
+    word_aligns = set()
+    # iterate each alignment
+    for al in bpe_al.split('\t')[1].split():
+      firstal, secondal = al.split('-')
+      if space:
+        new_al = str(sent1[int(firstal)]) + '-' + str(sent2[int(secondal)])
+        word_aligns.add(new_al)
+      else:
+        for el1 in sent1[int(firstal)]:
+          for el2 in sent2[int(secondal)]:
+            new_al = str(el1) + '-' + str(el2)
+            word_aligns.add(new_al)
+
+    all_word_aligns += str(i) + "\t" + ' '.join(word_aligns) + "\n"
+  return all_word_aligns
+\end{python}
+
+The final step of calculating scores does not change.
+
 \begin{python}
 
 \end{python}

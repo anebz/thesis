@@ -236,3 +236,14 @@ This way, when accessing the most frequent pair in the corpus, we can also acces
 
 \section{BPE without word boundaries}
 
+Up until this point, the underlying principle of creating BPE units is that merges between words are not considered. But given the existence of languages without any clear word boundaries, this thesis also explores what would happen if merges between different words were allowed, which has not been done before in literature, to the knowledge of the author. Regarding the algorithm pipeline, all remains the same except the algorithm to create BPE merges. Now, instead of having a special token to mark the beginning of each word, the same token is used to replace whitespace. For instance, the space mode tokenization used until now and the new no-space mode tokenization:
+
+\begin{itemize}
+	\item Raw sentence: The cake is delicious .
+	\item Sentence after space mode tokenization: \_T h e \_c a k e \_i s \_d e l i c i o u s .
+	\item Sentence after no-space mode tokenization: T h e \_ c a k e \_ i s \_ d e l i c i o u s \_ .
+\end{itemize}
+
+This way, merges with whitespace are possible, as well as merges between endings of some words and beginnings of the next. After learning BPE units using this method, these are the most common merges in English: e \_, t h, s \_, t \_, n \_, d \_, th e\_, e r, i n, y \_. The most common BPE unit between words is \emph{of\_ the\_}. As for German, the most common merges are: n \_, e r, e n\_, c h, e \_, \_ d, e i, u n, t \_, er \_. And the most common BPE unit between words is \emph{, \_da}.
+
+Since now merges between words are possible, there are many more possible merges, and the algorithm is not so fast as in the space mode. The rest of the algorithms, namely applying BPE units to a corpus, extracting alignments, and calculating scores remain the same. However, it is important to consider that when aligning units this way, a unit containing multiple words might get aligned to a unit containing also multiple words, so the mapping subword to word is slightly altered, relative to the previous case where only parts of words were aligned.
