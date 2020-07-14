@@ -3,11 +3,9 @@
 1. [ ] Introduction
 2. [ ] Motivation
 3. [X] Tokenization
-4. [ ] Translation
-5. [~] Methodology
-6. [~] Development: more technical
-   1. Implementation of BPE dropout on source or target side
-   2. BPE without spaces
+4. [~] Translation
+5. [X] Methodology
+6. [X] Development
 7. Results, experiments, analysis, challenges, how to choose a good baseline, figures
    1. BPE results
    2. BPE dropout results
@@ -118,3 +116,14 @@
 3. apply_bpe.py
 4. extract_alignments.py (can be done in parallel to apply_bpe, after an offset of ~2 elements)
 5. calc_align_score.py / merge_dropout.py
+=======
+## open questions
+
+* learn_bpe: substitute number for digit when merging? it's a good thing that these are rare. This way, we only merge a digit with a character only if it's frequent.
+* dropout only on one side? source_bpe -> source_dropout? Since they experiment on MT, the situation is totally different. It might be interesting to see if there's a difference or not. Alignments are bidirectional. If you want to try this, you should try it for both sides and merge them:
+  * Normal_source Sample_target_1
+  * Normal_source Sample_target_2
+  * Normal_source Sample_target_3
+  * Sample_source_1 Normal_target
+  * Sample_source_2 Normal_target
+  * Sample_source_3 Normal_target

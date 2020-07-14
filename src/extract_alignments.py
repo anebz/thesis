@@ -3,91 +3,75 @@ from os.path import join
 import os
 import sys
 import codecs
-import argparse
 
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 from subword_word import *
 
-def add_numbers(input_file, output_file, start=0, max_num=-1):
-	with codecs.open(input_file, "r", "utf-8") as fi, codecs.open(output_file, "w", "utf-8") as fo:
-		count = start
-		for l in fi:
-			fo.write(str(count) + "\t" + l.strip() + "\n")
-			count += 1
-			if max_num > 0 and count >= max_num:
-				break
+
+def create_parallel_text(sourcepath: str, targetpath: str, outpath: str):
+
+	sourceinput = codecs.open(sourcepath, "r", "utf-8")
+	targetinput = codecs.open(targetpath, "r", "utf-8")
+	fa_file = codecs.open(outpath + '.txt', "w", "utf-8")
+
+	for sl, tl in zip(sourceinput, targetinput):
+		sl = sl.strip().split("\t")[-1]
+		tl = tl.strip().split("\t")[-1]
+		fa_file.write(f"{sl} ||| {tl}\n")
+	fa_file.close()
+	return
+
+def create_fwd_rev_files(outpath: str):
+	if mode == "fastalign":
+		os.system(f"{fastalign_path} -i {outpath}.txt -v -d -o > {outpath}.fwd")
+		os.system(f"{fastalign_path} -i {outpath}.txt -v -d -o -r > {outpath}.rev")
+	elif mode == "eflomal":
+		os.system(f"cd {eflomal_path}; python align.py -i {outpath}.txt --model 3 -f {outpath}.fwd -r {outpath}.rev")
+	return
 
 
-def extract_alignments(i=-1, input_mode=False):
+def create_gdfa_file(outpath: str):
+	# create gdfa file from .fwd and .rev
+	os.system(f"{atools_path} -i {outpath}.fwd -j {outpath}.rev -c grow-diag-final-and > {outpath}_unnum.gdfa")
+
+	# parse _unnum.gdfa to .gdfa with "\t" separator
+	with codecs.open(f"{outpath}_unnum.gdfa", "r", "utf-8") as fi, codecs.open(f"{outpath}.gdfa", "w", "utf-8") as fo:
+		for i, line in enumerate(fi):
+			fo.write(f"{i}\t{line.strip()}\n")
+
+	# delete unnecessary files
+	os.system(f"rm {outpath}_unnum.gdfa; rm {outpath}.fwd; rm {outpath}.rev; rm {outpath}.txt")
+	return
+
+
+def extract_alignments(i: int =-1, input_mode: bool =False):
 
 	for num_symbols in all_symbols:
 
 		if input_mode:
 			print(f"Alignments for input files")
-			s = inputpath[source]
-			t = inputpath[target]
-			o = join(bpedir, "fastalign/input")
-
+			sourcepath = inputpath[source]
+			targetpath = inputpath[target]
+			outpath = join(bpedir, mode, "input")
 		else:
 			print(f"Alignments for {num_symbols} symbols")
 			if target_bpe:
-				s = inputpath[source]
+				sourcepath = inputpath[source]
 			else:
-				s = join(bpedir, 'segmentations', source+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
-			
+				sourcepath = join(bpedir, 'segmentations', f"{source}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
+
 			if source_bpe:
-				t = inputpath[target]
+				targetpath = inputpath[target]
 			else:
-				t = join(bpedir, 'segmentations', target+"_"+str(num_symbols)+('_'+str(i) if dropout else '')+".bpe")
+				targetpath = join(bpedir, 'segmentations', f"{target}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
 
-			o = join(bpedir, "fastalign",
-						str(num_symbols) +
-						('_'+str(i) if i != -1 else '') +
-						('_deu' if target_bpe else '')
-					)
+			outpath = join(bpedir, mode, f"{num_symbols}{'_'+str(i) if i != -1 else ''}{'_deu' if target_bpe else ''}")
 
-		p = ""
-		m = "fast"
-
-		# create parallel text
-		if p == "" and m == "fast":
-			p = o + ".txt"
-
-			fa_file = codecs.open(p, "w", "utf-8")
-			fsrc = codecs.open(s, "r", "utf-8")
-			ftrg = codecs.open(t, "r", "utf-8")
-
-			for sl, tl in zip(fsrc, ftrg):
-				sl = sl.strip().split("\t")[-1]
-				tl = tl.strip().split("\t")[-1]
-
-				fa_file.write(sl + " ||| " + tl + "\n")
-			fa_file.close()
-
-		if m == "fast":
-			os.system("{} -i {} -v -d -o > {}.fwd".format(fastalign_path, p, o))
-			os.system("{} -i {} -v -d -o -r > {}.rev".format(fastalign_path, p, o))
-		elif m == "eflomal":
-			os.system(eflomal_path + "align.py -i {0} --model 3 -f {1}.fwd -r {1}.rev".format(p, o))
-
-		os.system("{0} -i {1}.fwd -j {1}.rev -c grow-diag-final-and > {1}_unnum.gdfa".format(atools_path, o))
-		add_numbers(o + "_unnum.gdfa", o + ".gdfa")
-		os.system("rm {}_unnum.gdfa".format(o))
-		os.system("rm {}.fwd".format(o))
-		os.system("rm {}.rev".format(o))
-		os.system("rm {}.txt".format(o))
-
-		'''
-		with open(o + ".fwd", "r") as f1, open(o + ".rev", "r") as f2, open(o + ".inter", "w") as fo:
-			count = 0
-			for l1, l2 in zip(f1, f2):
-				l1 = set(l1.strip().split())
-				l2 = set(l2.strip().split())
-				fo.write(str(count) + "\t" + " ".join(sorted([x for x in l1 & l2])) + "\n")
-				count += 1
-		'''
+		create_parallel_text(sourcepath, targetpath, outpath)
+		create_fwd_rev_files(outpath)
+		create_gdfa_file(outpath)
 
 		if input_mode:
 			break
@@ -95,14 +79,14 @@ def extract_alignments(i=-1, input_mode=False):
 		# map alignment from subword to word
 		bpes = load_and_map_segmentations(num_symbols, i)
 
-		argsalign = codecs.open(o+'.gdfa', encoding='utf-8')
+		argsalign = codecs.open(outpath+'.gdfa', encoding='utf-8')
 		all_word_aligns = bpe_word_align(bpes, argsalign)
-		os.system("rm {}.gdfa".format(o))
+		os.system(f"rm {outpath}.gdfa")
 
-		argsoutput = codecs.open(o+'.wgdfa', 'w', encoding='utf-8')
+		argsoutput = codecs.open(outpath+'.wgdfa', 'w', encoding='utf-8')
 		argsoutput.write(all_word_aligns)
 
-		print("\n\n\n\n")
+		print("\n\n")
 	return
 
 if __name__ == "__main__":
@@ -116,16 +100,15 @@ if __name__ == "__main__":
 	usage 2: ./extract_alignments.py -p parallel_file -o output_file
 	'''
 
-	eflomal_path = "/mounts/Users/student/masoud/tools/eflomal-master/"
-
 	print(f"Extracting alignments for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
 
-	if not os.path.isfile(join(bpedir, 'fastalign/input.wgdfa')):
+	os.makedirs(join(bpedir, 'fastalign'), exist_ok=True)
+	if not os.path.isfile(join(bpedir, mode, 'input.wgdfa')):
 		extract_alignments(input_mode=True)
 
 	if dropout > 0:
-		# create `dropout_sampless` segmentations, to aggregate later
-		for i in range(dropout_sampless):
+		# create `dropout_samples` segmentations, to aggregate later
+		for i in range(dropout_samples):
 			print(f"Iteration {i+1}")
 			extract_alignments(i)
 			print("\n\n\n\n")
