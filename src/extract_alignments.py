@@ -10,7 +10,7 @@ from settings import *
 from subword_word import *
 
 
-def create_parallel_text(sourcepath, targetpath, outpath):
+def create_parallel_text(sourcepath: str, targetpath: str, outpath: str):
 
 	sourceinput = codecs.open(sourcepath, "r", "utf-8")
 	targetinput = codecs.open(targetpath, "r", "utf-8")
@@ -23,7 +23,7 @@ def create_parallel_text(sourcepath, targetpath, outpath):
 	fa_file.close()
 	return
 
-def create_fwd_rev_files(outpath):
+def create_fwd_rev_files(outpath: str):
 	if mode == "fastalign":
 		os.system(f"{fastalign_path} -i {outpath}.txt -v -d -o > {outpath}.fwd")
 		os.system(f"{fastalign_path} -i {outpath}.txt -v -d -o -r > {outpath}.rev")
@@ -32,7 +32,7 @@ def create_fwd_rev_files(outpath):
 	return
 
 
-def create_gdfa_file(outpath):
+def create_gdfa_file(outpath: str):
 	# create gdfa file from .fwd and .rev
 	os.system(f"{atools_path} -i {outpath}.fwd -j {outpath}.rev -c grow-diag-final-and > {outpath}_unnum.gdfa")
 
@@ -46,7 +46,7 @@ def create_gdfa_file(outpath):
 	return
 
 
-def extract_alignments(i=-1, input_mode=False):
+def extract_alignments(i: int =-1, input_mode: bool =False):
 
 	for num_symbols in all_symbols:
 

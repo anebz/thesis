@@ -14,7 +14,7 @@ from settings import *
 
 def read_bpe_model(lang: str) -> (list, int):
     # check if a BPE model for this language exists
-    # if so, only create new BPE model if num_all_symbols > symbols in the model
+    # if so, only create new BPE model if learn_symbols > symbols in the model
     model_path = join(datadir, lang+('' if space else '_ns')+'.model')
     if os.path.isfile(model_path):
         bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
@@ -105,7 +105,7 @@ def get_stats(tokens: list) -> (Counter, dict):
     return pairs, idx
 
 
-def update_tokens(tokens, idx, pairs, pair):
+def update_tokens(tokens: list, idx: dict, pairs: Counter, pair: tuple) -> (list, dict, Counter):
 
     def update_freqs(pairs, idx, pair, new_pair=-1):
 
@@ -204,7 +204,7 @@ def update_tokens(tokens, idx, pairs, pair):
     return tokens, idx, pairs
 
 
-def learn_bpe(corpus, bpe_model):
+def learn_bpe(corpus: list) -> list:
     """
     Learn BPE operations from vocabulary.
     Steps:
@@ -219,8 +219,10 @@ def learn_bpe(corpus, bpe_model):
     pairs, idx = get_stats(tokens)
 
     most_frequent_merges = []
-    for i in tqdm(range(num_all_symbols),
-                  desc=f"learn_bpe: num_symbols={num_all_symbols}, lang={lang}, space mode={space}"):
+    for i in tqdm(
+        range(learn_symbols), 
+        desc=f"learn_bpe: num_symbols={learn_symbols}, lang={lang}, space mode={space}"
+        ):
 
         try:
             most_frequent = pairs.most_common(1)[0][0]
@@ -246,11 +248,11 @@ if __name__ == '__main__':
     for lang in [source, target]:
 
         argsinput = codecs.open(inputpath[lang], encoding='utf-8')
-        bpe_model, model_symbols = read_bpe_model(lang)
+        _, model_symbols = read_bpe_model(lang)
 
-        if num_all_symbols <= int(model_symbols):
-            print(f"A model for lang={lang} with at least {num_all_symbols} symbols already exists")
+        if learn_symbols <= int(model_symbols):
+            print(f"A model for lang={lang} with at least {learn_symbols} symbols already exists")
             continue
 
-        most_freq_merges = learn_bpe(argsinput, bpe_model)
+        most_freq_merges = learn_bpe(argsinput)
         write_bpe(lang, most_freq_merges)

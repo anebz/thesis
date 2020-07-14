@@ -14,7 +14,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
 
-def load_gold(g_path):
+def load_gold(g_path: str) -> (dict, dict, int):
 
 	gold_f = open(g_path, "r")
 	pros = {}
@@ -48,7 +48,7 @@ def load_gold(g_path):
 	return pros, surs, surs_count
 
 
-def calc_score(input_path, probs, surs, surs_count):
+def calc_score(input_path: str, probs: dict, surs: dict, surs_count: int) -> (float, float, float, float):
 
 	total_hit = 0.
 	p_hit = 0.
@@ -85,19 +85,17 @@ def calc_score(input_path, probs, surs, surs_count):
 	return y_prec, y_rec, y_f1, aer
 
 
-def get_baseline_score(probs, surs, surs_count):
+def get_baseline_score(probs: dict, surs: dict, surs_count: float) -> pd.DataFrame:
 
 	alfile = join(bpedir, mode, 'input.gdfa')
 
-	scores = []
 	score = [0]
 	score.extend(list(calc_score(alfile, probs, surs, surs_count)))
-	scores.append(score)
-	baseline_df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+	baseline_df = pd.DataFrame([score], columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 	return baseline_df
 
 
-def plot_scores(df, baseline_df, scoredir):
+def plot_scores(df: pd.DataFrame, baseline_df: pd.DataFrame, scoredir: str):
 
 	# Use plot styling from seaborn.
 	sns.set(style='darkgrid')
@@ -131,7 +129,7 @@ def plot_scores(df, baseline_df, scoredir):
 	return
 
 
-def calc_align_scores(probs, surs, surs_count, baseline_df, i=-1):
+def calc_align_scores(probs: dict, surs: dict, surs_count: float, baseline_df: pd.DataFrame, i: int =-1) -> pd.DataFrame:
 
 	scores = []
 	for num_symbols in all_symbols:

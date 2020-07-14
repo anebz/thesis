@@ -8,7 +8,7 @@ sys.path.insert(1, join(sys.path[0], '..'))
 from settings import *
 
 
-def map_subword_to_word(corpus, bpes, lang):
+def map_subword_to_word(corpus: list, bpes: dict, lang: str) -> dict:
     '''
     SPACE MODE
     Input: list of sentences with subword separation
@@ -45,7 +45,7 @@ def map_subword_to_word(corpus, bpes, lang):
     return bpes
 
 
-def map_multiple_to_word(corpus, bpes, lang):
+def map_multiple_to_word(corpus: list, bpes: dict, lang: str) -> dict:
     '''
     NO SPACE MODE
     Input: list of sentences with subword separation
@@ -106,10 +106,9 @@ def map_multiple_to_word(corpus, bpes, lang):
     return bpes
 
 
-def load_and_map_segmentations(num_symbols, i=-1):
+def load_and_map_segmentations(num_symbols: str, i: int =-1) -> dict:
 
     bpes = {}
-    os.chdir(join(bpedir, 'segmentations'))
     for lang in [source, target]:
         segmentpath = lang+'_'+str(num_symbols)+('_'+str(i) if i != -1 else '')+'.bpe'
 
@@ -134,7 +133,7 @@ def load_and_map_segmentations(num_symbols, i=-1):
     return bpes
 
 
-def bpe_word_align(bpes, bpe_aligns):
+def bpe_word_align(bpes: dict, bpe_aligns: list) -> str:
     '''
     Input: dictionary of bpes obtained as output of map_subword_to_word()
     Output: list of word alignments and their indexes

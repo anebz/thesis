@@ -11,7 +11,7 @@ from settings import *
 from learn_bpe import read_bpe_model, read_corpus
 
 
-def load_data():
+def load_data() -> (list, list, list):
 
     os.chdir(datadir)
     langs = [source, target]
@@ -32,7 +32,7 @@ def load_data():
     return langs, bpe_models, corpora
 
 
-def write_bpe(lang, num_symbols, merged_corpus, i=-1):
+def write_bpe(lang: str, num_symbols: int, merged_corpus: str, i: int =-1):
     outputpath = join(bpedir, 'segmentations',
                       f"{lang}_{num_symbols}{'' if space else '_ns'}{'_'+str(i) if i != -1 else ''}.bpe")
     argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
@@ -40,7 +40,7 @@ def write_bpe(lang, num_symbols, merged_corpus, i=-1):
     return
 
 
-def apply_bpe(langs, bpe_models, corpora, i=-1):
+def apply_bpe(langs: list, bpe_models: list, corpora: list, i: int =-1):
     
     for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
 
