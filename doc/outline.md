@@ -1,32 +1,18 @@
 # Thesis document outline
 
-1. Introduction
-2. Motivation
-3. Literature review
-   1. Tokenization
-      1. Tokenization methods
-      2. BPE
-      3. BPE dropout
-   2. Translation
-      1. NMT? open vocabulary problems?
-      2. https://arxiv.org/abs/2004.08728 section 5
-   3. fastalign, eflomal
-4. Methodology: Theoretical idea: what I want to do, how, algorithmic/mathematical
-5. Development: more technical
-   1. Coding practices
-   2. Implementation of BPE
-      1. Learn BPEs
-      2. Apply BPEs
-      3. Align BPEs
-      4. Calculate BPE scores
-   3. Implementation of BPE dropout
-   4. Implementation of BPE dropout on source or target side
-   5. Improvement over BPE dropout
-   6. ...
-6. Results, experiments. challenges, how to choose a good baseline, figures
-7. ...
-8. Future work
-9.  Conclusion
+1. [ ] Introduction
+2. [ ] Motivation
+3. [X] Tokenization
+4. [~] Translation
+5. [X] Methodology
+6. [X] Development
+7. Results, experiments, analysis, challenges, how to choose a good baseline, figures
+   1. BPE results
+   2. BPE dropout results
+   3. learn_bpe improvement performance
+8. ...
+9. Future work
+10. Conclusion
 
 ## learn_bpe algorithm
 
@@ -72,6 +58,65 @@
 * dropout=0.4, best result at merge_threshold=0.3, num_symbols=500, f1=0.532
 * dropout=0.5, best result at merge_threshold=0.3, **num_symbols=4000**, f1=0.529
 
+## directory structure
+
+```
+.
+├── data
+│   ├── input
+│   │   ├── eng_with_10k.txt   # input txt file with 10k english sentences
+│   │   ├── deu_with_10k.txt
+│   │   └── eng_deu.gold       # gold standard alignments for English-German
+│   ├── normal_bpe
+│   │   ├── segmentations      # files obtained by segmenting based on num_symbols and lang
+│   │   │   └── *.bpe
+│   │   ├── fastalign          # files obtained from fastalign alignment algorithm
+│   │   │   └── .wgdfa
+│   │   └── eflomal            # files obtained from eflomal alignment algorithm
+│   │       └── .wgdfa
+│   ├── dropout_bpe
+│   │   ├── segmentations                             
+│   │   │   └── *.bpe
+│   │   ├── fastalign                                 
+│   │   │   └── *.wgdfa
+│   │   └── eflomal                                   
+│   │       └── *.wgdfa
+│   ├── eng.model              # merge list for english, space mode
+│   ├── deu.model
+│   ├── eng_ns.model           # merge list for english, no space mode
+│   └── deu_ns.model
+├── doc                        # LaTeX files for the writing of the thesis
+│   ├── figures
+│   ├── sections
+│   └── *.tex files
+├── reports
+│   ├── scores_normal_bpe      # scores for BPE depending on normal/dropout, space/no space, etc.
+│   │   └── *.csv, *.png
+│   └── scores_dropout_bpe
+│       └── *.csv, *.png
+├── src                        # python files
+│   ├── learn_bpe.py
+│   ├── apply_bpe.py
+│   ├── extract_alignments.py
+│   ├── calc_align_score.py
+│   └── merge_dropout.py
+├── tools                        # fastalign, eflomal installation directories
+│   ├── fastalign
+│   └── eflomal
+├── .gitignore
+├── README.md
+├── requirements.txt
+└── settings.py
+```
+
+## pipeline
+
+1. Set parameters in `settings.py`
+2. learn_bpe.py
+3. apply_bpe.py
+4. extract_alignments.py (can be done in parallel to apply_bpe, after an offset of ~2 elements)
+5. calc_align_score.py / merge_dropout.py
+=======
 ## open questions
 
 * learn_bpe: substitute number for digit when merging? it's a good thing that these are rare. This way, we only merge a digit with a character only if it's frequent.

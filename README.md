@@ -29,45 +29,6 @@ Master thesis repo
   * t h, both 0, then th:1. th:1, e:0, the:2
   * un:1 accept:3 able:3. acceptable has higher score than unaccept. if 2 chunks have same score, join the larger ones.
 
-## pipeline
-
-1. Set parameters in `settings.py`
-2. learn_bpe.py
-3. apply_bpe.py
-4. extract_alignments.py (can be done in parallel to apply_bpe, after an offset of ~2 elements)
-5. calc_align_score.py / merge_dropout.py
-
-## directory structure
-
-```
-.
-├── data
-│   ├── input
-│   │   ├── eng_with_10k.txt                          # input txt file with 10k english sentences
-│   │   └── deu_with_10k.txt
-│   ├── normal_bpe
-│   │   ├── fastalign                                 # files obtained from fastalign alignment algorithm
-│   │   │   └── *.wgdfa, *_deu.wgdfa
-│   │   └── segmentations                             # files obtained by segmenting based on num_symbols
-│   │       └── .bpe
-│   ├── dropout_bpe
-│   │   ├── fastalign
-│   │   │   └── *.wgdfa, *_deu.wgdfa, *_union.wgdfa, *_inter.wgdfa, *_thres.wgdfa
-│   │   └── segmentations
-│   │       └── .bpe
-│   ├── eng.model                                      # merge list for english
-│   └── deu.model
-├── doc
-├── reports
-│   ├── scores_dropout_bpe
-│   │   └── *.csv, *.png
-│   └── scores_normal_bpe
-│       └── *.csv, *.png
-├── README.md
-├── .py
-└── ...
-```
-
 ## resources
 
 * [You token to me](https://github.com/VKCOM/YouTokenToMe)
