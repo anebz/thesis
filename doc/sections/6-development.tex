@@ -177,7 +177,7 @@ if __name__ == '__main__':
     write_bpe(lang, most_freq_merges)
 \end{python}
 
-\subsection{Apply BPE algorithm}
+\subsection{Apply BPE algorithm}\label{dev:applybpe}
 
 After learning BPE units, there is already a merge list written into the project data directory, which can now be loaded into memory in order to apply these merges to the corpus. The following function returns a list of the languages present in the project, BPE models and corpora for each language.
 
@@ -220,10 +220,10 @@ def apply_bpe(langs: list, bpe_models: list, corpora: list):
     bpe_model = bpe_model[:max(all_symbols)]
     k = 0
     str_corpus = '\n'.join(corpus)
-    for j, bigram in enumerate(tqdm(bpe_model, desc=f"apply_bpe: dropout={dropout}, lang={lang}")):
+    for j, bigram in enumerate(bpe_model):
       str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
       if j + 1 == all_symbols[k]:
-        write_bpe(lang, all_symbols[k], str_corpus, i)
+        write_bpe(lang, all_symbols[k], str_corpus)
         k += 1
   return
 
@@ -245,7 +245,7 @@ After this step, in the directory \emph{../data/normal\_bpe/segmentations/} vari
 
 \emph{deu} or \emph{eng} refers to the language, and the numbers are the amount of merges that have been applied into this file. For examples, see~\ref{met:applybpe}.
 
-\subsection{Extract alignments}
+\subsection{Extract alignments}\label{dev:extractalign}
 
 This step requires some prior installation of the alignment software. The thesis has been conducted in a Linux environment, so the installation guide is adapted to this case. The installation of the software in any other OS is however possible, as long as the user adapts the commands to their OS. Initially, if not present in the system, it is mandatory to \href{https://cmake.org/install/}{install Cmake}. The installation steps for \emph{fast\_align} are as follows, in bash.
 
@@ -550,9 +550,9 @@ if __name__ == "__main__":
 
 \section{Replication of BPE dropout}
 
-The previous section has laid the backbone of the algorithms. In this and the following sections, some modifications are introduced. For the sake of simplicity, the code snippets that follow only include the new changes, or the functions from the last section with new modifications. The functions that remain unaltered aren't shown.
+The previous section has laid the backbone of the algorithms, the various files and functions. In this and the following sections, some modifications and improvements are introduced to the already existing Python scripts. For the sake of simplicity, the code snippets that follow only include the new changes, or the functions from the last section with new modifications, and the modifications are introduced by signaling the line numbers from previous scripts in which changes are introduced. For example, it might be mentioned that a certain line is added to line 21 of a certain function in a specific script. This refers to the function introduced in the previous section, and it will be referred as such. In the case that a function is altered in a significant way, the new version of the function will be shown, which overrules the previous version. The functions that remain unaltered aren't shown.
 
-Three new parameters come into play in the pipeline, namely \textbf{dropout} rate and \textbf{dropout\_samples}, that is, how many samples of the dropout system are considered. Besides, \emph{merge\_threshold} serves its function when dealing with alignments later on. These values are saved into \emph{settings.py}
+When adding dropout to BPE, three new parameters come into play in the project, namely \textbf{dropout} rate, \textbf{dropout\_samples}, that is, how many samples of the dropout system are considered, and \textbf{merge\_threshold}, which serves its function with alignments later on. These values are saved into \emph{settings.py}, as well as new data directories to store files resulting from BPE dropout.
 
 \begin{python}
 # settings.py
@@ -567,19 +567,23 @@ scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 el
 
 \subsection{Apply BPE to corpus with dropout}
 
-The first modifications are in \emph{apply\_bpe.py}, where we skip some merges, and repeat the process 10 times. The function \emph{apply\_bpe} includes two new lines where a random number between 0 and 1 is generated. If this number is smaller than the \emph{dropout} rate saved in \emph{settings.py}, then that merge isn't considered and the loop skips it. Additionally, in the main function, the function \emph{apply\_bpe} is called \emph{dropout\_samples} times. To save the files accordingly, a new variable is introduced, namely \emph{i}, that does nothing in the case where dropout=0, but when repeating the process, for instance if lang=eng, num\_symbols=2000, and first iteration of dropout, that is, i=0, the files are saved as \emph{eng\_2000\_0.bpe} instead.
+The first modifications in the project occur in \emph{apply\_bpe.py}, where some merges are skipped, and the process is repeated 10 times. More theoretical insights regarding this approach can be found in the Methodology section~\ref{sec:replbpedrop}. The function \emph{apply\_bpe} includes two new lines where a random number between 0 and 1 is generated. If this number is smaller than the \emph{dropout} rate saved in \emph{settings.py}, then that merge isn't considered and the loop skips it. This means that if the \emph{dropout} variable has the value of 0.1, 10\% of merges are skipped.
+
+Additionally, in the main function, the function \emph{apply\_bpe} is called \emph{dropout\_samples} times. To save the files accordingly, a new variable is introduced, namely \emph{i}, that does nothing in the case where dropout=0, but when repeating the process, for instance if lang=eng, num\_symbols=2000, and first iteration of dropout, that is, i=0, the files are saved as \emph{eng\_2000\_0.bpe} instead, and so on for further iterations. This is effectively achieved by changing the variable \emph{outputpath}
+
+In the function \emph{write\_bpe} in the general pipeline~\ref{dev:applybpe}, the following modifications are made
 
 \begin{python}
 # apply_bpe.py
 import random
 
-def write_bpe(lang, num_symbols, merged_corpus, i=-1):
+def write_bpe(lang: str, num_symbols: int, merged_corpus: str, i: int =-1):
   outputpath = join(bpedir, 'segmentations', f"{lang}_{num_symbols}{f'_{i}' if i != -1 else ''}.bpe")
   argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
   argsoutput.write(merged_corpus)
   return
 
-def apply_bpe(langs, bpe_models, corpora, i=-1):
+def apply_bpe(langs: list, bpe_models: list, corpora: list, i: int =-1):
   for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
     bpe_model = bpe_model[:max(all_symbols)]
     all_symbols_copy = all_symbols.copy()
@@ -603,58 +607,29 @@ if __name__ == "__main__":
 
 \subsection{Extract alignments with dropout}
 
-The only change here is that the \emph{extract\_alignment} function is called \emph{dropout\_samples} times, which changes the function to write the alignments in the new format, namely, changing the variables \emph{sourcepath} and \emph{targetpath}. Additionally, the gold standard's alignments don't need to be calculated since the baseline are the BPE scores rather than the gold standard scores. The rest, the alignment algorithm, remains unchanged.
+The only change in this step is that the \emph{extract\_alignment}~\ref{dev:extractalign} function is called \emph{dropout\_samples} times, which changes the function to write the alignments in the new format, namely, changing the variables \emph{sourcepath} and \emph{targetpath}. Additionally, the gold standard's alignments don't need to be calculated since the baseline are the BPE scores rather than the gold standard scores. The rest, the alignment algorithm, remains unchanged.
 
 \begin{python}
 # extract_alignments.py
 
-def extract_alignments(i=-1, input_mode=False):
+# change line 2
+def extract_alignments(i: int =-1, input_mode: bool =False):
 
-  for num_symbols in all_symbols:
+# change lines 11 and 12
+sourcepath = join(bpedir, 'segmentations', f"{source}_{num_symbols}_{'_'+str(i) if dropout else ''}.bpe")
+targetpath = join(bpedir, 'segmentations', f"{target}_{num_symbols}_{'_'+str(i) if dropout else ''}.bpe")
 
-    if input_mode:
-      print("Alignments for input files")
-      sourcepath = inputpath[source]
-      targetpath = inputpath[target]
-      outpath = join(bpedir, mode, "input")
-    else:
-      print(f"Alignments for {num_symbols} symbols")
-      sourcepath = join(bpedir, 'segmentations', f"{source}_{num_symbols}_{'_'+str(i) if dropout else ''}.bpe")
-      targetpath = join(bpedir, 'segmentations', f"{target}_{num_symbols}_{'_'+str(i) if dropout else ''}.bpe")
-      outpath = join(bpedir, mode, str(num_symbols))
-
-    create_parallel_text(sourcepath, targetpath, outpath)
-    create_fwd_rev_files(outpath)
-    create_gdfa_file(outpath)
-
-    # map alignment from subword to word
-    bpes = load_and_map_segmentations(num_symbols)
-
-    argsalign = codecs.open(o+'.gdfa', encoding='utf-8')
-    all_word_aligns = bpe_word_align(bpes, argsalign)
-    os.system(f"rm {outpath}.gdfa")
-
-    argsoutput = codecs.open(outpath+'.wgdfa', 'w', encoding='utf-8')
-    argsoutput.write(all_word_aligns)
-
-  return
-
-if __name__ == "__main__":
-
-  os.makedirs(join(bpedir, mode), exist_ok=True)
-  if not dropout and not os.path.isfile(join(bpedir, mode, 'input.wgdfa')):
-    extract_alignments(input_mode=True)
-
-  if dropout > 0:
-    for i in range(dropout_samples):
-      extract_alignments(i)
-  else:
-    extract_alignments()
+# change line 30
+if dropout > 0:
+  for i in range(dropout_samples):
+    extract_alignments(i)
+else:
+  extract_alignments()
 \end{python}
 
 \subsection{Calculate alignment scores with dropout}
 
-As explained in the Methodology section~\ref{sec:replbpedrop}, variants of union, intersection and threshold are created. This is introduced with a new algorithm, namely \emph{merge\_dropout.py}. First of all, the function \emph{merge\_dropout\_alignments} opens all alignment files and creates a dictionary data structure with the union, intersection and threshold alignment files and saves them into \emph{X\_union.wgdfa}, \emph{X\_inter.wgdfa}, \emph{X\_thres.wgdfa} respectively. Afterwards, the function \emph{calc\_score\_merges} opens these files and calculates the score, much in the way as the \emph{calc\_align\_score} algorithm from the previous section.
+As explained in the Methodology section~\ref{sec:replbpedrop}, variants of union, intersection and threshold are created. This is introduced with a new script, namely \emph{merge\_dropout.py}. First of all, the function \emph{merge\_dropout\_alignments} opens all alignment files and creates a dictionary data structure with the union, intersection and threshold alignment files and saves them into \emph{X\_union.wgdfa}, \emph{X\_inter.wgdfa}, \emph{X\_thres.wgdfa} respectively.
 
 \begin{python}
 # merge_dropout.py
@@ -665,7 +640,6 @@ import codecs
 import pandas as pd
 from tqdm import tqdm
 from collections import Counter
-
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
@@ -673,13 +647,9 @@ from calc_align_score import *
 
 def merge_dropout_alignments():
   union_merge, inter_merge, thres_merge = {}, {}, {}
-
-  os.chdir(join(bpedir, mode))
   for num_symbols in tqdm(all_symbols, desc=f"merge_dropout: dropout={dropout}, union, inter, thres"):
     union_merge[num_symbols], inter_merge[num_symbols], thres_merge[num_symbols] = [], [], []
-
     for i in range(dropout_sampless):
-
       for j, line in enumerate(open(f'{num_symbols}_{i}.wgdfa', 'r').readlines()):
         al = frozenset(line.strip().split("\t")[1].split())
 
@@ -699,25 +669,26 @@ def merge_dropout_alignments():
     unionfile = codecs.open(f'{num_symbols}_union.wgdfa', 'w')
     interfile = codecs.open(f'{num_symbols}_inter.wgdfa', 'w')
     thresfiles = {merge_t: codecs.open(f'{num_symbols}_thres_{merge_t}.wgdfa', 'w') for merge_t in merge_threshold}
-
     for i in range(len(union_merge[num_symbols])):
       unionfile.write(f"{i}\t{' '.join(union_merge[num_symbols][i])}\n")
       interfile.write(f"{i}\t{' '.join(inter_merge[num_symbols][i])}\n")
-
       # get alignments more common than the merge_threshold %
       for merge_t in merge_threshold:
         common_aligns = [k for k in thres_merge[num_symbols][i] 
                         if thres_merge[num_symbols][i][k] > merge_t * dropout_samples]
         thresfiles[merge_t].write(f"{i}\t{' '.join(common_aligns)}\n")
   return
+\end{python}
 
+Afterwards, the function \emph{calc\_score\_merges} opens these files and calculates the score, much in the way as the \emph{calc\_align\_score} algorithm from the previous section.
 
+\begin{python}
 def calc_score_merges():
   probs, surs, surs_count = load_gold(goldpath)
   baseline_df = pd.read_csv(join(baselinedir, f'scores_{source}_{target}.csv'))
   scorespath = join(scoredir, str(dropout))
   if not os.path.isdir(scorespath):
-      os.mkdir(scorespath)
+    os.mkdir(scorespath)
 
   for merge_type in ['union', 'inter']:
     scores = []
@@ -756,43 +727,37 @@ if __name__ == "__main__":
     calc_score_merges()
 \end{python}
 
-\section{Improvement of learn BPEs algorithm}
+\section{Improvement of learn BPEs algorithm}\label{dev:improvbpe}
 
 As explained in the methodology~\ref{sec:improvlearnbpe}, the main improvement in the learn BPE algorithm is to only update previous and next tokens to the merged pair, as well as saving the indexes where each pair occurs. These improvements are built on top of the code shown in~\ref{subsec:learnbpe}. 
 
 In the \emph{learn\_bpe} function, the new \emph{update\_tokens} returns the updated pairs and the merged tokens, all in one step. The function \emph{get\_stats}, which is the function that iterates the whole corpus, only has to be performed once. This is however a modification of the previous \emph{get\_stats} function, since it computes the indexes of the pairs as well.
 
 \begin{python}
-def learn_bpe(corpus, bpe_model):
-  """
+def learn_bpe(corpus: list, bpe_model: list): list:
+  '''
   Learn BPE operations from vocabulary.
   Steps:
   1. split corpus into characters, count frequency
   2. count bigrams in corpus
   3. merge most frequent symbols
   4. Update bigrams in corpus 
-  """
-
+  '''
   tokens = read_corpus(corpus)
-
   pairs, idx = get_stats(tokens)
-
   most_frequent_merges = []
   for i in range(learn_symbols):
-
     try:
       most_frequent = pairs.most_common(1)[0][0]
     except:
       # pairs is empty
       break
-
     most_freq_merges.append(most_frequent)
     tokens, idx, pairs = update_tokens(tokens, idx, pairs, most_frequent)
-
   return most_freq_merges
 \end{python}
 
-These are the modifications introduced in the \emph{get\_stats} function so that it saves the pair indexes. In the \emph{idx} data structure, not only is the index saved, but also the amount of appearances of each pair in that sentence. This is done to ensure that if the pair ('t', 'h') in index 0 now becomes ('t', 'he') because of the ('h', 'e') merge, and the frequency of ('t', 'h') is reduced by one, we might assume that ('t', 'h') no longer appears in that sentence. But this would be a mistake, since there might be other instances of ('t', 'h') in the sentence that aren't altered by this merge. We only want to say that ('t', 'h') no longer appears in index 0 when all instances of ('t', 'h') have been merged with other sequences.
+These are the modifications introduced in the \emph{get\_stats} function so that it saves the pair indexes. In the \emph{idx} data structure, not only is the index saved, but also the amount of appearances of each pair in that sentence. This is done to ensure that if the pair ('t', 'h') in index 0 now becomes ('t', 'he') because of the ('h', 'e') merge, and the frequency of ('t', 'h') is reduced by one, it might be assumed that ('t', 'h') no longer appears in that sentence. But this would be a mistake, since there might be other instances of ('t', 'h') in the sentence that aren't altered by this merge. We only want to say that ('t', 'h') no longer appears in index 0 when all instances of ('t', 'h') have been merged with other sequences. This is the motivation behind storing the amount of appearances of each pair in a sentence.
 
 \begin{python}
 def get_stats(tokens: list) -> (Counter, dict):
@@ -807,12 +772,9 @@ def get_stats(tokens: list) -> (Counter, dict):
           # keys are indexes in corpus, values are frequency of appearance
           0: 2,
           1: 3,
-          ...
       }
-      ...
   }
   """
-
   def get_pairs_idx(pairs, idx, symbols):
     symbols = symbols.split()
     for j in range(len(symbols) - 1):
@@ -827,26 +789,22 @@ def get_stats(tokens: list) -> (Counter, dict):
     # get stats for each word independently, no bigrams between different words
     for word in sent[1:].split(' '+word_sep):
       pairs, idx = get_pairs_idx(pairs, idx, word_sep + word)
-
   return pairs, idx
 \end{python}
 
-And for the case of updating only the previous and after tokens, the \emph{update\_tokens} function handles this. Comments are included in the code for readability.
+the \emph{update\_tokens} function handles the situation where only the previous and after tokens are updated for each merged pair. Comments are included in the code for readability.
 
 \begin{python}
 def update_tokens(tokens, idx, pairs, pair):
 
   def update_freqs(pairs, idx, pair, new_pair=-1):
-
     # decrease freq from pairs
     pairs[pair] -= 1
     if pairs[pair] <= 0: del pairs[pair]
-
     # decrease freq from idx
     idx[pair][i] -= 1
     if idx[pair][i] <= 0: del idx[pair][i]
     if len(idx[pair]) <= 0: del idx[pair]
-
     if new_pair != -1:
       pairs[new_pair] += 1
       idx[new_pair][i] += 1
@@ -854,13 +812,11 @@ def update_tokens(tokens, idx, pairs, pair):
 
   merged_pair = ''.join(pair)
   p = re.compile(r'(?<!\S)' + re.escape(' '.join(pair)) + r'(?!\S)')
-
   # only iterate the corpus indexes where the pair to be merged is present
   for i in list(idx[pair]).copy():
 
     # merge pair in the sentence
     sent = p.sub(merged_pair, tokens[i])
-
     # sentence remains unchanged. Delete pair from pairs and idx and continue
     if sent == tokens[i]:
       del pairs[pair]
@@ -868,9 +824,7 @@ def update_tokens(tokens, idx, pairs, pair):
       if len(idx[pair]) <= 0:
         del idx[pair]
       continue
-
     tokens[i] = sent
-
     '''
     iterate sent by the position the merged_pair occurs. 
     in each position, we need to reduce freq of previous and after tokens
@@ -886,7 +840,6 @@ def update_tokens(tokens, idx, pairs, pair):
     '''
     sent = sent.split(merged_pair)
     for k in range(len(sent[:-1])):
-
       if sent[k].split() and sent[k][-1] == ' ' and word_sep not in pair[0][0]:
         '''
         conditions to update the **previous** token:
@@ -909,13 +862,12 @@ def update_tokens(tokens, idx, pairs, pair):
             * and create a new pair ('ssi', 'ssi')
         '''
         if sent[k] and sent[k][-1] == word_sep:
-            after = (word_sep+merged_pair, pair[0])
-            new_pair = -1
+          after = (word_sep+merged_pair, pair[0])
+          new_pair = -1
         else:
-            after = (pair[1], pair[0])
-            new_pair = (merged_pair, merged_pair)
-            pairs, idx = update_freqs(pairs, idx, after, new_pair)
-
+          after = (pair[1], pair[0])
+          new_pair = (merged_pair, merged_pair)
+          pairs, idx = update_freqs(pairs, idx, after, new_pair)
       elif sent[k+1].split() and word_sep not in sent[k+1].split()[0]:
         '''
         conditions to update the **after** token in a more general case:
@@ -925,10 +877,8 @@ def update_tokens(tokens, idx, pairs, pair):
         after = (pair[1], sent[k+1].split()[0])
         new_pair = (merged_pair, after[1])
         pairs, idx = update_freqs(pairs, idx, after, new_pair)
-
       # decrease freq of merged bigram
       pairs, idx = update_freqs(pairs, idx, pair)
-
   return tokens, idx, pairs
 \end{python}
 
@@ -936,7 +886,7 @@ The performance improvements of this approach can be seen in the Results section
 
 \section{BPE without word boundaries}
 
-As explained in the Methodology chapter, this addition considers BPE units between different words. The only change occurs when learning these BPE units and mapping multiple-word-units to multiple-word-units, the rest of the pipeline remains as is, other than changing the filenames of the alignments and scores. A new boolean variable is introduced in \emph{settings.py}, so that by changing it to True will make the whole pipeline act in space mode, that is, setting the space boundary and only allowing merges between words. On the contrary, no space mode allows merges between different words.
+As explained in the Methodology chapter, this addition considers BPE units between different words. The only change occurs when learning these BPE units and mapping multiple-word-units to multiple-word-units, the rest of the pipeline remains as is, other than changing the filenames and paths of the alignments and scores. A new boolean variable is introduced in \emph{settings.py}, so that by changing it to True will make the whole pipeline act in space mode, that is, setting the space boundary and only allowing merges between words. On the contrary, no space mode allows merges between different words.
 
 \begin{python}
 # settings.py
@@ -944,7 +894,7 @@ As explained in the Methodology chapter, this addition considers BPE units betwe
 space = False
 \end{python}
 
-The following codes for learning BPEs and extracting and mapping alignments are generalized in the sense that just by changing the boolean variable in the settings file, the pipeline runs automatically and no further changes need to be done. The code snippets below display these functionality, accepting both modes.
+The following scripts for learning BPEs and extracting and mapping alignments are generalized in the sense that just by changing the boolean variable in the settings file, the pipeline runs automatically and no further changes need to be done. The code snippets below display these functionality, accepting both modes.
 
 In \emph{learn\_bpe.py}, the way to parse and tokenize the corpus is slightly different, now instead of having a special token to denote the beginning of a word, the special token denotes the whitespace.
 
@@ -952,36 +902,28 @@ In \emph{learn\_bpe.py}, the way to parse and tokenize the corpus is slightly di
 # learn_bpe.py
 
 def read_corpus(corpus: list) -> list:
-  """
+  '''
   Read corpus, strip index and new line characters.
   In space mode, each word has a word_sep symbol at the beginning to signal it's the beginning of the word.
-  example:
   tokens = [
-      'w e \_d o \_n o t \_b e l i e v e \_t h a t \_w e \_s h o u l d \_c h e r r y - p i c k \_.',
-      ...
+    'w e \_d o \_n o t \_b e l i e v e \_t h a t \_w e \_s h o u l d \_c h e r r y - p i c k \_.',
   ]
   In no space mode, there's no signal at the beginning of the word but word are joined by word_sep.
-  example:
   tokens = [
-      'w e \_ d o \_ n o t \_ b e l i e v e \_ t h a t \_ w e \_ s h o u l d \_ c h e r r y - p i c k \_ .',
-      ...
+    'w e \_ d o \_ n o t \_ b e l i e v e \_ t h a t \_ w e \_ s h o u l d \_ c h e r r y - p i c k \_ .',
   ]
-  """
-
+  '''
   tokens = []
   for line in corpus:
     line = line.split('\t')[1].strip('\r\n ')
-
     line = line.split()
     line[0] = str.lower(line[0])
-
     if space:
       # add word_sep to each beginning of word and join by space
       tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
     else:
       # join all words by word_sep
       tokens.append(u' \u2581 '.join([' '.join(word) for word in line]))
-
   return tokens
 \end{python}
 
@@ -991,25 +933,21 @@ When analyzing pairs and their frequencies, each word's last character and the f
 # learn_bpe.py
 
 def get_stats(tokens: list) -> (Counter, dict):
-  """
+  '''
   Count frequency of all bigrams, the indexes where they occur and the frequency per index.
   pairs = {
     ('s', 'h'): 5,
     ('h', 'e'): 6
   }
-
   idx = {
     ('t', 'h'): {
         # keys are indexes in corpus, values are frequency of appearance
         0: 2,
         1: 3,
-        ...
     }
-    ...
   }
   In space mode, the last token '.' or word_sep. isn't merged with anything.
-  """
-
+  '''
   def get_pairs_idx(pairs, idx, symbols):
     symbols = symbols.split()
     for j in range(len(symbols) - 1):
@@ -1028,114 +966,40 @@ def get_stats(tokens: list) -> (Counter, dict):
     else:
       # get bigram stats for the whole sentence
       pairs, idx = get_pairs_idx(pairs, idx, sent)
-
   return pairs, idx
 \end{python}
 
-And finally, after merging a pair in the corpus, when updating the tokens and the pairs, the fact that space boundaries exist or not also plays a role. Specifically, the no space mode is freer, in the sense that no matter which pair is merged, the pair immediately before and the pair immediately after are merged, no matter what. In space mode however, this cannot be done if the previous or next pair belong to another word, which puts some restrictions. There are comments in the code for readability.
+And finally, after merging a pair in the corpus, when updating the tokens and the pairs, the fact that space boundaries exist or not also plays a role. Specifically, the no space mode enjoys more freedom, in the sense that no matter which pair is merged, the pair immediately before and the pair immediately after are merged, no matter what. In space mode however, this cannot be done if the previous or next pair belong to another word, which puts some restrictions. Only modified lines with respect to the code in the previous improve learn BPE algorithm~\ref{dev:improvbpe}. There are comments in the code for readability.
 
 \begin{python}
 # learn_bpe.py
 
-def update_tokens(tokens, idx, pairs, pair):
+def update_tokens(tokens: list, idx: dict, pairs: Counter, pair: tuple) -> (list, dict, Counter):
 
-  def update_freqs(pairs, idx, pair, new_pair=-1):
-    # decrease freq from pairs
-    pairs[pair] -= 1
-    if pairs[pair] <= 0: del pairs[pair]
+# change line 46
+if sent[k].split() and (sent[k][-1] == ' ' and word_sep not in pair[0][0] if space else True):
+  '''
+  conditions to update the **previous** token:
+  * in space mode, if the merged_pair isn't the beginning of the word.
+    * in this case, we don't want the last letter from the prev word to be merged with
+    * our current pair. ... e _t h ... we don't want to consider ('e', '_t')
+  '''
 
-    # decrease freq from idx
-    idx[pair][i] -= 1
-    if idx[pair][i] <= 0: del idx[pair][i]
-    if len(idx[pair]) <= 0: del idx[pair]
+# change line 58
+if space and not sent[k+1].split() and word_sep not in pair[0][0]:
+  '''
+  conditions to update the **after** token when merged bigrams are consecutive:
+  * in space mode specifically, when the pair's first character isn't the beginning of the word
+  '''
 
-    if new_pair != -1:
-        pairs[new_pair] += 1
-        idx[new_pair][i] += 1
-
-    return pairs, idx
-
-  merged_pair = ''.join(pair)
-  p = re.compile(r'(?<!\S)' + re.escape(' '.join(pair)) + r'(?!\S)')
-
-  # only iterate the corpus indexes where the pair to be merged is present
-  for i in list(idx[pair]).copy():
-
-    # merge pair in the sentence
-    sent = p.sub(merged_pair, tokens[i])
-
-    # sentence remains unchanged. Delete pair from pairs and idx and continue
-    if sent == tokens[i]:
-        del pairs[pair]
-        del idx[pair][i]
-        if len(idx[pair]) <= 0:
-            del idx[pair]
-        continue
-
-    tokens[i] = sent
-
-    '''
-    iterate sent by the position the merged_pair occurs. 
-    in each position, we need to reduce freq of previous and after tokens
-    sentence before merge: 'h e l l o', pair: ('e', 'l')
-    merged sent = 'h el l o'
-    sent.split(merged_pair) -> ['h ', ' l o']
-    we iterate the splitted sentence and in each occasion
-    * decrease freq of previous token ('h', 'e')
-        * create new token ('h', 'el')
-    * decrease freq of after token ('l', 'l')
-        * create new token ('el', 'l')
-    * decrease freq of merged pair ('e', 'l')
-    '''
-    sent = sent.split(merged_pair)
-    for k in range(len(sent[:-1])):
-
-      if sent[k].split() and (sent[k][-1] == ' ' and word_sep not in pair[0][0] if space else True):
-        '''
-        conditions to update the **previous** token:
-        * if sent[k] isn't empty. if it is, there's no previous token to update.
-        * in space mode, if the merged_pair isn't the beginning of the word.
-            * in this case, we don't want the last letter from the prev word to be merged with
-            * our current pair. ... e _t h ... we don't want to consider ('e', '_t')
-        '''
-        prev = (sent[k].split()[-1], pair[0])
-        new_pair = (prev[0], merged_pair)
-        pairs, idx = update_freqs(pairs, idx, prev, new_pair)
-
-      if space and not sent[k+1].split() and word_sep not in pair[0][0]:
-        '''
-        conditions to update the **after** token when merged bigrams are consecutive:
-        * in space mode specifically, when the pair's first character isn't the beginning of the word
-        * and when the next token is empty
-        * we're dealing with consecutive merged pairs, merged_pair = ('ssi'), sent= 'm i ssi ssi p p i'
-            * in this case, we delete the token between the merged_pair: ('i', 's')
-            * and create a new pair ('ssi', 'ssi')
-        '''
-        if sent[k] and sent[k][-1] == word_sep:
-          after = (word_sep+merged_pair, pair[0])
-          new_pair = -1
-        else:
-          after = (pair[1], pair[0])
-          new_pair = (merged_pair, merged_pair)
-          pairs, idx = update_freqs(pairs, idx, after, new_pair)
-
-      elif sent[k+1].split() and (word_sep not in sent[k+1].split()[0] if space else True):
-        '''
-        conditions to update the **after** token in a more general case:
-        * if sent[k] isn't empty. if it is, there's no after token to update.
-        * in space mode, if the after token is a new word, we don't want to consider it.
-        '''
-        after = (pair[1], sent[k+1].split()[0])
-        new_pair = (merged_pair, after[1])
-        pairs, idx = update_freqs(pairs, idx, after, new_pair)
-
-      # decrease freq of merged bigram
-      pairs, idx = update_freqs(pairs, idx, pair)
-
-  return tokens, idx, pairs
+# change line 74
+elif sent[k+1].split() and (word_sep not in sent[k+1].split()[0] if space else True):
+  '''
+  * in space mode, if the after token is a new word, we don't want to consider it.
+  '''
 \end{python}
 
-The \emph{apply\_bpe.py} remains unchanged, aligning BPE files as well with the Fastalign or Eflomal algorithm as well. However, since now the alignments are among many words, the mapping is different than in the space case. The mapping is divided into subword to word mapping (map\_subword\_.to\_word function) and multiword to word (map\_multiword\_to\_word).
+The \emph{apply\_bpe.py} remains unchanged, aligning BPE files as well with the \emph{Fastalign} or \emph{Eflomal} algorithm as well. However, since now the alignments are among many words, the mapping is different than in the space case. The mapping is divided into subword to word mapping (map\_subword\_.to\_word function) and multiword to word (map\_multiword\_to\_word).
 
 \begin{python}
 # extract_alignmens.py
@@ -1145,9 +1009,8 @@ def map_subword_to_word(corpus, bpes, lang):
   SPACE MODE
   Input: list of sentences with subword separation
   corpus =  [
-      '_We _do _no t _be li eve _.',
-      '_Thi s _is _a _sent ence _.',
-      ...
+    '_We _do _no t _be li eve _.',
+    '_Thi s _is _a _sent ence _.',
   ]
   Output: dictionary of each language and 
   a list of indexes pointing to which word each element (_do) belongs to
@@ -1156,11 +1019,6 @@ def map_subword_to_word(corpus, bpes, lang):
     [
       [0, 1, 2, 2, 3, 3, 3, 4],
       [0, 0, 1, 2, 3, 4, 5],
-      ...
-    ],
-    target:
-    [
-      ...
     ],
   }
   '''
@@ -1174,15 +1032,18 @@ def map_subword_to_word(corpus, bpes, lang):
       mapping.append(i)
     bpes[lang].append(mapping)
   return bpes
+\end{python}
 
+And the new \emph{map\_multiword\_to\_word} function.
+
+\begin{python}
 def map_multiple_to_word(corpus, bpes, lang):
   '''
   NO SPACE MODE
   Input: list of sentences with subword separation
   corpus =  [
-      'b u t_this_is_no t_w hat_hap pen s_.',
-      'th e_ ice_cre am_.',
-      ...
+    'b u t_this_is_no t_w hat_hap pen s_.',
+    'th e_ ice_cre am_.',
   ]
   Output: dictionary of each language and 
   a list of indexes pointing to which word each element (t\_w) belongs to
@@ -1191,11 +1052,6 @@ def map_multiple_to_word(corpus, bpes, lang):
     [
       [[0], [0], [0,1,2,3], [3,4], [4,5], [5], [5,6]],
       [[0], [0], [1,2], [2]],
-      ...
-    ],
-    target:
-    [
-      ...
     ],
   }
   '''
@@ -1226,7 +1082,11 @@ def map_multiple_to_word(corpus, bpes, lang):
       j += word_count
     bpes[lang].append(sent_bpes)
   return bpes
+\end{python}
 
+Consequently, the function \emph{load\_and\_map\_segmentations} is altered in the following way:
+
+\begin{python}
 def load_and_map_segmentations(num_symbols, i=-1):
   bpes = {}
   for lang in [source, target]:
@@ -1239,10 +1099,9 @@ def load_and_map_segmentations(num_symbols, i=-1):
   return bpes
 \end{python}
 
-Besidesthe function bpe\_word\_align is also altered to account for the fact that if a multiword unit such as \emph{from\_the} is aligned with \emph{aus\_dem}, each one-to-one alignment must be considered, that is, from-aus, from-dem, the-aus, and the-dem.
+Besides, the function \emph{bpe\_word\_align} is also altered to account for the fact that if a multiword unit such as \emph{from\_the} is aligned with \emph{aus\_dem}, each one-to-one alignment must be considered, that is, from-aus, from-dem, the-aus, and the-dem.
 
 \begin{python}
-
 def bpe_word_align(bpes, bpe_aligns):
   '''
   Input: dictionary of bpes obtained as output of map_subword_to_word()
@@ -1271,7 +1130,3 @@ def bpe_word_align(bpes, bpe_aligns):
 \end{python}
 
 The final step of calculating scores does not change.
-
-\begin{python}
-
-\end{python}
