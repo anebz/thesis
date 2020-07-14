@@ -34,7 +34,7 @@ The corpus employed in this thesis is a 10k sentence English-German corpus. As a
 
 Each step of the pipeline will be detailed as follows.
 
-\subsection{Learn BPE algorithm}
+\subsection{Learn BPE algorithm}\label{met:learnbpe}
 
 Sennrich's repository's code has some additional parameters that were not relevant for a minimal implementation of the BPE algorithm, so the script was adapted. These are the steps for a minimal algorithm to learn BPE units:
 
@@ -53,7 +53,7 @@ Sennrich's repository's code has some additional parameters that were not releva
 
 This step of the pipeline only has to be done once for each corpus, afterwards the vocabulary can be used in different ways. But this minimal algorithm, since it has to count all the pairs in the whole corpus in each iteration, takes a long time. One of the improvements of this thesis is optimizing the runtime of this algorithm, which will be explained further down. With the given corpus, these are the 10 most frequent merges in the English language are: \_t h, \_th e, o n, r e, t i, e n, e r, i n, i s, n d. And the 10 most frequent merges in German: e n, e r, c h, i e, e i, n d, n g, \_d ie, s t, i ch.
 
-\subsection{Apply BPE algorithm}
+\subsection{Apply BPE algorithm}\label{met:applybpe}
 
 The learnt vocabulary can be applied to a corpus. In the case of this thesis, this corpus is the same as the one used to learn the BPE units. Different num\_merges are declared. For example, for 500 merges, only the first 500 merges of the vocabulary are taken, and there are barely any recognizable BPE units in the corpus. For bigger merge values, more and more subword units get merged. In this thesis, merges range from 500 up to 8000. These are the steps for applying BPE merges to a corpus:
 

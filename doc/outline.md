@@ -59,3 +59,62 @@
 * dropout=0.3, best result at merge_threshold=0.5, num_symbols=500, f1=0.556
 * dropout=0.4, best result at merge_threshold=0.3, num_symbols=500, f1=0.532
 * dropout=0.5, best result at merge_threshold=0.3, **num_symbols=4000**, f1=0.529
+
+## directory structure
+
+```
+.
+├── data
+│   ├── input
+│   │   ├── eng_with_10k.txt   # input txt file with 10k english sentences
+│   │   ├── deu_with_10k.txt
+│   │   └── eng_deu.gold       # gold standard alignments for English-German
+│   ├── normal_bpe
+│   │   ├── segmentations      # files obtained by segmenting based on num_symbols and lang
+│   │   │   └── *.bpe
+│   │   ├── fastalign          # files obtained from fastalign alignment algorithm
+│   │   │   └── .wgdfa
+│   │   └── eflomal            # files obtained from eflomal alignment algorithm
+│   │       └── .wgdfa
+│   ├── dropout_bpe
+│   │   ├── segmentations                             
+│   │   │   └── *.bpe
+│   │   ├── fastalign                                 
+│   │   │   └── *.wgdfa
+│   │   └── eflomal                                   
+│   │       └── *.wgdfa
+│   ├── eng.model              # merge list for english, space mode
+│   ├── deu.model
+│   ├── eng_ns.model           # merge list for english, no space mode
+│   └── deu_ns.model
+├── doc                        # LaTeX files for the writing of the thesis
+│   ├── figures
+│   ├── sections
+│   └── *.tex files
+├── reports
+│   ├── scores_normal_bpe      # scores for BPE depending on normal/dropout, space/no space, etc.
+│   │   └── *.csv, *.png
+│   └── scores_dropout_bpe
+│       └── *.csv, *.png
+├── src                        # python files
+│   ├── learn_bpe.py
+│   ├── apply_bpe.py
+│   ├── extract_alignments.py
+│   ├── calc_align_score.py
+│   └── merge_dropout.py
+├── tools                        # fastalign, eflomal installation directories
+│   ├── fastalign
+│   └── eflomal
+├── .gitignore
+├── README.md
+├── requirements.txt
+└── settings.py
+```
+
+## pipeline
+
+1. Set parameters in `settings.py`
+2. learn_bpe.py
+3. apply_bpe.py
+4. extract_alignments.py (can be done in parallel to apply_bpe, after an offset of ~2 elements)
+5. calc_align_score.py / merge_dropout.py

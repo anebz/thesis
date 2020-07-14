@@ -6,28 +6,32 @@
 
 \chapter{Development}\label{ch:development}
 
-This chapter talks more deeply about the code and algorithms previously explained in the Methodology section.~\ref{sec:methodology}
+This chapter explains the development of the thesis in a deeper way, adding more detailed explanations, the code and algorithms previously explained in the Methodology section.~\ref{ch:methodology} This chapter includes coding practices, how global variables are stored and trated, the tree directory of the project, and the various tasks that have been undertaken during this thesis, which include the following:
+
+\begin{enumerate}
+  \item Replication BPE algorithm and results
+  \item Replication BPE dropout algorithm and results
+  \item Improvemenet of the learn BPE algorithm
+  \item Study and implementation of BPE without word boundaries
+\end{enumerate}
 
 \section{Coding practices}
 
-The parameters for the pipeline, such as num\_symbols, dropout, file paths, etc. have been written in \emph{settings.py}.
+To ensure consistency, the parameters for the pipeline, called global variables, such as num\_symbols, dropout, file paths, etc. have been written in \emph{settings.py}. The word separator is a special Unicode character. The languages used as source and target languages are English and German respectively. The number of symbols to be learnt in the learn BPE phase is set as 20000. When applying these merges to the corpus, in order to have different variants and explore the differences between merging few symbols or more, a number of key numbers are selected for these experiments, as seen in the variable \emph{all\_symbols}.
 
 \begin{python}
-# global variables
+# settings.py
 import os
 from os.path import join
-import sys
 
 word_sep = u'\u2581'
 source, target = 'eng', 'deu'
-
-num_all_symbols = 20000
+learn_symbols = 20000
 all_symbols = [100, 200, 500, 1000, 2000, 4000, 6000, 8000]
 
 rootdir = os.getcwd()
 if rootdir.split(os.sep)[-1] == 'src':
     rootdir = os.sep.join(rootdir.split(os.sep)[:-1])
-
 datadir = join(rootdir, 'data')
 inputdir = join(datadir, 'input')
 bpedir = join(datadir, 'normal_bpe')
@@ -41,36 +45,47 @@ fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 atools_path = join(rootdir, "tools/fast_align/build/atools")
 \end{python}
 
+Regarding directories and paths, the tree view of the project is displayed in the following figure. The input data is saved into \emph{data/input}, the rest of the intermediate data files such as \emph{.bpe}, \emph{.wgdfa} and others are saved into their respective folder depending on the dropout parameter. The models are saved in the general \emph{data} folder with the \emph{.model} extension. The \LaTeX files for writing this thesis are saved in the \emph{doc}, the score figures and csv files in \emph{reports}, all Python scripts in \emph{src}, the Fastalign and Eflomal installation files in \emph{tools}, and README, requirements, gitignore and the global variable file \emph{settings.py} are saved in the root folder.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=16cm]{figures/dir.png}
+    \caption{Project directories in tree mode}
+\end{figure}
+
 \section{Replication of BPE results}
+
+The first programming task in this thesis has been to replicate the BPE results from Sennrich et al.~\cite{sennrich2015neural}. In order to modularize the code in clear units, these have been the steps:
 
 \begin{enumerate}
     \item Write learn BPE from corpus algorithm
     \item Write apply BPE to corpus algorithm
-    \item Write extract alignment script
+    \item Write extract alignments script
     \item Write calculate alignment scores script
 \end{enumerate}
 
+In the following sections, each step will be explained in detail, with comments and examples for each function.
+
 \subsection{Learn BPE algorithm}\label{subsec:learnbpe}
 
-\begin{python}
-#!/usr/bin/env python
+In learning BPE units, the first step is to read the corpus into an appropriate format. All the libraries and global variables imported are also added here for simplicity.
 
+\begin{python}
+# learn_bpe.py
 import os
 import re
 import sys
 import codecs
-from tqdm import tqdm
 from os.path import join
 from collections import defaultdict, Counter
-
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
 def read_corpus(corpus: list) -> list:
-  """
+  '''
   Read corpus, strip index and new line characters.
-  In space mode, each word has a word_sep symbol at the beginning to signal it's the beginning of the word.
+  A word_sep symbol is added at the beginning of each word.
   example:
   tokens = [
       '\_w e \_d o \_n o t \_b e l i e v e 
@@ -78,8 +93,7 @@ def read_corpus(corpus: list) -> list:
       \_c h e r r y - p i c k \_.',
       ...
   ]
-  """
-
+  '''
   tokens = []
   for line in corpus:
     line = line.split('\t')[1].strip('\r\n ')
@@ -88,19 +102,22 @@ def read_corpus(corpus: list) -> list:
 
     # add word_sep to each beginning of word and join by space
     tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
-
   return tokens
+\end{python}
 
+Once the corpus is parsed, all pairs and their frequencies are computed and saved in a suitable data structure.
+
+\begin{python}
+# learn_bpe.py
 def get_stats(tokens: list) -> Counter:
-  """
+  '''
   Count frequency of all bigrams and the frequency per index.
   pairs = {
     ('s', 'h'): 5,
     ('h', 'e'): 6
   }
   The last token '.' or word_sep. isn't merged with anything.
-  """
-
+  '''
   pairs = Counter()
   for i, sent in enumerate(tokens):
     # get stats for each word independently, 
@@ -109,131 +126,128 @@ def get_stats(tokens: list) -> Counter:
       symbols = symbols.split()
       for j in range(len(symbols) - 1):
         pairs[symbols[j], symbols[j + 1]] += 1
-
   return pairs
+\end{python}
 
+Following the algorithm explained in the previous chapter,~\ref{met:learnbpe}, in the big loop the most frequent pair is extracted, the corpus merged, pairs extracted again and so on.
 
-def merge_token(corpus, most_frequent):
+\begin{python}
+# learn_bpe.py
+def merge_token(corpus: list, most_frequent: tuple) -> list:
   str_corpus = '\n'.join(corpus)
   str_corpus = str_corpus.replace(' '.join(most_frequent), ''.join(most_frequent))
   return str_corpus.split('\n')
 
-
-def learn_bpe(argsinput, bpe_model):
-  """
-  Learn BPE operations from vocabulary.
-  Steps:
+def learn_bpe(argsinput: str) -> list:
+  '''
+  Learn BPE operations from vocabulary. Steps:
   1. split corpus into characters, count frequency
   2. count bigrams in corpus
   3. merge most frequent symbols
   4. Update bigrams in corpus 
-  """
-
+  '''
   corpus = read_corpus(argsinput)
-
   most_frequent_merges = []
-  for i in range(num_all_symbols):
-
+  for i in range(learn_symbols):
     pairs = get_stats(corpus)
-
-      try:
-        most_frequent = pairs.most_common(1)[0][0]
-      except:
-        # pairs is empty
-        break
-
-      most_frequent_merges.append(most_frequent)
-      corpus = merge_token(corpus, most_frequent)
-
+    try:
+      most_frequent = pairs.most_common(1)[0][0]
+    except:
+      # pairs is empty
+      break
+    most_frequent_merges.append(most_frequent)
+    corpus = merge_token(corpus, most_frequent)
   return most_frequent_merges
+\end{python}
 
+After the loop ends, the merge list is saved into a \emph{.bpe} file. The following code includes this function as well as the main function that calls out all functions.
 
-def write_bpe(lang, most_freq_merges):
-
+\begin{python}
+#learn_bpe.py
+def write_bpe(lang: str, most_freq_merges: list):
   bpe_file = codecs.open(join(datadir, lang+'.model'), 'w', encoding='utf-8')
   bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
   bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
   return
 
 if __name__ == '__main__':
-
   for lang in [source, target]:
-
     argsinput = codecs.open(inputpath[lang], encoding='utf-8')
-    bpe_model = codecs.open(join(datadir, lang+'.model'), 'w', encoding='utf-8')
-    most_freq_merges = learn_bpe(argsinput, bpe_model)
+    most_freq_merges = learn_bpe(argsinput)
     write_bpe(lang, most_freq_merges)
 \end{python}
 
 \subsection{Apply BPE algorithm}
 
+After learning BPE units, there is already a merge list written into the project data directory, which can now be loaded into memory in order to apply these merges to the corpus. The following function returns a list of the languages present in the project, BPE models and corpora for each language.
+
 \begin{python}
 # apply_bpe.py
-
 import os
 from os.path import join
 import sys
 import codecs
-import random
-from tqdm import tqdm
-
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 from learn_bpe import read_bpe_model, read_corpus
 
-def load_data():
-
-  os.chdir(datadir)
+def load_data() -> (list, list, list):
   langs = [source, target]
   bpe_models = []
   corpora = []
   for lang in langs:
-
     argsinput = codecs.open(inputpath[lang], encoding='utf-8')
     corpora.append(read_corpus(argsinput))
-
-    bpe_model, _ = read_bpe_model(lang)
-    if not bpe_model:
-      print(f"No model found for lang={lang}")
-
-    bpe_model = [tuple(item.strip('\r\n ').split(' ')) for (n, item) in enumerate(bpe_model)]
+    bpe_model = codecs.open(join(datadir, lang+'.model'), encoding='utf-8').readlines()
+    bpe_model = [tuple(item.strip('\r\n ').split(' ')) for item in bpe_model]
     bpe_models.append(bpe_model[1:])
-
   return langs, bpe_models, corpora
+\end{python}
 
-def write_bpe(lang, num_symbols, merged_corpus):
+Once this data is available, the merge list is applied to the corpus iteratively, for the symbols present in the global variable \emph{all\_symbols}. To avoid repetition, when aiming for 8000 merges, the loop is halted at 100, 500 merges respectively, in order to save the state of the corpus into the \emph{.bpe} file. After writing the file in the system, the loop resumes again. A less efficient approach would be making the loop run until 100 merges, then start from scratch and run until 500, and so on. This method is equally effective but nearly as efficient.
+
+\begin{python}
+# apply_bpe.py
+def write_bpe(lang: str, num_symbols: int, merged_corpus: str):
   outputpath = join(bpedir, 'segmentations', f"{lang}_{num_symbols}.bpe")
   argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
   argsoutput.write(merged_corpus)
   return
 
-def apply_bpe(langs, bpe_models, corpora):
-    
+def apply_bpe(langs: list, bpe_models: list, corpora: list):
   for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
-
     bpe_model = bpe_model[:max(all_symbols)]
-    all_symbols_copy = all_symbols.copy()
-
+    k = 0
     str_corpus = '\n'.join(corpus)
-    for j, bigram in enumerate(bpe_model):
-
+    for j, bigram in enumerate(tqdm(bpe_model, desc=f"apply_bpe: dropout={dropout}, lang={lang}")):
       str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
-
-      if j + 1 == all_symbols_copy[0]:
-        write_bpe(lang, all_symbols_copy.pop(0), str_corpus)
+      if j + 1 == all_symbols[k]:
+        write_bpe(lang, all_symbols[k], str_corpus, i)
+        k += 1
   return
 
 if __name__ == "__main__":
-
   os.makedirs(join(bpedir, 'segmentations'), exist_ok=True)
   langs, bpe_models, corpora = load_data()
-  apply_bpe()
+  apply_bpe(langs, bpe_models, corpora)
 \end{python}
+
+After this step, in the directory \emph{../data/normal\_bpe/segmentations/} various files exist with the following format:
+
+\begin{itemize}
+  \item deu\_100.bpe
+  \item eng\_100.bpe
+  \item deu\_200.bpe
+  \item eng\_200.bpe
+  \item ...
+\end{itemize}
+
+\emph{deu} or \emph{eng} refers to the language, and the numbers are the amount of merges that have been applied into this file. For examples, see~\ref{met:applybpe}.
 
 \subsection{Extract alignments}
 
-In order to do this step, the softwares for \emph{fast\_align} and \emph{eflomal} must be installed. These are the steps to install \emph{fast\_align}, in bash. It's necessary to \href{https://cmake.org/install/}{install Cmake} if it's not present.
+This step requires some prior installation of the alignment software. The thesis has been conducted in a Linux environment, so the installation guide is adapted to this case. The installation of the software in any other OS is however possible, as long as the user adapts the commands to their OS. Initially, if not present in the system, it is mandatory to \href{https://cmake.org/install/}{install Cmake}. The installation steps for \emph{fast\_align} are as follows, in bash.
 
 \begin{quote}
   sudo apt-get install libgoogle-perftools-dev libsparsehash-dev\\
@@ -246,7 +260,7 @@ In order to do this step, the softwares for \emph{fast\_align} and \emph{eflomal
   make
 \end{quote}
 
-And for eflomal:
+And for \emph{eflomal}:
 
 \begin{quote}
   git clone https://github.com/robertostling/eflomal.git\\
@@ -256,57 +270,55 @@ And for eflomal:
   python3 setup.py install
 \end{quote}
 
-In the next step, the extract alignments script takes two files as input: English BPE file, German BPE file, and outputs an alignment file, with the extension .wgdfa.
-
-First of all, it's necessary to iterate through the different merge types that have been done before. There are BPE files with 100 merges, 200, 500, etc for both languages. At each iteration, a different alignment file is created.
-
-Alignment algorithms work on parallel data, that is, they expect text in the following format:
+In this step, as a general notion, the extract alignments script takes two files as input: English BPE file, German BPE file, and outputs an alignment file, with the extension .wgdfa. First of all, it's necessary to iterate through the different merge types that have been done before. There are BPE files with 100 merges, 200, 500, etc for both languages. At each iteration, a different alignment file is created. Regarding alignment algorithms, they work on parallel data, that is, they expect text in the following format:
 
 \begin{quote}
   Hello from England ||| Hallo aus Deutschland
 \end{quote}
 
-Since the BPE files don't have this format, first of all the function \emph{create\_parallel\_text} creates a \emph{.txt} file in the appropriate format. Afterwards, both \emph{fastalign} and \emph{eflomal} generate forward and reverse alignments. This is handled by the \emph{create\_fwd\_rev\_files} function, which creates \emph{.fwd} and \emph{.rev} files. Afterwards, given these \emph{.fwd} and \emph{.rev} files, the alignment algorithm creates a type of union between these two, called \emph{grow-diag-final-and}, with the extension \emph{.gdfa}. This is handled by the \emph{create\_gdfa\_file} function.
-
-As explained in the \textit{Extract alignment} subsection in the Methodology chapter~\ref{subsec:extractalign}, the script up until now has only aligned BPE units. Those alignments need to be transformed into word alignments. The function \emph{load\_and\_map\_segmentations} loads the BPE files and maps each BPE unit to its corresponding word. For an example, see the comments on the function. This is an auxiliary function in order to map the alignments later. Afterwards, by calling \emph{bpe\_word\_align}, the mapping from subword alignments to word alignments is made. Lastly, the new alignments are saved in a file with the extension \emph{.wgdfa}.
-
-The alignment algorithm is run for two types of files. Firstly, for the corpus itself, the fastalign/eflomal algorithm is run to align the corpus, which will serve as baseline to check how good the BPE merges are. And then, the fastalign/eflomal algorithm is run for the BPE files themselves.
+Since the BPE files don't have this format, they are actually separated into two files, namely \emph{deu} and \emph{eng} files, first of all the function \emph{create\_parallel\_text} creates a \emph{.txt} file in the appropriate parallel format.
 
 \begin{python}
 # extract_alignments.py
-
 from os.path import join
 import os
 import sys
 import codecs
-
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 from subword_word import *
 
-def create_parallel_text(sourcepath, targetpath, outpath):
-
+def create_parallel_text(sourcepath: str, targetpath: str, outpath: str):
   fa_file = codecs.open(outpath + '.txt', "w", "utf-8")
   fsrc = codecs.open(sourcepath, "r", "utf-8")
   ftrg = codecs.open(targetpath, "r", "utf-8")
-
   for sl, tl in zip(fsrc, ftrg):
     sl = sl.strip().split("\t")[-1]
     tl = tl.strip().split("\t")[-1]
     fa_file.write(f"{sl} ||| {tl}\n")
   fa_file.close()
   return
+\end{python}
 
-def create_fwd_rev_files(outpath):
+\emph{Fastalign} and \emph{eflomal} work by issuing a command on the OS terminal, and they generate forward and reverse alignments. This is handled by the \emph{create\_fwd\_rev\_files} function, which creates \emph{.fwd} and \emph{.rev} files with the corresponding file name.
+
+\begin{python}
+# extract_alignments.py
+def create_fwd_rev_files(outpath: str):
   if mode == "fastalign":
     os.system(f"{fastalign_path} -i {outpath}.txt -v -d -o > {outpath}.fwd")
     os.system(f"{fastalign_path} -i {outpath}.txt -v -d -o -r > {outpath}.rev")
   elif mode == "eflomal":
     os.system(f"cd {eflomal_path}; python align.py -i {outpath}.txt --model 3 -f {outpath}.fwd -r {outpath}.rev")
   return
+\end{python}
 
-def create_gdfa_file(outpath):
+Given these \emph{.fwd} and \emph{.rev} files, the alignment algorithm creates a type of union between these two, called \emph{grow-diag-final-and}, handled by the \emph{create\_gdfa\_file} function, creating files with the extension \emph{.gdfa}. The previously generated files, \emph{.fwd}, \emph{.rec}, \emph{.txt} and the intermediate file \emph{\_unnum.gdfa} are deleted from the system. 
+
+\begin{python}
+# extract_alignments.py
+def create_gdfa_file(outpath: str):
   # create gdfa file from .fwd and .rev
   os.system(f"{atools_path} -i {outpath}.fwd -j {outpath}.rev -c grow-diag-final-and > {outpath}_unnum.gdfa")
 
@@ -318,72 +330,73 @@ def create_gdfa_file(outpath):
   # delete unnecessary files
   os.system(f"rm {outpath}_unnum.gdfa; rm {outpath}.fwd; rm {outpath}.rev; rm {outpath}.txt")
   return
+\end{python}
 
-def load_and_map_segmentations(num_symbols):
+As explained in the \textit{Extract alignment} subsection in the Methodology chapter~\ref{subsec:extractalign}, the alignment aligns whitespace-separated units, which are generally words but in this case are subword, or BPE units. In order to actually make alignments between words, the subword alignments need to be transformed into word alignments. The function \emph{load\_and\_map\_segmentations} loads the BPE files and maps each BPE unit to its corresponding word. The comments on the function display a simple example to illustrate this concept. This is an auxiliary function in order to map the alignments later. Afterwards, by calling \emph{bpe\_word\_align}, the mapping from subword alignments to word alignments is made. Lastly, the new alignments are saved in a file with the extension \emph{.wgdfa}.
 
-    '''
-    Given a .bpe file composed of the corpus made of subword units such as
-    corpus_eng =  [
-        '_We _do _no t _be li eve _.',
-        '_Thi s _is _a _sent ence _.',
-        ...
-    ]
-    Output: dictionary of each language and 
-    a list of indexes pointing to which word each element (_do) belongs to
-    bpes = {
-        'eng':
-        [
-            [0, 1, 2, 2, 3, 3, 3, 4],
-            [0, 0, 1, 2, 3, 4, 5],
-            ...
-        ],
-        'deu':
-        [
-            ...
-        ],
-    } 
-    '''
+\begin{python}
+# extract_alignments.py
+def load_and_map_segmentations(num_symbols: int):
+  '''
+  Given a .bpe file composed of the corpus made of subword units such as
+  corpus_eng = [
+    '_We _do _no t _be li eve _.',
+    '_Thi s _is _a _sent ence _.',
+    ...
+  ]
+  Output: dictionary of each language and 
+  a list of indexes pointing to which word each element (_do) belongs to
+  bpes = {
+    'eng':[
+      [0, 1, 2, 2, 3, 3, 3, 4],
+      [0, 0, 1, 2, 3, 4, 5],
+      ...
+    ],
+    ...
+  } 
+  '''
+  bpes = {}
+  for lang in [source, target]:
+    bpes[lang] = []
+    corpus = codecs.open(lang+'_'+str(num_symbols)+'.bpe', encoding='utf-8')
+    for sent in corpus:
+      mapping = [0]
+      i = 0
+      for subw in sent.split()[1:]:
+        if subw[0] == word_sep:
+          i += 1
+        mapping.append(i)
+      bpes[lang].append(mapping)
+  return bpes
 
-    bpes = {}
-    for lang in [source, target]:
+def bpe_word_align(bpes: dict, bpe_aligns: list) -> str:
+  '''
+  Input: dictionary of bpes obtained as output of map_subword_to_word()
+  Output: list of word alignments and their indexes
+    "
+      0   0-0 0-1 1-1 1-2 3-1 2-4 \n
+      1   0-0 1-0 1-1 2-1 \n
+      ...
+    "
+  '''
+  all_word_aligns = ''
+  for i, (sent1, sent2, bpe_al) in enumerate(zip(bpes[source], bpes[target], bpe_aligns)):
+    word_aligns = set()
+    # iterate each alignment
+    for al in bpe_al.split('\t')[1].split():
+      firstal, secondal = al.split('-')
+      new_al = str(sent1[int(firstal)]) + '-' + str(sent2[int(secondal)])
+      word_aligns.add(new_al)
+    all_word_aligns += str(i) + "\t" + ' '.join(word_aligns) + "\n"
+  return all_word_aligns
+\end{python}
 
-        bpes[lang] = []
-        corpus = codecs.open(lang+'_'+str(num_symbols)+'.bpe', encoding='utf-8')
-        for sent in corpus:
-          mapping = [0]
-          i = 0
-          for subw in sent.split()[1:]:
-              if subw[0] == word_sep:
-                i += 1
-              mapping.append(i)
-          bpes[lang].append(mapping)
-    return bpes
+The alignment algorithm is run for two types of files. Firstly, for the raw corpus itself, the alignment algorithm is run to align the English raw corpus with the German raw corpus, which will serve as baseline to check how good the BPE merges are. And then, the alignment algorithm is run for the BPE files themselves.
 
-def bpe_word_align(bpes, bpe_aligns):
-    '''
-    Input: dictionary of bpes obtained as output of map_subword_to_word()
-    Output: list of word alignments and their indexes
-        "
-            0   0-0 0-1 1-1 1-2 3-1 2-4 \n
-            1   0-0 1-0 1-1 2-1 \n
-            ...
-        "
-    '''
-    all_word_aligns = ''
-    for i, (sent1, sent2, bpe_al) in enumerate(zip(bpes[source], bpes[target], bpe_aligns)):
-        word_aligns = set()
-        # iterate each alignment
-        for al in bpe_al.split('\t')[1].split():
-            firstal, secondal = al.split('-')
-            new_al = str(sent1[int(firstal)]) + '-' + str(sent2[int(secondal)])
-            word_aligns.add(new_al)
-        all_word_aligns += str(i) + "\t" + ' '.join(word_aligns) + "\n"
-    return all_word_aligns
-
-def extract_alignments(input_mode=False):
-
+\begin{python}
+# extract_alignments.py
+def extract_alignments(input_mode=False: bool):
   for num_symbols in all_symbols:
-
     if input_mode:
       print("Alignments for input files")
       sourcepath = inputpath[source]
@@ -394,45 +407,31 @@ def extract_alignments(input_mode=False):
       sourcepath = join(bpedir, 'segmentations', f"{source}_{num_symbols}.bpe")
       targetpath = join(bpedir, 'segmentations', f"{target}_{num_symbols}.bpe")
       outpath = join(bpedir, mode, str(num_symbols))
-
     create_parallel_text(sourcepath, targetpath, outpath)
     create_fwd_rev_files(outpath)
     create_gdfa_file(outpath)
-
     # map alignment from subword to word
     bpes = load_and_map_segmentations(num_symbols)
-
     argsalign = codecs.open(o+'.gdfa', encoding='utf-8')
     all_word_aligns = bpe_word_align(bpes, argsalign)
     os.system(f"rm {outpath}.gdfa")
-
     argsoutput = codecs.open(outpath+'.wgdfa', 'w', encoding='utf-8')
     argsoutput.write(all_word_aligns)
-
   return
 
 if __name__ == "__main__":
-
   os.makedirs(join(bpedir, mode), exist_ok=True)
   if not os.path.isfile(join(bpedir, mode, 'input.wgdfa')):
     extract_alignments(input_mode=True)
-
   extract_alignments()
 \end{python}
 
 \subsection{Calculate alignment scores}
 
-The last script calculates the alignment scores. These are the steps of the script:
-
-\begin{enumerate}
-  \item Load gold dataset
-  \item Calculate precision, recall, F1 score and AER metrics
-  \item Plot and save into \emph{.png} and \emph{.csv}
-\end{enumerate}
+At this point in the pipeline, the alignments between subword units are obtained, mapped into word alignments, and the last step to be performed is to calculate the alignment scores. First of all, the gold alignment file is loaded and its alignments extracted.
 
 \begin{python}
 # calc_align_scores.py
-
 import os
 from os.path import join
 import sys
@@ -442,133 +441,111 @@ import collections
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
-def load_gold(g_path):
-
+def load_gold(g_path: str) -> (dict, dict, float):
   gold_f = open(g_path, "r")
   pros = {}
   surs = {}
   all_count = 0.
   surs_count = 0.
-
   for line in gold_f:
     line = line.strip().split("\t")
     line[1] = line[1].split()
-
     pros[line[0]] = set()
     surs[line[0]] = set()
-
     for al in line[1]:
       pros[line[0]].add(al.replace('p', '-'))
       if 'p' not in al:
         surs[line[0]].add(al)
-
     all_count += len(pros[line[0]])
     surs_count += len(surs[line[0]])
-
   return pros, surs, surs_count
+\end{python}
 
-def calc_score(input_path, probs, surs, surs_count):
+The next function, given an input path, calculates the precision, recall, F1 and AER score based on the gold standard.
 
-  total_hit = 0.
-  p_hit = 0.
-  s_hit = 0.
+\begin{python}
+# calc_align_scores.py
+def calc_score(input_path: str, probs: dict, surs: dict, surs_count: float) -> (float, float, floatl float):
+  total_hit, p_hit, s_hit = 0., 0., 0.
   target_f = open(input_path, "r")
-
   for line in target_f:
     line = line.strip().split("\t")
-
     if line[0] not in probs: continue
     if len(line) < 2: continue
-
     line[1] = line[1].split()
     for pair in line[1]:
       if pair in probs[line[0]]:
         p_hit += 1
       if pair in surs[line[0]]:
         s_hit += 1
-
       total_hit += 1
-
   target_f.close()
-
   y_prec = round(p_hit / max(total_hit, 1.), 3)
   y_rec = round(s_hit / max(surs_count, 1.), 3)
   y_f1 = round(2. * y_prec * y_rec / max((y_prec + y_rec), 0.01), 3)
   aer = round(1 - (s_hit + p_hit) / (total_hit + surs_count), 3)
-
   return y_prec, y_rec, y_f1, aer
+\end{python}
 
-def get_baseline_score(probs, surs, surs_count):
+This step is done for the baseline, to obtain a measure of the standard version of the system, that is, the raw English and German corpora, and then for the BPE files itself.
 
+\clearpage
+\begin{python}
+# calc_align_scores.py
+def get_baseline_score(probs: dict, surs: dict, surs_count: int) -> pd.DataFrame:
   alfile = join(bpedir, mode, 'input.wgdfa')
-
-  scores = []
   score = [0]
   score.extend(list(calc_score(alfile, probs, surs, surs_count)))
-  scores.append(score)
-  baseline_df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+  baseline_df = pd.DataFrame([score], columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
   return baseline_df
 
-def calc_align_scores(probs, surs, surs_count):
-
+def calc_align_scores(probs: dict, surs: dict, surs_count: int):
   scores = []
   for num_symbols in all_symbols:
     alfile = join(bpedir, mode, f"{num_symbols}.wgdfa")
-    
     score = [int(num_symbols)]
     score.extend(list(calc_score(alfile, probs, surs, surs_count)))
     scores.append(score)
-
   df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
   return df
+\end{python}
 
+The scores for the baseline and the corresponding BPE file are obtained and stored in a DataFrame data structure. Next, this data is plotted and saved into \emph{.png} and \emph{.csv} files.
 
-def plot_scores(df, baseline_df, scoredir):
-
+\begin{python}
+# calc_align_scores.py
+def plot_scores(df: pd.DataFrame, baseline_df: pd.DataFrame, scoredir: str):
   # Use plot styling from seaborn.
   sns.set(style='darkgrid')
-
   # Increase the plot size and font size.
   sns.set(font_scale=1.5)
   plt.rcParams["figure.figsize"] = (12, 6)
-
   plt.clf()
   ax = plt.gca() # gca stands for 'get current axis'
-
   colors = ['magenta', 'tab:blue', 'tab:green', 'tab:red']
-
   df = df.sort_values('num_symbols')
   columns = list(df)
   for column, color in zip(columns[1:], colors):
     df.plot(kind='line', x=columns[0], y=column, color=color, ax=ax)
-
   for baseline_results, color in zip(list(baseline_df.iloc[0][1:]), colors):
     plt.axhline(y=baseline_results, color=color, linestyle='dashed')
-
   plt.savefig(join(scoredir+'.png'))
   return
 
-
 if __name__ == "__main__":
-  '''
-  Calculate alignment quality scores based on the gold standard.
-  The output contains Precision, Recall, F1, and AER.
-  '''
-
+  # Calculate alignment quality scores based on the gold standard.
+  # The output contains Precision, Recall, F1, and AER.
   probs, surs, surs_count = load_gold(goldpath)
   baseline_df = get_baseline_score(probs, surs, surs_count)
   df = calc_align_scores(probs, surs, surs_count, baseline_df)
-
   scorename = join(scoredir, 'scores')
   print(f"Scores saved into {scorename}")
   df.to_csv(scorename+'.csv', index=False)
   plot_scores(df, baseline_df, scorename)
-
 \end{python}
 
 \section{Replication of BPE dropout}
@@ -597,35 +574,26 @@ The first modifications are in \emph{apply\_bpe.py}, where we skip some merges, 
 import random
 
 def write_bpe(lang, num_symbols, merged_corpus, i=-1):
-
   outputpath = join(bpedir, 'segmentations', f"{lang}_{num_symbols}{f'_{i}' if i != -1 else ''}.bpe")
   argsoutput = codecs.open(outputpath, 'w', encoding='utf-8')
   argsoutput.write(merged_corpus)
   return
 
 def apply_bpe(langs, bpe_models, corpora, i=-1):
-    
   for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
-
     bpe_model = bpe_model[:max(all_symbols)]
     all_symbols_copy = all_symbols.copy()
     str_corpus = '\n'.join(corpus)
-
     for j, bigram in enumerate(bpe_model):
-
-        if random.uniform(0, 1) < dropout:
-            continue
-
+      if random.uniform(0, 1) < dropout:
+        continue
       str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
-
       if j + 1 == all_symbols_copy[0]:
         write_bpe(lang, all_symbols_copy.pop(0), str_corpus, i)
   return
 
 if __name__ == "__main__":
-
   langs, bpe_models, corpora = load_data()
-
   if dropout > 0:
     for i in range(dropout_samples):
       apply_bpe(i)
@@ -810,7 +778,7 @@ def learn_bpe(corpus, bpe_model):
   pairs, idx = get_stats(tokens)
 
   most_frequent_merges = []
-  for i in range(num_all_symbols):
+  for i in range(learn_symbols):
 
     try:
       most_frequent = pairs.most_common(1)[0][0]
@@ -1195,7 +1163,6 @@ def map_subword_to_word(corpus, bpes, lang):
       ...
     ],
   }
-      
   '''
   bpes[lang] = []
   for sent in corpus:
@@ -1213,12 +1180,12 @@ def map_multiple_to_word(corpus, bpes, lang):
   NO SPACE MODE
   Input: list of sentences with subword separation
   corpus =  [
-      'b u t▁this▁is▁no t▁w hat▁hap pen s▁.',
-      'th e▁ ice▁cre am_.',
+      'b u t_this_is_no t_w hat_hap pen s_.',
+      'th e_ ice_cre am_.',
       ...
   ]
   Output: dictionary of each language and 
-  a list of indexes pointing to which word each element (t▁w) belongs to
+  a list of indexes pointing to which word each element (t\_w) belongs to
   bpes = {
     source:
     [
@@ -1231,32 +1198,26 @@ def map_multiple_to_word(corpus, bpes, lang):
       ...
     ],
   }
-      
   '''
-
   bpes[lang] = []
   for sent in corpus:
     sent_bpes = []
     j = 0
     for word in sent.split():
-
       if word == word_sep:
         # word is simply '_', doesn't belong to anything
         j += 1
         sent_bpes.append([])
         continue
-
       word_count = word.count(word_sep)
       if word_count == 0:
         sent_bpes.append([j])
         continue
-
-      # multiple words in the element: t▁this▁is▁no -> [0,1,2,3]
+      # multiple words in the element: t_this_is_no -> [0,1,2,3]
       if word[0] == word_sep:
         # word starts with '_' but there are no elements of the previous word in it
         j += 1
         word_count -= 1
-
       if word[-1] == word_sep:
         # word ends with '_' but there are no elements of the next word in it
         sent_bpes.append(list(range(j, j + word_count)))
@@ -1267,7 +1228,6 @@ def map_multiple_to_word(corpus, bpes, lang):
   return bpes
 
 def load_and_map_segmentations(num_symbols, i=-1):
-
   bpes = {}
   for lang in [source, target]:
     segmentpath = lang+'_'+str(num_symbols)+('_'+str(i) if i != -1 else '')+'.bpe'
@@ -1290,7 +1250,6 @@ def bpe_word_align(bpes, bpe_aligns):
     "
       0   0-0 0-1 1-1 1-2 3-1 2-4 \n
       1   0-0 1-0 1-1 2-1 \n
-      ...
     "
   '''
   all_word_aligns = ''
@@ -1307,7 +1266,6 @@ def bpe_word_align(bpes, bpe_aligns):
           for el2 in sent2[int(secondal)]:
             new_al = str(el1) + '-' + str(el2)
             word_aligns.add(new_al)
-
     all_word_aligns += str(i) + "\t" + ' '.join(word_aligns) + "\n"
   return all_word_aligns
 \end{python}
