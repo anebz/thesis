@@ -151,7 +151,7 @@ Now there are subword alignments as opposed to word alignments. For instance, si
 In the final step, the alignment scores are computed against the gold standard. After loading the gold dataset, each alignment file is matched against this dataset, obtaining precision, recall, F1 score and AER metrics. In the case of 100 learnt symbols, there will be an associated score and so on for other numbers of learnt symbols. Additionally, the gold standard's scores are also computed as a baseline. To make it more visual, the scores are plotted and saved into a \emph{.png} image file as well as \emph{.csv} file with the exact numbers.
 
 \clearpage
-\section{Replication of BPE dropout}\label{sec:replbpedrop}
+\section{Replication of BPE dropout}\label{met:replbpedrop}
 
 BPE dropout's difference with regards to normal BPE is the fact that some merges don't take place. Based on this random factor, each time this system is carried out, new BPE merges are created. For example, if the most merge in English \emph{(\_t, h)} is not merged, the resulting file of BPE merges is vastly different than if the 10th most frequent merge does not take place. In order to obtain different instances, the dropout algorithm is run a number of times, in this case 10 times, the alignments extracted 10 times, and then the alignments aggregated. Regarding each specific step, the algorithm to create the merge list (learn\_bpe) remains unchanged, the first slight change occurs when applying the BPE algorithm to the corpus.
 

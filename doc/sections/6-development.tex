@@ -314,7 +314,7 @@ def create_fwd_rev_files(outpath: str):
   return
 \end{python}
 
-Given these \emph{.fwd} and \emph{.rev} files, the alignment algorithm creates a type of union between these two, called \emph{grow-diag-final-and}, handled by the \emph{create\_gdfa\_file} function, creating files with the extension \emph{.gdfa}. The previously generated files, \emph{.fwd}, \emph{.rec}, \emph{.txt} and the intermediate file \emph{\_unnum.gdfa} are deleted from the system. 
+Given these \emph{.fwd} and \emph{.rev} files, the alignment algorithm creates a type of union between these two, called \emph{grow-diag-final-and}, handled by the \emph{create\_gdfa\_file} function, creating files with the extension \emph{.gdfa}. The previously generated files, \emph{.fwd}, \emph{.rec}, \emph{.txt} and the intermediate file \emph{\_unnum.gdfa} are deleted from the system.
 
 \begin{python}
 # extract_alignments.py
@@ -567,7 +567,7 @@ scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 el
 
 \subsection{Apply BPE to corpus with dropout}
 
-The first modifications in the project occur in \emph{apply\_bpe.py}, where some merges are skipped, and the process is repeated 10 times. More theoretical insights regarding this approach can be found in the Methodology section~\ref{sec:replbpedrop}. The function \emph{apply\_bpe} includes two new lines where a random number between 0 and 1 is generated. If this number is smaller than the \emph{dropout} rate saved in \emph{settings.py}, then that merge isn't considered and the loop skips it. This means that if the \emph{dropout} variable has the value of 0.1, 10\% of merges are skipped.
+The first modifications in the project occur in \emph{apply\_bpe.py}, where some merges are skipped, and the process is repeated 10 times. More theoretical insights regarding this approach can be found in the Methodology section~\ref{met:replbpedrop}. The function \emph{apply\_bpe} includes two new lines where a random number between 0 and 1 is generated. If this number is smaller than the \emph{dropout} rate saved in \emph{settings.py}, then that merge isn't considered and the loop skips it. This means that if the \emph{dropout} variable has the value of 0.1, 10\% of merges are skipped.
 
 Additionally, in the main function, the function \emph{apply\_bpe} is called \emph{dropout\_samples} times. To save the files accordingly, a new variable is introduced, namely \emph{i}, that does nothing in the case where dropout=0, but when repeating the process, for instance if lang=eng, num\_symbols=2000, and first iteration of dropout, that is, i=0, the files are saved as \emph{eng\_2000\_0.bpe} instead, and so on for further iterations. This is effectively achieved by changing the variable \emph{outputpath}
 
@@ -629,7 +629,7 @@ else:
 
 \subsection{Calculate alignment scores with dropout}
 
-As explained in the Methodology section~\ref{sec:replbpedrop}, variants of union, intersection and threshold are created. This is introduced with a new script, namely \emph{merge\_dropout.py}. First of all, the function \emph{merge\_dropout\_alignments} opens all alignment files and creates a dictionary data structure with the union, intersection and threshold alignment files and saves them into \emph{X\_union.wgdfa}, \emph{X\_inter.wgdfa}, \emph{X\_thres.wgdfa} respectively.
+As explained in the Methodology section~\ref{met:replbpedrop}, variants of union, intersection and threshold are created. This is introduced with a new script, namely \emph{merge\_dropout.py}. First of all, the function \emph{merge\_dropout\_alignments} opens all alignment files and creates a dictionary data structure with the union, intersection and threshold alignment files and saves them into \emph{X\_union.wgdfa}, \emph{X\_inter.wgdfa}, \emph{X\_thres.wgdfa} respectively.
 
 \begin{python}
 # merge_dropout.py
