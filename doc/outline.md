@@ -7,7 +7,6 @@
 5. [X] Methodology
 6. [X] Development
 7. Results, experiments, analysis, challenges, how to choose a good baseline, figures
-   1. BPE results
    2. BPE dropout results
    3. learn_bpe improvement performance
 8. ...
@@ -50,6 +49,8 @@
   * union score has very high recall, very low precision. makes sense, there's many-to-many alignment among words
   * intersection score has very high precision, very low recall
 * we have no spaces so even f1=0.5 would be great. we'd be aligning words even if we don't know they exist. then we could go for more precision-based model or recall-based model. alignment w/o tokenization
+
+## BPE dropout results no space
 
 * dropout=0,   best result at merge_threshold=0.5, num_symbols=200, f1=0.477
 * dropout=0.1, best result at merge_threshold=0.7, num_symbols=200, f1=0.523
