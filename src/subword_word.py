@@ -110,7 +110,7 @@ def load_and_map_segmentations(num_symbols: str, i: int =-1) -> dict:
 
     bpes = {}
     for lang in [source, target]:
-        segmentpath = lang+'_'+str(num_symbols)+('_'+str(i) if i != -1 else '')+'.bpe'
+        segmentpath = join(bpedir, 'segmentations', lang+'_'+str(num_symbols)+('_'+str(i) if i != -1 else '')+'.bpe')
 
         if target_bpe and lang == source:
             argsinput = codecs.open(inputpath[source], encoding='utf-8')

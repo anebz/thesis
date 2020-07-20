@@ -218,7 +218,7 @@ def learn_bpe(corpus: list) -> list:
 
     pairs, idx = get_stats(tokens)
 
-    most_frequent_merges = []
+    most_freq_merges = []
     for i in tqdm(
         range(learn_symbols), 
         desc=f"learn_bpe: num_symbols={learn_symbols}, lang={lang}, space mode={space}"

@@ -21,7 +21,7 @@ def merge_dropout_alignments():
 
         for i in range(dropout_samples):
 
-            for j, line in enumerate(open(f'{num_symbols}_{i}.wgdfa', 'r').readlines()):
+            for j, line in enumerate(open(f"{num_symbols}_{i}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}.wgdfa", 'r').readlines()):
                 al = frozenset(line.strip().split("\t")[1].split())
 
                 # at the first iteration, just append the alignment
@@ -69,7 +69,7 @@ def calc_score_merges():
             scores.append(score)
 
        	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
-        scorename = join(scorespath, f"{''if space else 'ns_'}{merge_type}_{mode}")
+        scorename = join(scorespath, f"{''if space else 'ns_'}{merge_type}_{mode}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}")
 
         print(f"Scores saved into {scorename}")
         df.to_csv(scorename+'.csv', index=False)
@@ -86,7 +86,7 @@ def calc_score_merges():
             scores.append(score)
 
         df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
-        scorename = join(scorespath, f"{'' if space else 'ns_'}{merge_t}_thres_{mode}")
+        scorename = join(scorespath, f"{'' if space else 'ns_'}{merge_t}_thres_{mode}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}")
         
         print(f"Scores saved into {scorename}")
         df.to_csv(scorename+'.csv', index=False)

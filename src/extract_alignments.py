@@ -57,17 +57,17 @@ def extract_alignments(i: int =-1, input_mode: bool =False):
 			outpath = join(bpedir, mode, "input")
 		else:
 			print(f"Alignments for {num_symbols} symbols")
-			if target_bpe:
-				sourcepath = inputpath[source]
-			else:
-				sourcepath = join(bpedir, 'segmentations', f"{source}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
-
 			if source_bpe:
-				targetpath = inputpath[target]
+				sourcepath = join(bpedir, 'segmentations', f"{source}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
 			else:
-				targetpath = join(bpedir, 'segmentations', f"{target}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
+				sourcepath = inputpath[source]
 
-			outpath = join(bpedir, mode, f"{num_symbols}{'_'+str(i) if i != -1 else ''}{'_deu' if target_bpe else ''}")
+			if target_bpe:
+				targetpath = join(bpedir, 'segmentations', f"{target}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
+			else:
+				targetpath = inputpath[target]
+
+			outpath = join(bpedir, mode, f"{num_symbols}{'_'+str(i) if i != -1 else ''}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}")
 
 		create_parallel_text(sourcepath, targetpath, outpath)
 		create_fwd_rev_files(outpath)
