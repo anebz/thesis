@@ -67,13 +67,38 @@ Fastalign's modification is that the distribution over alignments is parametrize
 
 The paper~\cite{dyer-etal-2013-simple} has more detailed information on training, inference and results.
 
-% AER metric, https://scholar.googleusercontent.com/scholar.bib?q=info:a-eei_wZtkcJ:scholar.google.com/&output=citation&scisdr=CgXZp9n9EI2uyPv4CgI:AAGBfm0AAAAAXw79EgJRtT7BBqbVOjSMQpiJnheyyRTO&scisig=AAGBfm0AAAAAXw79EhCMr28rmBlxrIyW2udKWVdRPsSh&scisf=4&ct=citation&cd=-1&hl=en
-
-% https://www.nltk.org/howto/align.html#koehn2010
-
 \subsection{Eflomal algorithm}
 
-https://github.com/robertostling/eflomal
-https://content.sciendo.com/view/journals/pralin/106/1/article-p125.xml
+The Eflomal alignment algorithm~\cite{ostling2016efficient}, presented in 2016, defins itself as an \emph{Efficient Low-Memory Aligner}. Its code is available \href{https://github.com/robertostling/eflomal}{on Github}, and it is a word alignment tool based on efmaral, with some improvements, such as more compact data structures, yielding a lower memory requirement, and the fact that the estimation of alignment variable marginals is done one sentence at a time, which also saves a lot of memory at no detectable cost in accuracy. Technical details relevant to both efmaral and eflomal can be found in the cited article.
 
 \section{Alignment metrics}\label{tra:metrics}
+
+Evaluating alignments is usually done by the following metrics: precision, recall, F1 score and accuracy. It is assumed that the actual results are at a disposal, in this case, that the correct alignments are known. The system then makes a prediction for certain alignments. This confusion matrix shows th etable for true positives, true negatives, false positives and false negatives.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=12cm]{figures/precrec.jpeg}
+    \caption{Confusion matrix for actual and predicted results}
+\end{figure}
+
+If an alignment is predicted and is also correct, that constitutes a true positive. If an alignment is predicted but is not correct, that constitutes a false positive. If a correct alignment was not predicted, it constitutes a false negative. And an alignment that is not present in the actual alignment list nor in the prediction list is a true negative. These are the formulas to calculate the precision, recall and F1 score:
+
+\begin{itemize}
+    \item Precision =  true positives / (true positives + false positives) = true positives / (total predicted positives)
+    \item Recall =  true positives / (true positives + false negatives) = true positives / (total actual positives)
+    \item F1 score = 2 x precision x recall / (precision + recall)
+\end{itemize}
+
+In a nutshell, precision evaluates the following: out of all the predicted items, how many are correct? And recall: out of all the correct items, how many were predicted? The F1 score is a balance between the two, so that a system with a high precision but low recall might have a decent F1 score.
+
+This is the traditional use of precision and recall. When talking specifically about alignments however, a slightly different definition is commonly provided:
+
+\begin{itemize}
+    \item Precision =  test alignments x possible alignments / test alignments
+    \item Recall =  test alignments x sure alignments / sure alignments
+    \item F1 score = (test x sure + test x possible) / (test + sure)
+    \item AER = 1 - F1 score
+\end{itemize}
+
+AER, Alignment Error Rate~\cite{mihalcea2003evaluation}~\cite{koehn2009statistical}, is a commonly used metric for assessing sentence alignments. It combines precision and recall metrics together such that a perfect alignment must have all of the sure alignments and may have some possible alignments. It is the opposite of the F1 score.
+

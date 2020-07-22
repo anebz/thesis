@@ -6,4 +6,12 @@
 
 \chapter{Goals of the thesis}
 
-no goals whatsoever
+The goal of this thesis has been primarily to analyse the BPE algorithm, as a way to tokenize raw text and as opposed to other tokenization methods such as word tokenization, or other subword tokenizations. After reading this thesis the reader should have no doubts as to how the BPE algorithm works, given the extensive array of examples and codes that are presented throughout the thesis. This thesis also aims to replicate the BPE algorithm and obtain satisfactory performance results.
+
+In order to evaluate the performance of the BPE algorithm, an alignment method from statistical machine translation is transferred into this scenario, to compare the difference between aligning words and subword units.
+
+An additional goal is to analyse, understand and replicate an improvement over BPE called BPE dropout. The intricancies of the algorithm improvement, the motivation stemming from some of BPE's drawbacks will be explained, and examples and codes included as well. By iterating on some of the hyperparameters used to obtain BPE dropout results, this thesis will atempt to improve BPE dropout's results.
+
+This thesis will also intend to improve the original BPE learning algorithm, making a dramatic improvement in performance. Furthermore, a new paradigm to obtain BPE units will be presented, namely removing the space boundary between words to admit creating BPE units among different words. This will be integrated into the algorithm, so that the end user can choose which mode to use, either the traditional space separated version employed in the BPE and BPE dropout paper, or the new one. 
+
+The pipeline will be automated and easy to tweak in the sense that by changing some parameters in a global file, such as dropout rate, number of merges, space mode on or off, etc. the pipeline will automatically adapt to the specific scenario.
