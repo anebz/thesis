@@ -57,19 +57,17 @@ This approach is an example of unsupervised learning, meaning that the system ha
 
 \subsection{Fastalign algorithm}
 
-Fastalign algorithm~\cite{dyer-etal-2013-simple} is a simple log-linear reparametrization of IBM Model 2 that overcomes problems from both Model 1 and Model 2. Training this model is consistently ten times faster than Model 4.
-
-An open-source implementation of the alignment model described in this paper is available in \href{http://github.com/clab/fast align}{Github}.
+Fastalign algorithm~\cite{dyer-etal-2013-simple} is a simple log-linear reparametrization of IBM Model 2 that overcomes problems from both Model 1 and Model 2. Training this model is consistently ten times faster than Model 4. An open-source implementation of the alignment model described in this paper is available in \href{http://github.com/clab/fast align}{Github}.
 
 Fastalign is a variation of the lexical translation. Lexican translation works as follows: given a source sentence \emph{f} with length \emph{n}, first generate the length of the target sentence \emph{m}, where the target sentence is \emph{e}. Then generate an alignment vector of length \emph{m} that indicates which source word (or null token) each target word will be a translation of. Lastly, generate the \emph{m} output words, where each word in \emph{e} depends only on the word in \emph{f} it's aligned with.
 
-Fastalign's modification is that the distribution over alignments is parametrized by a null alignment probability and a precision parameter, which controls how strongly the model favors alignment points close to the diagonal (if we use the word alignment matrix like in the example above).
+Fastalign's modification is that the distribution over alignments is parametrized by a null alignment probability and a precision parameter, which controls how strongly the model favors alignment points close to the diagonal (if we use the word alignment matrix like in the example above). It also adds a symmetrization step called GDFA.
 
 The paper~\cite{dyer-etal-2013-simple} has more detailed information on training, inference and results.
 
 \subsection{Eflomal algorithm}
 
-The Eflomal alignment algorithm~\cite{ostling2016efficient}, presented in 2016, defins itself as an \emph{Efficient Low-Memory Aligner}. Its code is available \href{https://github.com/robertostling/eflomal}{on Github}, and it is a word alignment tool based on efmaral, with some improvements, such as more compact data structures, yielding a lower memory requirement, and the fact that the estimation of alignment variable marginals is done one sentence at a time, which also saves a lot of memory at no detectable cost in accuracy. Technical details relevant to both efmaral and eflomal can be found in the cited article.
+The Eflomal alignment algorithm~\cite{ostling2016efficient}, presented in 2016, defins itself as an \emph{Efficient Low-Memory Aligner}. Its code is available \href{https://github.com/robertostling/eflomal}{on Github}, and it is a word alignment tool based on efmaral, with some improvements, such as more compact data structures, yielding a lower memory requirement, and the fact that the estimation of alignment variable marginals is done one sentence at a time, which also saves a lot of memory at no detectable cost in accuracy. Eflomal differs from Fastalign in the sense that it is based on a hidden Markov Model, as opposite to Fastalign which is based on an IBM model. Eflomal also requires the simmetrization step GDFA, and has historically had better results than Fastalign. Technical details relevant to both efmaral and eflomal can be found in the cited article.
 
 \section{Alignment metrics}\label{tra:metrics}
 
