@@ -28,17 +28,12 @@
 \pagenumbering{roman}
 \pagestyle{plain}
 \include{sections/abstract}
-\include{sections/task}
-\include{sections/declaration}
 
 % the table of contents and the lists of figures and tables
 \pagenumbering{arabic}
 \pagestyle{headings}
 \tableofcontents
-\include{sections/notation}
-\include{sections/acronyms}
 \listoffigures
-\listoftables
 
 % the actual content
 \include{sections/1-introduction}
@@ -48,20 +43,13 @@
 \include{sections/5-methodology}
 \include{sections/6-development}
 \include{sections/7-results}
-\include{sections/summary}
+\include{sections/8-conclusion}
 
 % the bibliography
 \bibliographystyle{unsrt}	% only numbers
 \bibliography{references}
 
-% the appendix
-\appendix
-\include{sections/appendix}
-
-% the theses
-\pagestyle{empty}	
-\include{sections/statements}
-
+\pagestyle{empty}
 \end{document}
 
 % end of file
