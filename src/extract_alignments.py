@@ -56,7 +56,7 @@ def extract_alignments(i: int =-1, input_mode: bool =False):
 			print(f"Alignments for input files")
 			sourcepath = inputpath[source]
 			targetpath = inputpath[target]
-			outpath = join(bpedir, mode, "input")
+			outpath = join(bpedir, mode, f"input_{source}_{target}")
 		else:
 			print(f"Alignments for {num_symbols} symbols")
 			if source_bpe:
@@ -105,15 +105,13 @@ if __name__ == "__main__":
 	print(f"Extracting alignments with {mode} for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
 	t0 = time.time()
 	os.makedirs(join(bpedir, mode), exist_ok=True)
-	if not os.path.isfile(join(bpedir, mode, 'input.gdfa')):
+	if not os.path.isfile(join(bpedir, mode, f'input_{source}_{target}.gdfa')):
 		extract_alignments(input_mode=True)
 
 	if dropout > 0:
-		# create `dropout_samples` segmentations, to aggregate later
 		for i in range(dropout_samples):
 			print(f"Iteration {i+1}")
 			extract_alignments(i)
 	else:
 		extract_alignments()
-
 	print(f"The process of extracting alignments took {str(timedelta(seconds=time.time()-t0))}")

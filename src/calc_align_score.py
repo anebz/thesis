@@ -87,7 +87,7 @@ def calc_score(input_path: str, probs: dict, surs: dict, surs_count: int) -> (fl
 
 def get_baseline_score(probs: dict, surs: dict, surs_count: float) -> pd.DataFrame:
 
-	alfile = join(bpedir, mode, 'input.gdfa')
+	alfile = join(bpedir, mode, f'input_{source}_{target}.gdfa')
 
 	score = [0]
 	score.extend(list(calc_score(alfile, probs, surs, surs_count)))
@@ -134,8 +134,7 @@ def calc_align_scores(probs: dict, surs: dict, surs_count: float, baseline_df: p
 	scores = []
 	for num_symbols in all_symbols:
 		alfile = join(bpedir, mode, 
-			f"{num_symbols}{'_'+str(i) if dropout else ''}\
-			{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}.wgdfa")
+			f"{num_symbols}{'_'+str(i) if dropout else ''}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}.wgdfa")
 
 		if (not target_bpe and '_'+target in alfile) or (not source_bpe and '_'+source in alfile):
 			continue

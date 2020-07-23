@@ -1,18 +1,19 @@
 # global variables
 import os
-from os.path import join
 import sys
+import glob
+from os.path import join
 
 word_sep = u'\u2581'
-source, target = 'eng', 'deu' #eng, deu
+source, target = 'eng', 'hin' #eng, deu, ron, hin
 source_bpe, target_bpe = False, False # both can't be true at the same time
 
 space = True
 dropout = 0.1
-dropout_samples = 7
-learn_symbols = 20000
+dropout_samples = 10
+learn_symbols = 10000
 all_symbols = [1000]
-merge_threshold = [0.7] # if alignments are present in >X% of files, they're accepted
+merge_threshold = [0.7]
 
 rootdir = os.getcwd()
 if rootdir.split(os.sep)[-1] == 'src':
@@ -23,11 +24,12 @@ bpedir = join(datadir, 'dropout_bpe' if dropout > 0 else 'normal_bpe')
 baselinedir = join(rootdir, 'reports', 'scores_normal_bpe')
 scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 else 'normal_bpe'))
 goldpath = join(inputdir, source+'_'+target+'.gold')
-inputpath = {source: join(inputdir, source+'_with_10k.txt'),
-            target: join(inputdir, target+'_with_10k.txt')}
 
-mode = "eflomal" #fastalign, eflomal
+inputpath = {}
+for filename in glob.glob(join(inputdir, "*.txt")):
+    inputpath[filename.split(os.sep)[-1].split('_')[0]] = filename
+
+mode = "fastalign" #fastalign, eflomal
 fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
-# https://github.com/robertostling/eflomal
-eflomal_path = join(rootdir, "tools/eflomal")
 atools_path = join(rootdir, "tools/fast_align/build/atools")
+eflomal_path = join(rootdir, "tools/eflomal")
