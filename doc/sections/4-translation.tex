@@ -4,13 +4,13 @@
 %
 % Translation
 
-\chapter{Translation}\label{ch:translation}
+\section{Translation}\label{ch:translation}
 
 A significant component of this thesis is the use of word alignments, a method eployed in satistical machine translation in order to gauge how good a translation is. If a word in French gets aligned to its equivalent word in English, for example \emph{maison-house}, then the translation is correct. It is a metric to evaluate if a translation has been successful.
 
 This thesis is not related to translation, not SMT nor its more modern approach neural machine translation. But the word alignment algorithm is used in order to compare word alignments against BPE alignments. Taking word alignments as the basis, alignment algorithms are used to see if these BPE units are also correctly aligned to the BPE units in the other language. For example, ideally the English suffix \emph{ment} would be aligned to the German word ending of \emph{keit}. But before diving deep into word alignments and how they work, it is important to understand the background of this algorithm, as well as its original purpose and a general notion of how statistical machine translation works.
 
-\section{Statistical machine translation (SMT)}
+\subsection{Statistical machine translation (SMT)}
 
 SMT is a machine translation approach where translations are generated based on statistical models, whose parameters are derived from the analysis of bilingual text corpora. It can be done with rule-based approaches in a supervised way, or example-based approaches, in an unsupervised way. A document is translated according to the probabilistic distribution \emph{P(e|s)} that a word \emph{e} in the target language (for example English) is the translation of a word \emph{s} in the source language (for example, Spanish).
 
@@ -31,7 +31,7 @@ Typically, a translation model first translates the source language into a broke
     \caption{Example of Spanish-English SMT system.}
 \end{figure}
 
-\section{Word alignments}
+\subsection{Word alignments}
 
 Word alignment between a parallel corpora is the NLP task of identifying translation relationships among the words in a parallel text, resulting in a graph between the two sides of the texts, with an arc between two words if they are translations of one another. Figure 4.2. shows an alignment example between a sentence in English and its counterpart in French. Alternatively, the alignments can also be displayed in a matrix as shown in Figure 4.3.
 
@@ -55,7 +55,7 @@ For training, historically IBM models have been used.~\cite{koehn2009statistical
 
 This approach is an example of unsupervised learning, meaning that the system has no knowledge of the kind of output it is expected to produce, but tries to find values for the unobserved model and alignments which best explain the observed parallel text. In some cases, a small number of manually aligned sentences is used to help the model, as a way to explore supervised learning.~\cite{varga2007parallel} These models are able to more easily take advantage of combining many features within the data, such as context, syntactic structure, part-of-speech or translation lexicon information, which are difficult to integrate into the unsupervised models generally used.
 
-\subsection{Fastalign algorithm}
+\subsubsection{Fastalign algorithm}
 
 Fastalign algorithm~\cite{dyer-etal-2013-simple} is a simple log-linear reparametrization of IBM Model 2 that overcomes problems from both Model 1 and Model 2. Training this model is consistently ten times faster than Model 4. An open-source implementation of the alignment model described in this paper is available in \href{http://github.com/clab/fast align}{Github}.
 
@@ -65,11 +65,11 @@ Fastalign's modification is that the distribution over alignments is parametrize
 
 The paper~\cite{dyer-etal-2013-simple} has more detailed information on training, inference and results.
 
-\subsection{Eflomal algorithm}
+\subsubsection{Eflomal algorithm}
 
 The Eflomal alignment algorithm~\cite{ostling2016efficient}, presented in 2016, defins itself as an \emph{Efficient Low-Memory Aligner}. Its code is available \href{https://github.com/robertostling/eflomal}{on Github}, and it is a word alignment tool based on efmaral, with some improvements, such as more compact data structures, yielding a lower memory requirement, and the fact that the estimation of alignment variable marginals is done one sentence at a time, which also saves a lot of memory at no detectable cost in accuracy. Eflomal differs from Fastalign in the sense that it is based on a hidden Markov Model, as opposite to Fastalign which is based on an IBM model. Eflomal also requires the simmetrization step GDFA, and has historically had better results than Fastalign. Technical details relevant to both efmaral and eflomal can be found in the cited article.
 
-\section{Alignment metrics}\label{tra:metrics}
+\subsection{Alignment metrics}\label{tra:metrics}
 
 Evaluating alignments is usually done by the following metrics: precision, recall, F1 score and accuracy. It is assumed that the actual results are at a disposal, in this case, that the correct alignments are known. The system then makes a prediction for certain alignments. This confusion matrix shows th etable for true positives, true negatives, false positives and false negatives.
 
@@ -94,9 +94,7 @@ This is the traditional use of precision and recall. When talking specifically a
 \begin{itemize}
     \item Precision =  test alignments x possible alignments / test alignments
     \item Recall =  test alignments x sure alignments / sure alignments
-    \item F1 score = (test x sure + test x possible) / (test + sure)
-    \item AER = 1 - F1 score
+    \item AER = 1 - (test x sure + test x possible) / (test + sure)
 \end{itemize}
 
-AER, Alignment Error Rate~\cite{mihalcea2003evaluation}~\cite{koehn2009statistical}, is a commonly used metric for assessing sentence alignments. It combines precision and recall metrics together such that a perfect alignment must have all of the sure alignments and may have some possible alignments. It is the opposite of the F1 score.
-
+AER, Alignment Error Rate~\cite{mihalcea2003evaluation}~\cite{koehn2009statistical}, is a commonly used metric for assessing sentence alignments. It combines precision and recall metrics together such that a perfect alignment must have all of the sure alignments and may have some possible alignments.

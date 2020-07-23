@@ -4,9 +4,11 @@
 %
 % Tokenization
 
-\chapter{Tokenization}\label{sec:tokenization}
+\chapter{Literature review}\label{ch:literature}
 
-\section{Introduction}
+\section{Tokenization}\label{sec:tokenization}
+
+\subsection{Introduction}
 
 Tokenization is the first major step in language processing. The main idea is simplifying or compressing the input text into meaningful units, called tokens, creating a big vocabulary of tokens and shorter sequences, as illustrated in Figure 3.1.~\cite{manning2008introduction}
 
@@ -43,17 +45,17 @@ In the simple example above, tokens were words. Alternatively, tokens can be gro
 
 The major question in the tokenization phase is: \textbf{what are the correct tokens to use?}. The following section explores these 4 types of tokenization methods and delves into the algorithms and code libraries available.
 
-\section{Tokenization algorithm types}
+\subsection{Tokenization algorithm types}
 
 The tokenization method depends heavily on the targeted application. This results in different applications requiring different tokenization algorithms. Nowadays, most deep learning architectures in NLP process raw text at the token level and as a first step, create embeddings for these tokens, which will be explained in more detail in the following section. In short, \textit{the type of tokenization depends on the type of embedding}. Advantages and drawbacks of several tokenization methods are further explained in the following sections.
 
-\subsection{Word level tokenization}
+\subsubsection{Word level tokenization}
 
 Word level tokenization is the first established type of tokenization. It is the most basic and also the most common form of tokenization. It splits a piece of text into individual words based on word boundaries; usually a specific delimiter consisting mostly of whitespace ' ' or other punctuation signs.
 
 Conceptually, splitting on whitespace can also split an element which should be regarded as a single token, for example New York. This is mostly the case with names, borrowed foreign phrases, and compounds that are sometimes written as multiple words. Tokenization without word boundaries aims to address that problem.~\ref{subsec:wordtokwowb} on page~\pageref{subsec:wordtokwowb}
 
-\subsubsection{Word level algorithms}
+\paragraph{Word level algorithms}
 
 The simplest way to obtain word level tokenization is by splitting the sentence on the desired delimeter; most commonly this is whitespace. The \pyth{sentence.split()} function in Python or a Regex command \pyth{re.findall("[\w']+", text)} achieves this in a simple way.
 
@@ -112,7 +114,7 @@ Apart from word2vec, there are other word embedding algorithms, namely \textit{G
 
 In the example, the embeddings of \emph{smart} and \emph{intelligent} have a distance of 2, since the last two numbers in the vector differ by one respectively. If this was plotted in a four dimensional space, these words would be very close together. On the other hand, \emph{stupid} is almost the opposite of \emph{smart}. The distance in this case is much larger. In the plot, these words would sit roughly in opposite directions. Thus, with word embeddings, a sentence is transformed into a sequence of embedding vectors, which is very useful for NLP tasks.
 
-\subsubsection{Word level tokenization drawbacks}
+\paragraph{Word level tokenization drawbacks}
 
 Word embeddings have some drawbacks. In many cases, a word can have more than one meaning: \emph{well}, for example, can be used in these two scenarios.
 
@@ -129,7 +131,7 @@ Another issue with word tokens is related to the \textbf{vocabulary size}. Gener
 
 These problems are not to be mistaken with tokenization problems, tokenization is merely a way to an end. In most cases however, they are used to create embeddings. And if embeddings from word tokens have drawbacks, the tokenization method is changed in order to create different tokens, in order to create other types of embeddings.
     
-\subsection{Character level tokenization}
+\subsubsection{Character level tokenization}
 
 In this type of tokenization, instead of splitting a text into words, the splitting is done into characters, whereby \emph{smarter} becomes \emph{s-m-a-r-t-e-r} for instance. \href{https://github.com/karpathy/char-rnn}{Karpathy, 2015} was the first to introduce a character level language model.
 
@@ -139,11 +141,11 @@ Character level models are unrestricted in their vocabulary and see the input "a
 
 Radfor et al. (2017)~\cite{radford2017learning} from OpenAI showed that character level models can capture the semantic properties of text. Kalchbrenner et al.(2016)~\cite{kalchbrenner2016neural} from Deepmind and Leet et al. (2017)~\cite{lee-etal-2017-fully} both demonstrated translation at the character level. These are particularly compelling results as the task of translation captures the semantic understanding of the underlying text.
 
-\subsubsection{Character level algorithms}
+\paragraph{Character level algorithms}
 
 The previous libraries explored in the case of word tokenization (native python libraries, nltk, spacy, keras) have their own version for character level tokenization.
 
-\subsubsection{Character level tokenization drawbacks}
+\paragraph{Character level tokenization drawbacks}
 
 When tokenizing a text at the character level, the sequences are longer, which takes longer to compute since the neural network needs to have significantly more parameters to allow the model to perform the conceptual grouping internally, instead of being handed the groups from the beginning.
 
@@ -153,7 +155,7 @@ Sometimes the NLP task does not need processing at the character level, such as 
 
 As an in-betweener between word and character tokenization, subword tokenization produces subword units, smaller than words but bigger than just characters.
 
-\subsection{Subword level tokenization}
+\subsubsection{Subword level tokenization}
 
 Subword tokenization is the task of splitting the text into subwords or n-gram characters. For example, words like \emph{lower} can be segmented as \emph{low-er}, \emph{smartest} as \emph{smart-est}, and so on. In the event of an OOV word such as \emph{eorner}, this tokenizer will divide it into \emph{eorn-er} and effectivey obtain some semantic information. Very common subwords such as \emph{ing}, \emph{ion}, usually with a morphological sense, are learnt through repetition. The word \emph{unfriendly} would be split into \emph{un-friend-ly}.
 
@@ -173,7 +175,7 @@ Since BPE is the basis of the thesis, it will be explained in depth in the follo
 
 Huggingface, an open source NLP company, released Transformers and Tokenizers (Wolf et al., 2019~\cite{wolf2019huggingfaces}), two popular NLP framework which include \href{https://github.com/huggingface/tokenizers/tree/74d812d40180032d2dbb6ca59e2e10f0257ef46b/bindings/python/tokenizers/implementations}{several subword tokenizers} such as \emph{ByteLevelBPETokenizer}, \emph{CharBPETokenizer}, \emph{SentencePieceBPETokenizer} and \emph{BertWordPieceTokenizer}. The first refer to the first subword level algorithm, BPE, in addition to WordPiece and SentencePiece.
 
-\subsubsection{BPE}\label{subsubsec:bpe}
+\paragraph{BPE}\label{subsubsec:bpe}
 
 BPE (Sennrich et al., 2016~\cite{sennrich2015neural}) merges the most frequently occurring character or character sequences iteratively. This is roughly how the algorithm works:
 
@@ -188,7 +190,7 @@ BPE (Sennrich et al., 2016~\cite{sennrich2015neural}) merges the most frequently
 
 BPE is based on a greedy and deterministic symbol replacement, and ca not provide multiple segmentations.
 
-\subsubsection{Unigram LM}\label{subsubsec:unigramlm}
+\paragraph{Unigram LM}\label{subsubsec:unigramlm}
 
 Unigram language modeling (Kudo, 2018~\cite{kudo-2018-subword}) is based on the assumption that all subword occurrences are independent and therefore subword sequences are produced by the product of subword occurrence probabilities. These are the steps of the algorithm:
 
@@ -203,7 +205,7 @@ Unigram language modeling (Kudo, 2018~\cite{kudo-2018-subword}) is based on the 
 
 Kudo argues that the unigram LM model is more flexible than BPE because it is based on a probabilistic LM and can output multiple segmentations with their probabilities.
 
-\subsubsection{WordPiece}\label{subsubsec:wordpiece}
+\paragraph{WordPiece}\label{subsubsec:wordpiece}
 
 WordPiece (Schuster and Nakajima, 2012~\cite{schuster2012japanese}) was initially used to solve Japanese and Korean voice problem. It is similar to BPE in many ways, except that it forms a new subword based on likelihood, not on the next highest frequency pair. These are the steps of the algorithm:
 
@@ -232,7 +234,7 @@ BERT (Devlin et al., 2018~\cite{devlin2018bert}) uses WordPiece as its tokenizat
     bert tokens = ["[CLS]", "john", "johan", "\#\#son", "'", "s", "house", "[SEP]"]
 \end{quote}
 
-\subsubsection{SentencePiece}
+\paragraph{SentencePiece}
 
 SentencePiece (Kudo et al. 2018~\cite{kudo2018sentencepiece}) is a subword tokenization type that has an \href{https://github.com/google/sentencepiece}{extensive Github repository} with freely available code.
 
@@ -250,7 +252,7 @@ Approaching ambiguity in text as a regularization parameter for downstream model
 
 The number of unique tokens in SentencePiece is predetermined, the segmentation model is trained such that the final vocabulary size is fixed, e.g., 8k, 16k, or 32k. This is different from BPE (Sennrich et al., 2015~\cite{sennrich2015neural}) which uses the number of merge operations instead. The number of merge operations is a BPE-specific parameter and not applicable to other segmentation algorithms, including unigram, word and character level algorithms.
 
-\subsection{Tokenization without word boundaries}\label{subsec:wordtokwowb}
+\subsubsection{Tokenization without word boundaries}\label{subsec:wordtokwowb}
 
 Another type of tokenization, beyond word, character or subword, is tokenization without word boundaries. The three types of tokenization explored until now cannot create units among words, that is, they consider words separatedly.
 
@@ -263,7 +265,7 @@ When dealing with languages that do not include space tokenization, such as seve
 
 An approach to handle this has been to abandon word-based indexing, and do all indexing from just short subsequences of characters (character n-grams), regardless of whether particular sequences cross word boundaries or not. Hence, at times, each character used is taken as a token in Chinese tokenization.
 
-\section{BPE}
+\subsection{BPE}
 
 Byte Pair Encoding (BPE) (Sennrich et al., 2015~\cite{sennrich2015neural}), is a widely used tokenization method among Transformer-based models. The code is open source and there is an \href{https://github.com/rsennrich/subword-nmt}{active repository} on Github. It merges the most frequently occurring character or character sequences iteratively.
 
@@ -275,7 +277,7 @@ Byte Pair Encoding (BPE) (Sennrich et al., 2015~\cite{sennrich2015neural}), is a
 
 BPE enables the encoding of rare or OOV words with appropriate subword tokenization without introducing any 'unknown' tokens. One of the performance aspects in tokenization is the length of output sequences. Here, BPE is superior as it produces shorter sequences compared to character tokenization.
 
-\subsection{Minimal algorithm to learn BPE segmentations}
+\subsubsection{Minimal algorithm to learn BPE segmentations}
 
 Subsection ~\ref{subsubsec:bpe} showed a simple algorithm to build subword units. In this section it will be explained in depth with an example. These are the steps of the algorithm:
 
@@ -377,7 +379,7 @@ for _ in range(vocab_size):
 
 In each step of the iteration, the \emph{get\_stats} function iterates all the characters in the corpus, so the complexity is O(len(corpus) * length of sentence), for an average sentence length. Obtaining the most frequent pair takes constant time, since the object \emph{pairs} is a Counter object and includes a function to retrieve the most frequent item. At the step of \emph{merge\_pair\_in\_corpus}, the corpus is iterated in its entirety again, with a complexity of O(len(corpus) * len(sent)). Therefore, the algorithm has a complexity of O(num\_merges * len(corpus) * len(sent)). Iterating num\_merges amount of times cannot be avoided, but operating through all the characters in the corpus is computationally very expensive. One of the contributions of this thesis is an optimization of this algorithm, as will be shown in the following chapters.
 
-\subsection{Applying BPE to OOV words}
+\subsubsection{Applying BPE to OOV words}
 
 In the event of an OOV word, such as 'these', which the corpus used in the previous example does not know, the BPE algorithm can create some subword units from the corpus used before.
 
@@ -416,7 +418,7 @@ while True:
 
 '\_th' is the only known merge in the vocabulary, the rest of the characters ('e', 's', 'e') are unknown to the vocabulary so it does not know how to create any subword units.
 
-\subsection{BPE dropout}
+\subsubsection{BPE dropout}
 
 BPE dropout (Provilkov et al., 2019~\cite{provilkov2019bpedropout}) changes the BPE algorithm by stochastically corrupting the segmentation procedure of BPE, producing multiple segmentations within the same fixed BPE framework.
 
@@ -426,7 +428,7 @@ It's hypothesized in the paper that exposing a model to different segmentations 
 
 Sentences segmented with BPE-Dropout are longer. There is a danger that models trained with BPE-Dropout might use more fine-grained segmentation during inference and hence slow down the process.
 
-\subsection{BPE drawbacks}
+\subsubsection{BPE drawbacks}
 
 Kudo (2018)~\cite{kudo-2018-subword} showed that BPE is a \textbf{greedy algorithm} that keeps the most frequent words intact, while splitting the rare ones into multiple tokens. BPE splits words into unique sequences, meaning that for each word, a model observes \textbf{only one segmentation}, meaning that if there is a segmentation error, all the following steps are erroneous. Additionally, subwords into which rare words are segmented end up poorly understood.
 
