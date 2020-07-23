@@ -8,12 +8,11 @@ source, target = 'eng', 'deu' #eng, deu
 source_bpe, target_bpe = False, False # both can't be true at the same time
 
 space = True
-dropout = 0
-dropout_samples = 10
+dropout = 0.1
+dropout_samples = 7
 learn_symbols = 20000
-all_symbols = [100, 200, 500, 1000, 2000, 4000, 6000, 8000]
-merge_threshold = [0.3, 0.5, 0.7, 0.9] # if alignments are present in >X% of files, they're accepted
-#avgs = [3, 5, 7, 10] # average dropout scores, avg of 3, 5, ...
+all_symbols = [1000]
+merge_threshold = [0.7] # if alignments are present in >X% of files, they're accepted
 
 rootdir = os.getcwd()
 if rootdir.split(os.sep)[-1] == 'src':
@@ -27,7 +26,7 @@ goldpath = join(inputdir, source+'_'+target+'.gold')
 inputpath = {source: join(inputdir, source+'_with_10k.txt'),
             target: join(inputdir, target+'_with_10k.txt')}
 
-mode = "fastalign" #fastalign, eflomal
+mode = "eflomal" #fastalign, eflomal
 fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 # https://github.com/robertostling/eflomal
 eflomal_path = join(rootdir, "tools/eflomal")

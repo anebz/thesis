@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-from os.path import join
 import os
 import sys
+import time
 import codecs
+from datetime import timedelta
+from os.path import join
 
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -100,10 +102,10 @@ if __name__ == "__main__":
 	usage 2: ./extract_alignments.py -p parallel_file -o output_file
 	'''
 
-	print(f"Extracting alignments for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
-
-	os.makedirs(join(bpedir, 'fastalign'), exist_ok=True)
-	if not os.path.isfile(join(bpedir, mode, 'input.wgdfa')):
+	print(f"Extracting alignments with {mode} for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
+	t0 = time.time()
+	os.makedirs(join(bpedir, mode), exist_ok=True)
+	if not os.path.isfile(join(bpedir, mode, 'input.gdfa')):
 		extract_alignments(input_mode=True)
 
 	if dropout > 0:
@@ -111,6 +113,7 @@ if __name__ == "__main__":
 		for i in range(dropout_samples):
 			print(f"Iteration {i+1}")
 			extract_alignments(i)
-			print("\n\n\n\n")
 	else:
 		extract_alignments()
+
+	print(f"The process of extracting alignments took {str(timedelta(seconds=time.time()-t0))}")

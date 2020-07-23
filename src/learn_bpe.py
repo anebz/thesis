@@ -224,10 +224,12 @@ def learn_bpe(corpus: list) -> list:
         desc=f"learn_bpe: num_symbols={learn_symbols}, lang={lang}, space mode={space}"
         ):
 
+        # stop the loop if the frequency of the most common pair is 1
+        if pairs.most_common(1)[0][1] == 1:
+            break
         try:
             most_frequent = pairs.most_common(1)[0][0]
         except:
-            # pairs is empty
             break
 
         most_freq_merges.append(most_frequent)

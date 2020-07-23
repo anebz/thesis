@@ -9,12 +9,9 @@ Master thesis repo
 
 ## tasks
 
-* [ ] QUESTION: does eflomal use gdfa algorithm as well? atools from fastalign
-* [ ] eflomal instead of fastalign. result will probably not be as good
-* [ ] english - french, english - romanian (Masoud has datasets)
 * [ ] extract_alignments: maybe do fast align in one big file? both ways seem to work
 
-### BPE improvement
+### BPE improvement, after thesis
 
 * [ ] BPE improvement without dropout. comple t ely
   * divide and conquer, first make big chunks then merge them together instead of adding characters to the biggest chunk one by one

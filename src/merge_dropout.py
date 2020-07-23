@@ -57,8 +57,7 @@ def calc_score_merges():
     probs, surs, surs_count = load_gold(goldpath)
     baseline_df = pd.read_csv(join(baselinedir, f"{source}_{target}{'' if space else '_ns'}_{mode}.csv"))
     scorespath = join(scoredir, 'space' if space else 'no space', str(dropout))
-    if not os.path.isdir(scorespath):
-        os.mkdir(scorespath)
+    os.makedirs(scorespath, exist_ok=True)
     for merge_type in ['union', 'inter']:
         scores = []
         for num_symbols in all_symbols:
