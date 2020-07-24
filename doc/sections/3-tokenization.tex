@@ -29,7 +29,7 @@ In this example, the tokenization process is simple. First, locate the word boun
 
 \paragraph{How to deal with punctuation marks?}
 
-Every language has its challenges. In ENglish for example, there are possessors such as \emph{aren't}, and contractions such as \emph{Sarah's} and \emph{O'Neill}. Because of this, it is imperative to know the language of the input text. \textit{Language identification} is the task of identifying the language of the input text. Methods ranging from the initial k-gram algorithms used in cryptography (Konnheim, 1981), to more modern n-gram methods (Dunning, 1994) are commonly used. Once the language is identified, we can follow the rules for each case and deal with punctuation marks appropriately.
+Every language has its challenges. In English for example, there are possessors such as \emph{aren't}, and contractions such as \emph{Sarah's} and \emph{O'Neill}. Because of this, it is imperative to know the language of the input text. \textit{Language identification} is the task of identifying the language of the input text. Methods ranging from the initial k-gram algorithms used in cryptography (Konnheim, 1981), to more modern n-gram methods (Dunning, 1994) are commonly used. Once the language is identified, we can follow the rules for each case and deal with punctuation marks appropriately.
 
 \paragraph{Other types of tokens}
 
@@ -135,7 +135,7 @@ These problems are not to be mistaken with tokenization problems, tokenization i
 
 In this type of tokenization, instead of splitting a text into words, the splitting is done into characters, whereby \emph{smarter} becomes \emph{s-m-a-r-t-e-r} for instance. \href{https://github.com/karpathy/char-rnn}{Karpathy, 2015} was the first to introduce a character level language model.
 
-OOV words, misspellings or rare words are handled better, since they are broken down into characters and these characters are usually known in the vocabulary. In addition, the size of the vocabulary is significantly lower, namely 26 in the simple case where only the English characters are considered, though one might as well include all ASCII characters. Zhang et al. (2015)~\cite{zhang2015text}, who introduced the character CNN, consider all the alphanumeric character, in addition to puctuation marks and some special symbols.
+OOV words, misspellings or rare words are handled better, since they are broken down into characters and these characters are usually known in the vocabulary. In addition, the size of the vocabulary is significantly lower, namely 26 in the simple case where only the English characters are considered, though one might as well include all ASCII characters. Zhang et al. (2015)~\cite{zhang2015text}, who introduced the character CNN, consider all the alphanumeric character, in addition to punctuation marks and some special symbols.
 
 Character level models are unrestricted in their vocabulary and see the input "as-is". Since the vocabulary is much lower, the model's performance is much better than in the word tokens case. Tokenizing sequences at the character level has shown some impressive results.
 
@@ -188,18 +188,18 @@ BPE (Sennrich et al., 2016~\cite{sennrich2015neural}) merges the most frequently
     \item Repeat from step 3 until reaching subword vocabulary size (defined in step 2) or the next highest frequency pair is 1. Following the example, ('t', 'h') would be replaced by 'th' in the corpus, the pairs calculated again, the most frequent pair obtained again, and merged again.
 \end{enumerate}
 
-BPE is based on a greedy and deterministic symbol replacement, and ca not provide multiple segmentations.
+BPE is based on a greedy and deterministic symbol replacement and can not provide multiple segmentations.
 
 \paragraph{Unigram LM}\label{subsubsec:unigramlm}
 
-Unigram language modeling (Kudo, 2018~\cite{kudo-2018-subword}) is based on the assumption that all subword occurrences are independent and therefore subword sequences are produced by the product of subword occurrence probabilities. These are the steps of the algorithm:
+Unigram language modelling (Kudo, 2018~\cite{kudo-2018-subword}) is based on the assumption that all subword occurrences are independent and therefore subword sequences are produced by the product of subword occurrence probabilities. These are the steps of the algorithm:
 
 \begin{enumerate}
     \item Get a large enough corpus.
     \item Define a desired subword vocabulary size.
     \item Optimize the probability of word occurrence by giving a word sequence.
     \item Compute the loss of each subword.
-    \item Sort the symbol by loss and keep top X \% of word (X=80\% for example). To avoid oov instances, character level is recommended to be included as a subset of subwords.
+    \item Sort the symbol by loss and keep top X \% of word (X=80\% for example). To avoid OOV instances, character level is recommended to be included as a subset of subwords.
     \item Repeat step 3–5 until reaching the subword vocabulary size (defined in step 2) or there are no changes (step 5).
 \end{enumerate}
 
@@ -254,7 +254,7 @@ The number of unique tokens in SentencePiece is predetermined, the segmentation 
 
 \subsubsection{Tokenization without word boundaries}\label{subsec:wordtokwowb}
 
-Another type of tokenization, beyond word, character or subword, is tokenization without word boundaries. The three types of tokenization explored until now cannot create units among words, that is, they consider words separatedly.
+Another type of tokenization, beyond word, character or subword, is tokenization without word boundaries. The three types of tokenization explored until now cannot create units among words, that is, they consider words separately.
 
 When dealing with languages that do not include space tokenization, such as several Asian languages, an individual symbol can resemble a syllable rather than a word or letter. Most words are short (the most common length is 2 characters), and given the lack of standardization of word breaks in the writing system or lack of punctuation in certain languages, it is not always clear where word boundaries should be placed. As an example, in English:
 
@@ -424,7 +424,7 @@ BPE dropout (Provilkov et al., 2019~\cite{provilkov2019bpedropout}) changes the 
 
 It exploits the innate ability of BPE to be stochastic: the merge table remains the same, but when applying it to the corpus, at each merge step some merges are randomly dropped with probability p, hence the name of BPE dropout. In the paper p=0.1 is used during training and p=0 during inference. For the Chinese and Japanese languages, p=0.6 is used in order to match the increase in length of segmented sentences as other languages.
 
-It's hypothesized in the paper that exposing a model to different segmentations might result in better understanding of the whole words as well as their subword units. The performance improvement with respect to normal BPE is consistent no matter the vocabulary size, but it is shown that the impact from using BPE-Dropout vanishes when a corpora size gets bigger. These results are replicated and confirmed in later chapters.
+It is hypothesized in the paper that exposing a model to different segmentations might result in better understanding of the whole words as well as their subword units. The performance improvement with respect to normal BPE is consistent no matter the vocabulary size, but it is shown that the impact from using BPE-Dropout vanishes when a corpora size gets bigger. These results are replicated and confirmed in later chapters.
 
 Sentences segmented with BPE-Dropout are longer. There is a danger that models trained with BPE-Dropout might use more fine-grained segmentation during inference and hence slow down the process.
 

@@ -6,7 +6,7 @@
 
 \section{Translation}\label{ch:translation}
 
-A significant component of this thesis is the use of word alignments, a method eployed in satistical machine translation in order to gauge how good a translation is. If a word in French gets aligned to its equivalent word in English, for example \emph{maison-house}, then the translation is correct. It is a metric to evaluate if a translation has been successful.
+A significant component of this thesis is the use of word alignments, a method employed in statistical machine translation in order to gauge how good a translation is. If a word in French gets aligned to its equivalent word in English, for example \emph{maison-house}, then the translation is correct. It is a metric to evaluate if a translation has been successful.
 
 This thesis is not related to translation, not SMT nor its more modern approach neural machine translation. But the word alignment algorithm is used in order to compare word alignments against BPE alignments. Taking word alignments as the basis, alignment algorithms are used to see if these BPE units are also correctly aligned to the BPE units in the other language. For example, ideally the English suffix \emph{ment} would be aligned to the German word ending of \emph{keit}. But before diving deep into word alignments and how they work, it is important to understand the background of this algorithm, as well as its original purpose and a general notion of how statistical machine translation works.
 
@@ -23,7 +23,7 @@ SMT is a machine translation approach where translations are generated based on 
 
 Given the word \emph{gracias}, the translation algorithm would give a higher probability that it is aligned with \emph{thanks}, and lower probabilities to other alignments. For each word, there usually is a list with alignment possibilities and its probabilities, and the one with the highest probability is taken as alignment. Note that since this translation method is statistical, there is no direct translation, there is no direct approval of one alignment and dismissal of the rest, since all is based on probabilities.
 
-Typically, a translation model first translates the source language into a broken version of the target language, using an algorithm such as the expectation-maximization algorithm. Afterwards, a language model in the target language makes the broken language look more natural, in the way native speakers would speak it. A good language model will for example assign a higher probability to the sentence "the house is small" than to "small the is house". An example of a translation system from Spanish to English can be seen in Figure  4.1. In the first step, the translation model needs to know which words to align in a source-target sentence pair, which is handled by the word alignment step.
+Typically, a translation model first translates the source language into a broken version of the target language, using an algorithm such as the expectation-maximization algorithm. Afterwards, a language model in the target language makes the broken language look more natural, in the way native speakers would speak it. A good language model will for example assign a higher probability to the sentence "the house is small" than to "small the is house". An example of a translation system from Spanish to English can be seen in Figure  3.6. In the first step, the translation model needs to know which words to align in a source-target sentence pair, which is handled by the word alignment step.
 
 \begin{figure}[!ht]
     \centering
@@ -33,7 +33,7 @@ Typically, a translation model first translates the source language into a broke
 
 \subsection{Word alignments}
 
-Word alignment between a parallel corpora is the NLP task of identifying translation relationships among the words in a parallel text, resulting in a graph between the two sides of the texts, with an arc between two words if they are translations of one another. Figure 4.2. shows an alignment example between a sentence in English and its counterpart in French. Alternatively, the alignments can also be displayed in a matrix as shown in Figure 4.3.
+Word alignment between a parallel corpora is the NLP task of identifying translation relationships among the words in a parallel text, resulting in a graph between the two sides of the texts, with an arc between two words if they are translations of one another. Figure 3.7. shows an alignment example between a sentence in English and its counterpart in French. Alternatively, the alignments can also be displayed in a matrix as shown in Figure 3.8.
 
 \begin{figure}[!ht]
     \centering
@@ -47,7 +47,7 @@ Word alignment between a parallel corpora is the NLP task of identifying transla
     \caption{Word alignments between an English and French sentence in matrix form.}
 \end{figure}
 
-The most basic words usually have one-to-one alignments, such as \emph{the-le} in this example, and words with the same root, \emph{programme-programme} since they both come from Latin. However, in many cases one language might express something using one word but another might express with with many words, distributed throughout the sentence. Besides, as seen in this example, some words do not even have an alignment (\emph{And}), and some have multiple alignments, in this case one-to-many: \emph{inmplemented-mis en application}. There can also be many-to-one and many-to-many alignments.
+The most basic words usually have one-to-one alignments, such as \emph{the-le} in this example, and words with the same root, \emph{programme-programme} since they both come from Latin. However, in many cases one language might express something using one word but another might express with with many words, distributed throughout the sentence. Besides, as seen in this example, some words do not even have an alignment (\emph{And}), and some have multiple alignments, in this case one-to-many: \emph{implemented-mis en application}. There can also be many-to-one and many-to-many alignments.
 
 The parameters of word alignment methods are usually estimated by observing word-aligned texts~\cite{brown1993mathematics}, and automatic word alignment is typically done by choosing that alignment which best fits a statistical machine translation model. A popular algorithm to find word alignments is the \textbf{expectation-maximization algorithm}~\cite{och1999improved}
 
@@ -59,7 +59,7 @@ This approach is an example of unsupervised learning, meaning that the system ha
 
 Fastalign algorithm~\cite{dyer-etal-2013-simple} is a simple log-linear reparametrization of IBM Model 2 that overcomes problems from both Model 1 and Model 2. Training this model is consistently ten times faster than Model 4. An open-source implementation of the alignment model described in this paper is available in \href{http://github.com/clab/fast align}{Github}.
 
-Fastalign is a variation of the lexical translation. Lexican translation works as follows: given a source sentence \emph{f} with length \emph{n}, first generate the length of the target sentence \emph{m}, where the target sentence is \emph{e}. Then generate an alignment vector of length \emph{m} that indicates which source word (or null token) each target word will be a translation of. Lastly, generate the \emph{m} output words, where each word in \emph{e} depends only on the word in \emph{f} it's aligned with.
+Fastalign is a variation of the lexical translation. Lexical translation works as follows: given a source sentence \emph{f} with length \emph{n}, first generate the length of the target sentence \emph{m}, where the target sentence is \emph{e}. Then generate an alignment vector of length \emph{m} that indicates which source word (or null token) each target word will be a translation of. Lastly, generate the \emph{m} output words, where each word in \emph{e} depends only on the word in \emph{f} it is aligned with.
 
 Fastalign's modification is that the distribution over alignments is parametrized by a null alignment probability and a precision parameter, which controls how strongly the model favors alignment points close to the diagonal (if we use the word alignment matrix like in the example above). It also adds a symmetrization step called GDFA.
 
@@ -67,11 +67,11 @@ The paper~\cite{dyer-etal-2013-simple} has more detailed information on training
 
 \subsubsection{Eflomal algorithm}
 
-The Eflomal alignment algorithm~\cite{ostling2016efficient}, presented in 2016, defins itself as an \emph{Efficient Low-Memory Aligner}. Its code is available \href{https://github.com/robertostling/eflomal}{on Github}, and it is a word alignment tool based on efmaral, with some improvements, such as more compact data structures, yielding a lower memory requirement, and the fact that the estimation of alignment variable marginals is done one sentence at a time, which also saves a lot of memory at no detectable cost in accuracy. Eflomal differs from Fastalign in the sense that it is based on a hidden Markov Model, as opposite to Fastalign which is based on an IBM model. Eflomal also requires the simmetrization step GDFA, and has historically had better results than Fastalign. Technical details relevant to both efmaral and eflomal can be found in the cited article.
+The Eflomal alignment algorithm~\cite{ostling2016efficient}, presented in 2016, defines itself as an \emph{Efficient Low-Memory Aligner}. Its code is available \href{https://github.com/robertostling/eflomal}{on Github}, and it is a word alignment tool based on \emph{Efmaral}, with some improvements, such as more compact data structures, yielding a lower memory requirement, and the fact that the estimation of alignment variable marginals is done one sentence at a time, which also saves a lot of memory at no detectable cost in accuracy. Eflomal differs from Fastalign in the sense that it is based on a hidden Markov Model, as opposite to Fastalign which is based on an IBM model. Eflomal also requires the simmetrization step GDFA, and has historically had better results than Fastalign. Technical details relevant to both \emph{Efmaral} and \emph{Eflomal} can be found in the cited article.
 
 \subsection{Alignment metrics}\label{tra:metrics}
 
-Evaluating alignments is usually done by the following metrics: precision, recall, F1 score and accuracy. It is assumed that the actual results are at a disposal, in this case, that the correct alignments are known. The system then makes a prediction for certain alignments. This confusion matrix shows th etable for true positives, true negatives, false positives and false negatives.
+Evaluating alignments is usually done by the following metrics: precision, recall, F1 score and accuracy. It is assumed that the actual results are at a disposal, in this case, that the correct alignments are known. The system then makes a prediction for certain alignments. This confusion matrix shows the table for true positives, true negatives, false positives and false negatives.
 
 \begin{figure}[!ht]
     \centering

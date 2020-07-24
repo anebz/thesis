@@ -17,9 +17,16 @@
 .
 ├── data
 │   ├── input
-│   │   ├── eng_with_10k.txt   # input txt file with 10k english sentences
-│   │   ├── deu_with_10k.txt
-│   │   └── eng_deu.gold       # gold standard alignments for English-German
+│   │   ├── eng-deu
+│   │   │   ├── eng_with_10k.txt   # input txt file with 10k english sentences
+│   │   │   ├── deu_with_10k.txt
+│   │   │   ├── eng_deu.gold       # gold standard alignments for English-German
+│   │   │   ├── eng.model          # merge list for english, space mode
+│   │   │   ├── deu.model
+│   │   │   ├── eng_ns.model       # merge list for english, no space mode
+│   │   │   └── deu_ns.model
+│   │   ├── eng-ron
+│   │   └── eng-hin
 │   ├── normal_bpe
 │   │   ├── segmentations      # files obtained by segmenting based on num_symbols and lang
 │   │   │   └── *.bpe
@@ -27,17 +34,12 @@
 │   │   │   └── .wgdfa
 │   │   └── eflomal            # files obtained from eflomal alignment algorithm
 │   │       └── .wgdfa
-│   ├── dropout_bpe
-│   │   ├── segmentations                             
-│   │   │   └── *.bpe
-│   │   ├── fastalign                                 
-│   │   │   └── *.wgdfa
-│   │   └── eflomal                                   
-│   │       └── *.wgdfa
-│   ├── eng.model              # merge list for english, space mode
-│   ├── deu.model
-│   ├── eng_ns.model           # merge list for english, no space mode
-│   └── deu_ns.model
+│   └── dropout_bpe
+│       ├── segmentations
+│       │   └── *.bpe
+│       ├── fastalign
+│       │   └── *.wgdfa
+│       └── eflomal
 ├── doc                        # LaTeX files for the writing of the thesis
 │   ├── figures
 │   ├── sections

@@ -10,7 +10,7 @@ This chapter shows the results and analysis for each step of the development of 
 
 \section{Replication of BPE}
 
-When replicating BPE, the best BPE result using Fastalign as alignment algorithm is a F1 score of 0.609, obtained after 1000 BPE merges. The baseline has a F1 score of 0.6. Baseline in this situation refers to the scores when aligning the raw corpus, leaving the words untouched and with no BPE units.
+When replicating BPE, the best BPE result using \emph{Fastalign} as alignment algorithm is a F1 score of 0.609, obtained after 1000 BPE merges. The baseline has a F1 score of 0.6. Baseline in this situation refers to the scores when aligning the raw corpus, leaving the words untouched and with no BPE units.
 
 \begin{figure}[!ht]
     \centering
@@ -18,7 +18,7 @@ When replicating BPE, the best BPE result using Fastalign as alignment algorithm
     \caption{Scores of BPE over baseline, using Fastalign}
 \end{figure}
 
-In the case of Eflomal, the baseline F1 score is 0.72, and the best F1 score is 0.701, obtained after 6000 merges. When using Eflomal, BPE does not improve the baseline.
+In the case of \emph{Eflomal}, the baseline F1 score is 0.72, and the best F1 score is 0.701, obtained after 6000 merges. When using \emph{Eflomal}, BPE does not improve the baseline.
 
 \begin{figure}[!ht]
     \centering
@@ -26,7 +26,7 @@ In the case of Eflomal, the baseline F1 score is 0.72, and the best F1 score is 
     \caption{Scores of BPE over baseline, using Eflomal}
 \end{figure}
 
-The alignment algorithms, Fastalign and Eflomal, require one language to be given as source and the other as target, and perform the alignment based on this. Throughout the thesis, English has been taken as the source language and German as the target. It might have been interesting to see that swapping the languages would yield different results, by swapping the languages in the global variables file. The difference between these two cases is barely perceptible, a difference of 0.03\% throughout the scores across all numbers of merges. Therefore, it is assumed that swapping the source and target language has no effect in the experiment result scores.
+The alignment algorithms, \emph{Fastalign} and \emph{Eflomal}, require one language to be given as source and the other as target, and perform the alignment based on this. Throughout the thesis, English has been taken as the source language and German as the target. It might have been interesting to see that swapping the languages would yield different results, by swapping the languages in the global variables file. The difference between these two cases is barely perceptible, a difference of 0.03\% throughout the scores across all numbers of merges. Therefore, it is assumed that swapping the source and target language has no effect in the experiment result scores.
 
 \section{Replication of BPE dropout}
 
@@ -35,10 +35,10 @@ BPE dropout is meant to be an improvement of BPE, therefore the desired score co
 \begin{itemize}
 	\item The \textbf{union} case takes all alignments into account, resulting in a big list of alignments per sentence. These most probably include the correct alignments, but there are many other wrong alignments. This case has low precision and high recall.
 	\item The \textbf{intersection} case takes only those alignments which are present in all alignment files, resulting in a few number of alignments per sentence. Most probably, these alignments are correct, but there are also be many alignments missing. This case has high precision and low recall.
-	\item The \textbf{threshold} case is a mixture between union and intersection. Given a threshold, for instance 0.7, an alignemnt is accepted if it is present in 70\% of the alignment files. Smaller values for this variable resemble the union case, since more alignments are accepted. Higher threshold numbers resemble the intersection case, where alignments must be present in more and more files in order to be accepted.
+	\item The \textbf{threshold} case is a mixture between union and intersection. Given a threshold, for instance 0.7, an alignment is accepted if it is present in 70\% of the alignment files. Smaller values for this variable resemble the union case, since more alignments are accepted. Higher threshold numbers resemble the intersection case, where alignments must be present in more and more files in order to be accepted.
 \end{itemize}
 
-The following figures show the results for a \emph{dropout} rate of 10\%, and the union, intersection and threshold cases.
+The following figures 6.3, 6.4 and 6.5. show the results for a \emph{dropout} rate of 10\%, and the union, intersection and threshold cases.
 
  \begin{figure}[!ht]
      \centering
@@ -66,7 +66,7 @@ It can be seen that the F1 score improves consistently the more BPE units have b
     \caption{Scores for BPE with dropout 0.1, threshold mode at 0.7}
 \end{figure}
 
-It's visible that the scores plot with the thershold at 0.3 resembles the union case more, and recall goes lower while the precision goes higher for larger threshold values. The optimal result is found at the threshold value of 0.7. This result is replicated when increasing the dropout rate up to 20\% as well as 30\%, and setting the alignment threshold at 0.5. \textbf{This shows that BPEs are robust to dropout}.
+It is visible that the scores plot with the threshold at 0.3 resembles the union case more, and recall goes lower while the precision goes higher for larger threshold values. The optimal result is found at the threshold value of 0.7. This result is replicated when increasing the dropout rate up to 20\% as well as 30\%, and setting the alignment threshold at 0.5. \textbf{This shows that BPEs are robust to dropout}.
 
 In the BPE dropout paper~\cite{provilkov2019bpedropout}, the authors only use one dropout percentage, namely 10\% for all languages and 60\% specifically for Chinese and Japanese to match the increase in length of segmented sentences for other languages. The paper hypothesizes that exposing a model to different segmentations might result in better understanding of the whole words as well as their subword units, which is proven by the paper and by this thesis as well. The paper authors also speculate the following:
 
@@ -74,7 +74,7 @@ In the BPE dropout paper~\cite{provilkov2019bpedropout}, the authors only use on
 	Results indicate that using BPE-Dropout on the source side is more beneficial than using it on the target side. We speculate it is more important for the model to understand a source sentence, than being exposed to different ways to generate the same target sentence.
 \end{quote}
 
-This phenomenon has not been the case in this thesis, the results, as shown in the figure below, have actually been slightly worse than normal BPE, the difference decreasing the more symbols are employed. A reason for this might be that the empoyed corpora are small, or that the languages in the available setting (English and German) show a different behaviour than the average.
+This phenomenon has not been the case in this thesis, the results, as shown in the figure below, have actually been slightly worse than normal BPE, the difference decreasing the more symbols are employed. A reason for this might be that the employed corpora are small, or that the languages in the available setting (English and German) show a different behaviour than the average.
 
 \begin{figure}[!ht]
     \centering
@@ -92,9 +92,9 @@ This thesis has predominantly been run with a fixed size, relatively small corpu
 
 As the BPE dropout paper states, \emph{BPE dropout improves BPE consistently no matter how many merges are performed}. This result is replicated in this paper. Additionally, in the paper they use a fixed dropout rate and they give no information as per the threshold used in determining how to aggregate alignments. \textbf{By experimenting with different dropout and threshold rates, it was possible to improve the F1 score by selecting a dropout rate of 30\%, which is specific to the corpus, in this case English and German, creating 30 segmentations and selecting an alignment threshold of 0.5. This results in a F1 score of 0.685, an improvement of 2\% from the previous case}.
 
-\section{Improvement of the learn BPE algorithm}
+\section{Improvement of the learn-BPE algorithm}
 
-By modifying the algorithm to update the corpus after a merge, by introducing indexes and frequency counts to reduce iteration, the learn BPE algorithm's runtime was dramatically accelerated. In the beginning, the algorithm starts by creating around 1.5 BPE merges per second, which is relatively slow because since the most frequent pairs are so frequent, most of the indexes in the corpus are visited and many update operations are done. The further down in the iterations, the less frequent merges are, the faster it is to merge them and update the corpus. The speed of merges per second gets faster and faster until by the time it is finished with the corpus, it is running at roughly 300 merges per second for English and 120 merges per second in German.
+By modifying the algorithm to update the corpus after a merge, by introducing indexes and frequency counts to reduce iteration, the learn-BPE algorithm's runtime was dramatically accelerated. In the beginning, the algorithm starts by creating around 1.5 BPE merges per second, which is relatively slow because since the most frequent pairs are so frequent, most of the indexes in the corpus are visited and many update operations are done. The further down in the iterations, the less frequent merges are, the faster it is to merge them and update the corpus. The speed of merges per second gets faster and faster until by the time it is finished with the corpus, it is running at roughly 300 merges per second for English and 120 merges per second in German.
 
 After the improvement, the algorithm, on average, needs \textbf{55s to learn BPE merges in English, and 1:25min in German on corpora composed of 10.000 sentences}. The time difference between English and German is due to the fact that the words in German are generally lower, with a higher variance, and there are therefore more merge possibilities. In contrast, Sennrich et al.~\cite{sennrich2015neural}'s algorithm needs 2:15min for English and 3:20min for German. The algorithm presented here shows an improvement in speed of 2.5x for English and 2.4x for German. These tests have been performed on an Intel Core i5-7200U CPU at 2.5GHz, a 64-bit Windows OS with 8GB RAM.
 
@@ -106,7 +106,7 @@ Learning BPE units that can handle merges among words takes more time, since the
 
 As with the space case, the algorithm starts relatively slow, at around 0.7 BPE merges per second. While the most frequent merge in the space case is \emph{\_t, h} for English and \emph{e, n} for German, in the no space case the most frequent merges are \emph{e, \_} for English and \emph{e, n} again for German. In the English case, the pair \emph{e, \_} is much more frequent than the pair \emph{\_t, h}, and it takes more time for this pair to get merged. Afterwards, the number of merges per second increases until plateauing at 50 merges per second in English, and slightly lower in German. The runtime is \textbf{3:50min for 10.000 merges in English and 4:10min in German}. Since there are more merge possibilities, the algorithm was also run \textbf{for 20.000 merges, with a runtime of 9:30min in English and 10min in German}.
 
-Further down the pipeline, alignments are performed without any notion of what words are, and Fastalign and Eflomal are not thought to handle multiword-to-multiword alignments. It is therefore expected that the scores will be lower than in the space case, and it is also expected that the more BPE merges, the bigger the segmentations, the more words will be merged together. For instance, if the multiword unit \emph{in\_the\_street} is aligned to \emph{auf\_der\_Strasse}, the following mapping would be performed: \emph{in-auf}, \emph{in-der}, \emph{in-Strasse}, \emph{the-auf}, \emph{the-der} and so on. This brings the precision down dramatically, since most of these alignments are incorrect. For the case of no dropout, the best result for BPE without space separations is a F1 score of 0.477, obtained at 200 merges, which is a very low number of merges compared to the previous best scores. The F1 score is also poor relative to the case where merges between words are no allowed. Regardless, given that there is no notion as to what a word constitutes, this result cannot be poorly regarded.
+Further down the pipeline, alignments are performed without any notion of what words are, and \emph{Fastalign} and \emph{Eflomal} are not thought to handle multiword-to-multiword alignments. It is therefore expected that the scores will be lower than in the space case, and it is also expected that the more BPE merges, the bigger the segmentations, the more words will be merged together. For instance, if the multiword unit \emph{in\_the\_street} is aligned to \emph{auf\_der\_Strasse}, the following mapping would be performed: \emph{in-auf}, \emph{in-der}, \emph{in-Strasse}, \emph{the-auf}, \emph{the-der} and so on. This brings the precision down dramatically, since most of these alignments are incorrect. For the case of no dropout, the best result for BPE without space separations is a F1 score of 0.477, obtained at 200 merges, which is a very low number of merges compared to the previous best scores. The F1 score is also poor relative to the case where merges between words are no allowed. Regardless, given that there is no notion as to what a word constitutes, this result cannot be poorly regarded.
 
 \begin{figure}[!ht]
     \centering
@@ -128,7 +128,7 @@ For the dropout rate of 10\%, results already improve wtih a F1 score of 0.523 f
     \caption{Scores for no space BPE with dropout 0.2, threshold at 0.5}
 \end{figure}
 
-Experiments with higher dropout rates have also been conducted, namely a dropout rate of 50\% which is very large, half the merges are dropped, with a F1 score of 0.529 for 4000 merges and an alignment tnreshold of 0.3. These parameters are considerably different than the ones previously. The ideal score happens at 4000 merges, which makes sense that it is a bigger number since so many merges are dropped. And the alignment threshold is also very low compared to previous cases, meaning that most alignments are accepted creating a sort of union.
+Experiments with higher dropout rates have also been conducted, namely a dropout rate of 50\% which is very large, half the merges are dropped, with a F1 score of 0.529 for 4000 merges and an alignment threshold of 0.3. These parameters are considerably different than the ones previously. The ideal score happens at 4000 merges, which makes sense that it is a bigger number since so many merges are dropped. And the alignment threshold is also very low compared to previous cases, meaning that most alignments are accepted creating a sort of union.
 
 \begin{figure}[!ht]
     \centering
