@@ -14,7 +14,7 @@ from settings import *
 
 def read_bpe_model(lang: str) -> (list, int):
     # check if a BPE model for this language exists
-    # if so, only create new BPE model if learn_symbols > symbols in the model
+    # if so, only create new BPE model if learn_merges > symbols in the model
     model_path = join(inputdir, f"{lang}{'' if space else '_ns'}.model")
     if os.path.isfile(model_path):
         bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
@@ -220,8 +220,8 @@ def learn_bpe(corpus: list) -> list:
 
     most_freq_merges = []
     for i in tqdm(
-        range(learn_symbols), 
-        desc=f"learn_bpe: num_symbols={learn_symbols}, lang={lang}, space mode={space}"
+        range(learn_merges), 
+        desc=f"learn_bpe: num_symbols={learn_merges}, lang={lang}, space mode={space}"
         ):
 
         # stop the loop if the frequency of the most common pair is 1
@@ -252,8 +252,8 @@ if __name__ == '__main__':
         argsinput = codecs.open(inputpath[lang], encoding='utf-8')
         _, model_symbols = read_bpe_model(lang)
 
-        if learn_symbols <= int(model_symbols):
-            print(f"A model for lang={lang} with at least {learn_symbols} symbols already exists")
+        if learn_merges <= int(model_symbols):
+            print(f"A model for lang={lang} with at least {learn_merges} symbols already exists")
             continue
 
         most_freq_merges = learn_bpe(argsinput)

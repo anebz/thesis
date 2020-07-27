@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 import os
-from os.path import join
 import sys
 import glob
+import codecs
 import random
 import collections
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
+from tqdm import tqdm
+from os.path import join
+import matplotlib.pyplot as plt
+from collections import Counter
 
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -128,11 +131,10 @@ def plot_scores(df: pd.DataFrame, baseline_df: pd.DataFrame, scoredir: str):
 	plt.savefig(join(scoredir+'.png'))
 	return
 
-
 def calc_align_scores(probs: dict, surs: dict, surs_count: float, baseline_df: pd.DataFrame, i: int =-1) -> pd.DataFrame:
 
 	scores = []
-	for num_symbols in all_symbols:
+	for num_symbols in merges:
 		alfile = join(bpedir, mode, 
 			f"{num_symbols}{'_'+str(i) if dropout else ''}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}.wgdfa")
 
@@ -145,9 +147,7 @@ def calc_align_scores(probs: dict, surs: dict, surs_count: float, baseline_df: p
 
 	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 
-	scorename = scoredir +'/'
-	if not (target_bpe or source_bpe):
-		scorename += source + '_' + target
+	scorename = scoredir + '/' + source + '_' + target
 	if not space:
 		scorename += '_ns'
 	if target_bpe:
@@ -162,25 +162,57 @@ def calc_align_scores(probs: dict, surs: dict, surs_count: float, baseline_df: p
 		plot_scores(df, baseline_df, scorename)
 	return df
 
+# functions for dropout mode
+def calc_score_merges(probs, surs, surs_count, baseline_df):
+    scorespath = join(scoredir, 'space' if space else 'no space', str(dropout))
+    os.makedirs(scorespath, exist_ok=True)
+    for merge_type in ['union', 'inter']:
+        scores = []
+        for num_symbols in merges:
+            mergefilepath = join(bpedir, mode, f'{num_symbols}_{merge_type}.wgdfa')
+
+            score = [int(num_symbols)]
+            score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
+            scores.append(score)
+
+       	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+        scorename = join(scorespath, f"{source}_{target}_{''if space else 'ns_'}{merge_type}_{mode}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}")
+
+        print(f"Scores saved into {scorename}")
+        df.to_csv(scorename+'.csv', index=False)
+        plot_scores(df, baseline_df, scorename)
+
+    # threshold case, iterate all merge_thresholds saved
+    for merge_t in merge_threshold:
+        scores = []
+        for num_symbols in merges:
+            mergefilepath = join(bpedir, mode, f'{num_symbols}_thres_{merge_t}.wgdfa')
+
+            score = [int(num_symbols)]
+            score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
+            scores.append(score)
+
+        df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+        scorename = join(scorespath, f"{source}_{target}_{'' if space else 'ns_'}{merge_t}_thres_{mode}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}")
+        
+        print(f"Scores saved into {scorename}")
+        df.to_csv(scorename+'.csv', index=False)
+        plot_scores(df, baseline_df, scorename)
+    return
+
 
 if __name__ == "__main__":
-	'''
-	Calculate alignment quality scores based on the gold standard.
-	The output contains Precision, Recall, F1, and AER.
-	The gold annotated file should be selected by "gold_path".
-	The generated alignment file should be selected by "input_path".
-	Both gold file and input file are in the FastAlign format with sentence number at the start of line separated with TAB.
-	'''
 
 	print(f"Calculating alignment scores for source={source} and target={target}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
-
 	probs, surs, surs_count = load_gold(goldpath)
 
-	# no space case: take normal BPE scores as baseline. if normal case, take gold standard
-	if not space:
-		baseline_df = pd.read_csv(join(rootdir, 'reports/scores_normal_bpe', source+'_'+target+'.csv'))
-	else:
-		baseline_df = get_baseline_score(probs, surs, surs_count)
-
-	# only for dropout=0 mode, if dropout>1 do merge_dropout.py
-	calc_align_scores(probs, surs, surs_count, baseline_df)
+	if dropout:
+    	baseline_df = pd.read_csv(join(baselinedir, f"{source}_{target}{'' if space else '_ns'}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}_{mode}.csv"))
+		calc_score_merges(probs, surs, surs_count, baseline_df)
+    else:
+		# no space case: take normal BPE scores as baseline. if normal case, take gold standard
+		if not space:
+			baseline_df = pd.read_csv(join(rootdir, 'reports/scores_normal_bpe', source+'_'+target+'.csv'))
+		else:
+			baseline_df = get_baseline_score(probs, surs, surs_count)
+		calc_align_scores(probs, surs, surs_count, baseline_df)

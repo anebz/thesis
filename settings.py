@@ -1,18 +1,17 @@
 # global variables
 import os
-import sys
 import glob
 from os.path import join
 
 word_sep = u'\u2581'
-source, target = 'eng', 'hin' #eng, deu, ron, hin
+source, target = 'eng', 'ron' #eng, deu, ron, hin
 source_bpe, target_bpe = False, False # both can't be true at the same time
 
-space = True
-dropout = 0.1
+space = False
+dropout = 0
 dropout_samples = 10
-learn_symbols = 10000
-all_symbols = [1000]
+learn_merges = 10000
+merges = [100, 200, 500, 1000, 2000, 4000, 8000]
 merge_threshold = [0.7]
 
 rootdir = os.getcwd()
