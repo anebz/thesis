@@ -13,8 +13,8 @@ This chapter explains the technical content of this thesis in broad strokes, the
 Using Sennrich et al.'s~\cite{sennrich2015neural} \href{https://github.com/rsennrich/subword-nmt/}{code on Github}, the first goal of the thesis is to replicate the BPE algorithm, and gauge how good the BPE units are by using an alignment algorithm and matching it against a gold standard. For that, these steps are undertaken:
 
 \begin{enumerate}
-	\item Write learn BPE from corpus algorithm
-	\item Write apply BPE to corpus algorithm
+	\item Write learn-BPE from corpus algorithm
+	\item Write apply-BPE to corpus algorithm
 	\item Write extract alignment script
 	\item Write calculate alignment scores script
 \end{enumerate}
@@ -34,9 +34,9 @@ The corpus employed in this thesis is a 10k sentence English-German corpus. As a
 
 Each step of the pipeline will be detailed as follows.
 
-\subsection{Learn BPE algorithm}\label{met:learnbpe}
+\subsection{Learn-BPE algorithm}\label{met:learnbpe}
 
-Sennrich's repository's code has some additional parameters that were not relevant for a minimal implementation of the BPE algorithm, so the script was adapted. These are the steps for a minimal algorithm to learn BPE units:
+Sennrich's repository's code has some additional parameters that were not relevant for a minimal implementation of the BPE algorithm, so the script was adapted. These are the steps for a minimal algorithm to learn-BPE units:
 
 \begin{enumerate}
 	\item Read corpus into tokens, parse index.
@@ -53,7 +53,7 @@ Sennrich's repository's code has some additional parameters that were not releva
 
 This step of the pipeline only has to be done once for each corpus, afterwards the vocabulary can be used in different ways. But this minimal algorithm, since it has to count all the pairs in the whole corpus in each iteration, takes a long time. One of the improvements of this thesis is optimizing the runtime of this algorithm, which will be explained in the subsequent sections of this chapter. With the given corpus, these are the 10 most frequent merges in the English language: \_t h, \_th e, o n, r e, t i, e n, e r, i n, i s, n d. And the 10 most frequent merges in German: e n, e r, c h, i e, e i, n d, n g, \_d ie, s t, i ch.
 
-\subsection{Apply BPE algorithm}\label{met:applybpe}
+\subsection{Apply-BPE algorithm}\label{met:applybpe}
 
 The learnt vocabulary can be applied to a corpus. In the case of this thesis, this corpus is the same as the one used to learn the BPE units. Different num\_merges are declared. For example, for 500 merges, only the first 500 merges of the vocabulary are taken, and there are barely any recognizable BPE units in the corpus. For bigger merge values, more and more subword units get merged. In this thesis, merges range from 500 up to 8000. These are the steps for applying BPE merges to a corpus:
 
@@ -151,11 +151,11 @@ Now there are subword alignments as opposed to word alignments. For instance, si
 In the final step, the alignment scores are computed against the gold standard. After loading the gold dataset, each alignment file is matched against this dataset, obtaining precision, recall, F1 score and AER metrics. In the case of 100 learnt symbols, there will be an associated score and so on for other numbers of learnt symbols. Additionally, the gold standard's scores are also computed as a baseline. To make it more visual, the scores are plotted and saved into a \emph{.png} image file as well as \emph{.csv} file with the exact numbers.
 
 \clearpage
-\section{Replication of BPE dropout}\label{met:replbpedrop}
+\section{Replication of BPE-dropout}\label{met:replbpedrop}
 
-BPE dropout is difference with regards to normal BPE is the fact that some merges do not take place. Based on this random factor, each time this system is carried out, new BPE merges are created. For example, if the most merge in English \emph{(\_t, h)} is not merged, the resulting file of BPE merges is vastly different than if the 10th most frequent merge does not take place. In order to obtain different instances, the dropout algorithm is run a number of times, in this case 10 times, the alignments extracted 10 times, and then the alignments aggregated. Regarding each specific step, the algorithm to create the merge list (learn\_bpe) remains unchanged, the first slight change occurs when applying the BPE algorithm to the corpus.
+BPE-dropout is difference with regards to normal BPE is the fact that some merges do not take place. Based on this random factor, each time this system is carried out, new BPE merges are created. For example, if the most merge in English \emph{(\_t, h)} is not merged, the resulting file of BPE merges is vastly different than if the 10th most frequent merge does not take place. In order to obtain different instances, the dropout algorithm is run a number of times, in this case 10 times, the alignments extracted 10 times, and then the alignments aggregated. Regarding each specific step, the algorithm to create the merge list (learn\_bpe) remains unchanged, the first slight change occurs when applying the BPE algorithm to the corpus.
 
-In the apply BPE algorithm, a random variable is created for every merge: if it falls below a threshold, the dropout threshold, the merge in question is discarded. Apart from this, the whole algorithm is run a number of times, creating a number of BPE files, usually ten throughout this thesis. When extracting alignments, since now there are ten BPE files instead of a single one, the whole algorithm is run ten times, and alignments for all numbers of merges multiplied by all dropout repetitions are saved. At this point, there are ten alignments for each sentence. Which alignments to pick, is the next step to be resolved. Three methods are selected:
+In the apply-BPE algorithm, a random variable is created for every merge: if it falls below a threshold, the dropout threshold, the merge in question is discarded. Apart from this, the whole algorithm is run a number of times, creating a number of BPE files, usually ten throughout this thesis. When extracting alignments, since now there are ten BPE files instead of a single one, the whole algorithm is run ten times, and alignments for all numbers of merges multiplied by all dropout repetitions are saved. At this point, there are ten alignments for each sentence. Which alignments to pick, is the next step to be resolved. Three methods are selected:
 
 \begin{itemize}
 	\item Create the union of all alignments.
@@ -178,9 +178,9 @@ As it is visible in the example, the \textbf{union} case takes all alignments in
 
 The method of creating an \textbf{aggregated file} with the threshold aims to alleviate this problem by creating a sort of middle point between union and intersection. Taking a threshold value closer to 0 will mean that almost all alignments will be accepted, and therefore the score will be closer to the score of the union. In the opposite end of the spectrum, a threshold value close to 1 means that only alignments present in most alignment files will be accepted, and this resembles the intersection. Many experiments have been done with threshold values ranging from 0.3 to 0.9, and the corresponding scores can be found in the Results chapter.
 
-\section{Improvement of learn BPEs algorithm}\label{sec:improvlearnbpe}
+\section{Improvement of learn-BPE algorithm}\label{sec:improvlearnbpe}
 
-One of the drawbacks of the algorithm to learn BPE units is that every time a pair of sequences is merged in the corpus, all sequence pairs and their frequencies has to be computed from scratch. This requires iterating over all characters from each sentence in the corpus, and for each iteration, a pair of sequences gets merged.
+One of the drawbacks of the algorithm to learn-BPE units is that every time a pair of sequences is merged in the corpus, all sequence pairs and their frequencies has to be computed from scratch. This requires iterating over all characters from each sentence in the corpus, and for each iteration, a pair of sequences gets merged.
 
 \subsection{Updating only neighboring sequences}
 
@@ -238,6 +238,7 @@ This way, when accessing the most frequent pair in the corpus, we can also acces
 
 Up until this point, the underlying principle of creating BPE units is that merges between words are not considered. But given the existence of languages without any clear word boundaries, this thesis also explores what would happen if merges between different words were allowed, which has not been done before in literature, to the knowledge of the author. Regarding the algorithm pipeline, all remains the same except the algorithm to create BPE merges. Now, instead of having a special token to mark the beginning of each word, the same token is used to replace whitespace. For instance, the space mode tokenization used until now and the new no-space mode tokenization:
 
+\clearpage
 \begin{itemize}
 	\item Raw sentence: The cake is delicious .
 	\item Sentence after space mode tokenization: \_T h e \_c a k e \_i s \_d e l i c i o u s .

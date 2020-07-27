@@ -10,14 +10,14 @@ This chapter explains the development of the thesis in a deeper way, adding more
 
 \begin{enumerate}
   \item Replication of the BPE algorithm and results
-  \item Replication of the BPE dropout algorithm and results
+  \item Replication of the BPE-dropout algorithm and results
   \item Improvement of the learn BPE algorithm
   \item Study and implementation of BPE without word boundaries
 \end{enumerate}
 
 \section{Coding practices}
 
-To ensure consistency, the parameters for the pipeline, called global variables, such as num\_symbols, dropout, file paths, etc. have been written in \emph{settings.py}. The word separator is a special Unicode character. The languages used as source and target languages are English and German respectively. The number of symbols to be learnt in the learn BPE phase is set as 20000. When applying these merges to the corpus, in order to have different variants and explore the differences between merging few symbols or more, a number of key numbers are selected for these experiments, as seen in the variable \emph{all\_symbols}.
+To ensure consistency, the parameters for the pipeline, called global variables, such as num\_symbols, dropout, file paths, etc. have been written in \emph{settings.py}. The word separator is a special Unicode character. The languages used as source and target languages are English and German respectively. The number of symbols to be learnt in the learn-BPE phase is set as 20000. When applying these merges to the corpus, in order to have different variants and explore the differences between merging few symbols or more, a number of key numbers are selected for these experiments, as seen in the variable \emph{all\_symbols}.
 
 \begin{python}
 # settings.py
@@ -27,18 +27,18 @@ from os.path import join
 
 word_sep = u'\u2581'
 source, target = 'eng', 'deu'
-learn_symbols = 20000
-all_symbols = [100, 200, 500, 1000, 2000, 4000, 6000, 8000]
+learn_merges = 20000
+merges = [100, 200, 500, 1000, 2000, 4000, 6000, 8000]
 
 rootdir = os.getcwd()
 if rootdir.split(os.sep)[-1] == 'src':
     rootdir = os.sep.join(rootdir.split(os.sep)[:-1])
 datadir = join(rootdir, 'data')
-inputdir = join(datadir, 'input')
+inputdir = join(datadir, 'input', source+'-'+target)
 bpedir = join(datadir, 'normal_bpe')
 baselinedir = join(rootdir, 'reports', 'scores_normal_bpe')
 scoredir = join(rootdir, 'reports', 'scores_normal_bpe')
-goldpath = join(inputdir, 'eng_deu.gold')
+goldpath = join(inputdir, source+'_'+target+'.gold')
 inputpath = {}
 for filename in glob.glob(join(inputdir, "*.txt")):
   inputpath[filename.split(os.sep)[-1].split('_')[0]] = filename
@@ -58,15 +58,15 @@ Regarding directories and paths, the tree view of the project is displayed in th
 The first programming task in this thesis has been to replicate the BPE results from Sennrich et al.~\cite{sennrich2015neural}. In order to modularize the code in clear units, these have been the steps:
 
 \begin{enumerate}
-    \item Write the learn BPE from corpus algorithm
-    \item Write the apply BPE to corpus algorithm
+    \item Write the learn-BPE from corpus algorithm
+    \item Write the apply-BPE to corpus algorithm
     \item Write extract alignments script
     \item Write calculate alignment scores script
 \end{enumerate}
 
 In the following sections, each step will be explained in detail, with comments and examples for each function.
 
-\subsection{Learn BPE algorithm}\label{subsec:learnbpe}
+\subsection{Learn-BPE algorithm}\label{subsec:learnbpe}
 
 In learning BPE units, the first step is to read the corpus into an appropriate format. All the libraries and global variables imported are also added here for simplicity.
 
@@ -88,11 +88,11 @@ def read_corpus(corpus: list) -> list:
   A word_sep symbol is added at the beginning of each word.
   example:
   tokens = [
-      '\_w e \_d o \_n o t \_b e l i e v e 
-      \_t h a t \_w e \_s h o u l d 
-      \_c h e r r y - p i c k \_.',
-      ...
-  ]
+    '\_w e \_d o \_n o t \_b e l i e v e 
+    \_t h a t \_w e \_s h o u l d 
+    \_c h e r r y - p i c k \_.',
+    ...
+]
   '''
   tokens = []
   for line in corpus:
@@ -148,7 +148,7 @@ def learn_bpe(argsinput: str) -> list:
   '''
   corpus = read_corpus(argsinput)
   most_frequent_merges = []
-  for i in range(learn_symbols):
+  for i in range(learn_merges):
     pairs = get_stats(corpus)
     try:
       most_frequent = pairs.most_common(1)[0][0]
@@ -177,7 +177,7 @@ if __name__ == '__main__':
     write_bpe(lang, most_freq_merges)
 \end{python}
 
-\subsection{Apply BPE algorithm}\label{dev:applybpe}
+\subsection{Apply-BPE algorithm}\label{dev:applybpe}
 
 After learning BPE units, there is already a merge list written into the project data directory, which can now be loaded into memory in order to apply these merges to the corpus. The following function returns a list of the languages present in the project, BPE models and corpora for each language.
 
@@ -217,13 +217,13 @@ def write_bpe(lang: str, num_symbols: int, merged_corpus: str):
 
 def apply_bpe(langs: list, bpe_models: list, corpora: list):
   for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
-    bpe_model = bpe_model[:max(all_symbols)]
+    bpe_model = bpe_model[:max(merges)]
     k = 0
     str_corpus = '\n'.join(corpus)
     for j, bigram in enumerate(bpe_model):
       str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
-      if j + 1 == all_symbols[k]:
-        write_bpe(lang, all_symbols[k], str_corpus)
+      if j + 1 == merges[k]:
+        write_bpe(lang, merges[k], str_corpus)
         k += 1
   return
 
@@ -236,10 +236,11 @@ if __name__ == "__main__":
 After this step, in the directory \emph{../data/normal\_bpe/segmentations/} various files exist with the following format:
 
 \begin{itemize}
-  \item deu\_100.bpe
   \item eng\_100.bpe
-  \item deu\_200.bpe
   \item eng\_200.bpe
+  \item ...
+  \item deu\_100.bpe
+  \item deu\_200.bpe
   \item ...
 \end{itemize}
 
@@ -249,7 +250,6 @@ After this step, in the directory \emph{../data/normal\_bpe/segmentations/} vari
 
 This step requires some prior installation of the alignment software. The thesis has been conducted in a Linux environment, so the installation guide is adapted to this case. The installation of the software in any other OS is however possible, as long as the user adapts the commands to their OS. Initially, if not present in the system, it is mandatory to \href{https://cmake.org/install/}{install Cmake}. The installation steps for \emph{Fastalign} are as follows, in bash. The path \emph{path/to/project} should be the path to where the README, data folders and so on are present. Here, a new folder named \emph{tools} is created to save the alignment algorithms.
 
-\clearpage
 \begin{quote}
   sudo apt-get install libgoogle-perftools-dev libsparsehash-dev\\
   cd /path/to/project\\
@@ -334,15 +334,18 @@ Given these \emph{.fwd} and \emph{.rev} files, the alignment algorithm creates a
 # extract_alignments.py
 def create_gdfa_file(outpath: str):
   # create gdfa file from .fwd and .rev
-  os.system(f"{atools_path} -i {outpath}.fwd -j {outpath}.rev -c grow-diag-final-and > {outpath}_unnum.gdfa")
+  comm = f"{atools_path} -i {outpath}.fwd -j {outpath}.rev -c grow-diag-final-and > {outpath}_unnum.gdfa"
+  os.system(comm)
 
   # parse _unnum.gdfa to .gdfa with "\t" separator
-  with codecs.open(f"{outpath}_unnum.gdfa", "r", "utf-8") as fi, codecs.open(f"{outpath}.gdfa", "w", "utf-8") as fo:
-    for i, line in enumerate(fi):
-      fo.write(f"{i}\t{line.strip()}\n")
+  with codecs.open(f"{outpath}_unnum.gdfa", "r", "utf-8") as fi:
+    with codecs.open(f"{outpath}.gdfa", "w", "utf-8") as fo:
+      for i, line in enumerate(fi):
+        fo.write(f"{i}\t{line.strip()}\n")
 
   # delete unnecessary files
-  os.system(f"rm {outpath}_unnum.gdfa; rm {outpath}.fwd; rm {outpath}.rev; rm {outpath}.txt")
+  comm = f"rm {outpath}_unnum.gdfa; rm {outpath}.fwd; rm {outpath}.rev; rm {outpath}.txt"
+  os.system(comm)
   return
 \end{python}
 
@@ -410,7 +413,7 @@ The alignment algorithm is executed for two types of files. Firstly, for the raw
 \begin{python}
 # extract_alignments.py
 def extract_alignments(input_mode=False: bool):
-  for num_symbols in all_symbols:
+  for num_symbols in merges:
     if input_mode:
       print("Alignments for input files")
       sourcepath = inputpath[source]
@@ -426,11 +429,9 @@ def extract_alignments(input_mode=False: bool):
     create_gdfa_file(outpath)
     # map alignment from subword to word
     bpes = load_and_map_segmentations(num_symbols)
-    argsalign = codecs.open(o+'.gdfa', encoding='utf-8')
-    all_word_aligns = bpe_word_align(bpes, argsalign)
+    all_word_aligns = bpe_word_align(bpes, codecs.open(o+'.gdfa', encoding='utf-8'))
     os.system(f"rm {outpath}.gdfa")
-    argsoutput = codecs.open(outpath+'.wgdfa', 'w', encoding='utf-8')
-    argsoutput.write(all_word_aligns)
+    codecs.open(outpath+'.wgdfa', 'w', encoding='utf-8').write(all_word_aligns)
   return
 
 if __name__ == "__main__":
@@ -509,21 +510,23 @@ This step is done for the baseline, to obtain a measure of the standard version 
 
 \begin{python}
 # calc_align_scores.py
+columns = ['num_symbols', 'prec', 'rec', 'f1', 'AER']
+
 def get_baseline_score(probs: dict, surs: dict, surs_count: int) -> pd.DataFrame:
   alfile = join(bpedir, mode, 'input.wgdfa')
   score = [0]
   score.extend(list(calc_score(alfile, probs, surs, surs_count)))
-  baseline_df = pd.DataFrame([score], columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+  baseline_df = pd.DataFrame([score], columns=columns).round(decimals=3)
   return baseline_df
 
 def calc_align_scores(probs: dict, surs: dict, surs_count: int):
   scores = []
-  for num_symbols in all_symbols:
+  for num_symbols in merges:
     alfile = join(bpedir, mode, f"{num_symbols}.wgdfa")
     score = [int(num_symbols)]
     score.extend(list(calc_score(alfile, probs, surs, surs_count)))
     scores.append(score)
-  df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+  df = pd.DataFrame(scores, columns=columns).round(decimals=3)
   return df
 \end{python}
 
@@ -549,6 +552,7 @@ def plot_scores(df: pd.DataFrame, baseline_df: pd.DataFrame, scoredir: str):
   plt.savefig(join(scoredir+'.png'))
   return
 
+
 if __name__ == "__main__":
   # Calculate alignment quality scores based on the gold standard.
   # The output contains Precision, Recall, F1, and AER.
@@ -561,11 +565,11 @@ if __name__ == "__main__":
   plot_scores(df, baseline_df, scorename)
 \end{python}
 
-\section{Replication of BPE dropout}
+\section{Replication of BPE-dropout}
 
 The previous section has laid the backbone of the algorithms, the various files and functions. In this and the following sections, some modifications and improvements are introduced to the already existing Python scripts. For the sake of simplicity, the code snippets that follow only include the new changes, or the functions from the last section with new modifications, and the modifications are introduced by signalling the line numbers from previous scripts in which changes are introduced. For example, it might be mentioned that a certain line is added to line 21 of a certain function in a specific script. This refers to the function introduced in the previous section, and it will be referred as such. In the case that a function is altered in a significant way, the new version of the function will be shown, which overrules the previous version. The functions that remain unaltered are not shown.
 
-When adding dropout to BPE, three new parameters come into play in the project, namely \textbf{dropout} rate, \textbf{dropout\_samples}, that is, how many samples of the dropout system are considered, and \textbf{merge\_threshold}, which serves its function with alignments later on. These values are saved into \emph{settings.py}, as well as new data directories to store files resulting from BPE dropout.
+When adding dropout to BPE, three new parameters come into play in the project, namely \textbf{dropout} rate, \textbf{dropout\_samples}, that is, how many samples of the dropout system are considered, and \textbf{merge\_threshold}, which serves its function with alignments later on. These values are saved into \emph{settings.py}, as well as new data directories to store files resulting from BPE-dropout.
 
 \begin{python}
 # settings.py
@@ -578,13 +582,11 @@ bpedir = join(datadir, 'dropout_bpe' if dropout > 0 else 'normal_bpe')
 scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 else 'normal_bpe'))
 \end{python}
 
-\subsection{Apply BPE to corpus with dropout}
+\subsection{Apply-BPE to corpus with dropout}
 
 The first modifications in the project occur in \emph{apply\_bpe.py}, where some merges are skipped, and the process is repeated 10 times. More theoretical insights regarding this approach can be found in the Methodology section~\ref{met:replbpedrop}. The function \emph{apply\_bpe} includes two new lines where a random number between 0 and 1 is generated. If this number is smaller than the \emph{dropout} rate saved in \emph{settings.py}, then that merge is not considered and the loop skips it. This means that if the \emph{dropout} variable has the value of 0.1, 10\% of merges are skipped.
 
-Additionally, in the main function, the function \emph{apply\_bpe} is called \emph{dropout\_samples} times. To save the files accordingly, a new variable is introduced, namely \emph{i}, that does nothing in the case where dropout=0, but when repeating the process, for instance if lang=eng, num\_symbols=2000, and first iteration of dropout, that is, i=0, the files are saved as \emph{eng\_2000\_0.bpe} instead, and so on for further iterations. This is effectively achieved by changing the variable \emph{outputpath}.
-
-In the function \emph{write\_bpe} in the general pipeline~\ref{dev:applybpe}, the following modifications are made:
+Additionally, in the main function, the function \emph{apply\_bpe} is called \emph{dropout\_samples} times. To save the files accordingly, a new variable is introduced, namely \emph{i}, that does nothing in the case where dropout=0, but when repeating the process, for instance if lang=eng, num\_symbols=2000, and first iteration of dropout, that is, i=0, the files are saved as \emph{eng\_2000\_0.bpe} instead, and so on for further iterations. This is effectively achieved by changing the variable \emph{outputpath}. In the function \emph{write\_bpe} in the general pipeline~\ref{dev:applybpe}, the following modifications are made:
 
 \begin{python}
 # apply_bpe.py
@@ -598,15 +600,15 @@ def write_bpe(lang: str, num_symbols: int, merged_corpus: str, i: int =-1):
 
 def apply_bpe(langs: list, bpe_models: list, corpora: list, i: int =-1):
   for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
-    bpe_model = bpe_model[:max(all_symbols)]
-    all_symbols_copy = all_symbols.copy()
+    bpe_model = bpe_model[:max(merges)]
+    merges_copy = merges.copy()
     str_corpus = '\n'.join(corpus)
     for j, bigram in enumerate(bpe_model):
       if random.uniform(0, 1) < dropout:
         continue
       str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
-      if j + 1 == all_symbols_copy[0]:
-        write_bpe(lang, all_symbols_copy.pop(0), str_corpus, i)
+      if j + 1 == merges_copy[0]:
+        write_bpe(lang, merges_copy.pop(0), str_corpus, i)
   return
 
 if __name__ == "__main__":
@@ -659,7 +661,7 @@ from calc_align_score import *
 
 def merge_dropout_alignments():
   union_merge, inter_merge, thres_merge = {}, {}, {}
-  for num_symbols in tqdm(all_symbols, desc=f"merge_dropout: dropout={dropout}, union, inter, thres"):
+  for num_symbols in tqdm(merges, desc=f"merge_dropout: dropout={dropout}, union, inter, thres"):
     union_merge[num_symbols], inter_merge[num_symbols], thres_merge[num_symbols] = [], [], []
     for i in range(dropout_sampless):
       for j, line in enumerate(open(f'{num_symbols}_{i}.wgdfa', 'r').readlines()):
@@ -695,6 +697,7 @@ def merge_dropout_alignments():
 Afterwards, the function \emph{calc\_score\_merges} opens these files and calculates the score, much in the way as the \emph{calc\_align\_score} algorithm from the previous section.
 
 \begin{python}
+# merge_dropout.py
 def calc_score_merges():
   probs, surs, surs_count = load_gold(goldpath)
   baseline_df = pd.read_csv(join(baselinedir, f'scores_{source}_{target}.csv'))
@@ -704,13 +707,13 @@ def calc_score_merges():
 
   for merge_type in ['union', 'inter']:
     scores = []
-    for num_symbols in all_symbols:
+    for num_symbols in merges:
       mergefilepath = join(bpedir, mode, f'{num_symbols}_{merge_type}.wgdfa')
       score = [int(num_symbols)]
       score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
       scores.append(score)
 
-    df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+    df = pd.DataFrame(scores, columns=columns).round(decimals=3)
     scorename = join(scorespath, 'scores', merge_type)
 
     print(f"Scores saved into {scorename}")
@@ -720,13 +723,13 @@ def calc_score_merges():
   # threshold case, iterate all merge_thresholds saved
   for merge_t in merge_threshold:
     scores = []
-    for num_symbols in all_symbols:
+    for num_symbols in merges:
       mergefilepath = join(bpedir, mode, f'{num_symbols}_thres_{merge_t}.wgdfa')
       score = [int(num_symbols)]
       score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
       scores.append(score)
 
-    df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+    df = pd.DataFrame(scores, columns=columns).round(decimals=3)
     scorename = join(scorespath, 'scores', f"{merge_t}_thres")
     
     print(f"Scores saved into {scorename}")
@@ -739,13 +742,14 @@ if __name__ == "__main__":
     calc_score_merges()
 \end{python}
 
-\section{Improvement of learn BPEs algorithm}\label{dev:improvbpe}
+\section{Improvement of learn-BPE algorithm}\label{dev:improvbpe}
 
 As explained in the methodology~\ref{sec:improvlearnbpe}, the main improvement in the learn-BPE algorithm is to only update previous and next tokens to the merged pair, as well as saving the indexes where each pair occurs. These improvements are built on top of the code shown in~\ref{subsec:learnbpe}. 
 
 In the \emph{learn\_bpe} function, the new \emph{update\_tokens} returns the updated pairs and the merged tokens, all in one step. The function \emph{get\_stats}, which is the function that iterates the whole corpus, only has to be performed once. This is however a modification of the previous \emph{get\_stats} function, since it computes the indexes of the pairs as well.
 
 \begin{python}
+# learn_bpe.py
 def learn_bpe(corpus: list, bpe_model: list): list:
   '''
   Learn BPE operations from vocabulary.
@@ -758,7 +762,7 @@ def learn_bpe(corpus: list, bpe_model: list): list:
   tokens = read_corpus(corpus)
   pairs, idx = get_stats(tokens)
   most_frequent_merges = []
-  for i in range(learn_symbols):
+  for i in range(learn_merges):
     try:
       most_frequent = pairs.most_common(1)[0][0]
     except:
@@ -775,17 +779,17 @@ These are the modifications introduced in the \emph{get\_stats} function so that
 # learn_bpe.py
 def get_stats(tokens: list) -> (Counter, dict):
   """
-  Count frequency of all bigrams, the indexes where they occur and the frequency per index.
+  Count frequency of all bigrams, their indexes and the frequency per index.
   pairs = {
-      ('s', 'h'): 5,
-      ('h', 'e'): 6
+    ('s', 'h'): 5,
+    ('h', 'e'): 6
   }
   idx = {
-      ('t', 'h'): {
-          # keys are indexes in corpus, values are frequency of appearance
-          0: 2,
-          1: 3,
-      }
+    ('t', 'h'): {
+      # keys are indexes in corpus, values are frequency of appearance
+      0: 2,
+      1: 3,
+    }
   }
   """
   def get_pairs_idx(pairs, idx, symbols):
@@ -859,8 +863,8 @@ def update_tokens(tokens, idx, pairs, pair):
         conditions to update the **previous** token:
         * if sent[k] is not empty. if it is, there's no previous token to update.
         * if the merged_pair is not the beginning of the word.
-          * in this case, we do not want the last letter from the prev word to be merged with
-          * our current pair. ... e _t h ... we do not want to consider ('e', '_t')
+          * in this case, discard the last letter from the prev word to be merged with ...
+          * our current pair. ... e _t h ... ('e', '_t') is discarded
         '''
         prev = (sent[k].split()[-1], pair[0])
         new_pair = (prev[0], merged_pair)
@@ -871,8 +875,8 @@ def update_tokens(tokens, idx, pairs, pair):
         conditions to update the **after** token when merged bigrams are consecutive:
         * when the pair's first character is not the beginning of the word
         * and when the next token is empty
-        * we're dealing with consecutive merged pairs, merged_pair = ('ssi'), sent= 'm i ssi ssi p p i'
-            * in this case, we delete the token between the merged_pair: ('i', 's')
+        * there are consecutive merged pairs, merged_pair=('ssi'), sent='m i ssi ssi p p i'
+            * in this case, delete the token between the merged_pair: ('i', 's')
             * and create a new pair ('ssi', 'ssi')
         '''
         if sent[k] and sent[k][-1] == word_sep:
@@ -916,13 +920,13 @@ In \emph{learn\_bpe.py}, the way to parse and tokenize the corpus is slightly di
 def read_corpus(corpus: list) -> list:
   '''
   Read corpus, strip index and new line characters.
-  In space mode, each word has a word_sep symbol at the beginning to signal it is the beginning of the word.
+  In space mode, each word has a word_sep symbol at the beginning of the word.
   tokens = [
-    'w e \_d o \_n o t \_b e l i e v e \_t h a t \_w e \_s h o u l d \_c h e r r y - p i c k \_.',
+    'w e \_d o \_n o t \_b e l i e v e \_t h a t \_w e \_s h o u l d.',
   ]
-  In no space mode, there's no signal at the beginning of the word but word are joined by word_sep.
+  In no space mode, words are joined by word_sep.
   tokens = [
-    'w e \_ d o \_ n o t \_ b e l i e v e \_ t h a t \_ w e \_ s h o u l d \_ c h e r r y - p i c k \_ .',
+    'w e \_ d o \_ n o t \_ b e l i e v e \_ t h a t \_ w e \_ s h o u l d .',
   ]
   '''
   tokens = []
@@ -945,16 +949,16 @@ When analysing pairs and their frequencies, each word's last character and the f
 # learn_bpe.py
 def get_stats(tokens: list) -> (Counter, dict):
   '''
-  Count frequency of all bigrams, the indexes where they occur and the frequency per index.
+  Count frequency of all bigrams, their indexes and the frequency per index.
   pairs = {
     ('s', 'h'): 5,
     ('h', 'e'): 6
   }
   idx = {
     ('t', 'h'): {
-        # keys are indexes in corpus, values are frequency of appearance
-        0: 2,
-        1: 3,
+      # keys are indexes in corpus, values are frequency of appearance
+      0: 2,
+      1: 3,
     }
   }
   In space mode, the last token '.' or word_sep. is not merged with anything.
@@ -991,15 +995,15 @@ if sent[k].split() and (sent[k][-1] == ' ' and word_sep not in pair[0][0] if spa
   '''
   conditions to update the **previous** token:
   * in space mode, if the merged_pair is not the beginning of the word.
-    * in this case, we do not want the last letter from the prev word to be merged with
-    * our current pair. ... e _t h ... we do not want to consider ('e', '_t')
+    * in this case, discard the last letter from the prev word to be merged ...
+    * with our current pair. ... e _t h ... ('e', '_t') is discarded
   '''
 
 # change line 58
 if space and not sent[k+1].split() and word_sep not in pair[0][0]:
   '''
   conditions to update the **after** token when merged bigrams are consecutive:
-  * in space mode specifically, when the pair's first character is not the beginning of the word
+  * in space mode, when the pair's first character is not the beginning of the word
   '''
 
 # change line 74
