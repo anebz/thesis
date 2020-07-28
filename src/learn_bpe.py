@@ -45,20 +45,15 @@ def read_corpus(corpus: list) -> list:
 
     tokens = []
     for line in corpus:
-        line = line.split('\t')[1].strip('\r\n ')
-
-        # pad punctuation https://stackoverflow.com/a/3645946/4569908
-        line = re.sub('([.,:;¡!¿?\'()])', r' \1 ', line)
-
-        line = line.split()
+        line = line.split('\t')[1].strip('\r\n ').split()
         line[0] = str.lower(line[0])
 
         if space:
             # add word_sep to each beginning of word and join by space
-            tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
+            tokens.append(' '.join([f'{word_sep} '.join(word) for word in line]))
         else:
             # join all words by word_sep
-            tokens.append(' '+word_sep+' '.join([' '.join(word) for word in line]))
+            tokens.append(f' {word_sep} '.join([' '.join(word) for word in line]))
 
     return tokens
 
@@ -221,7 +216,7 @@ def learn_bpe(corpus: list) -> list:
     most_freq_merges = []
     for i in tqdm(
         range(learn_merges), 
-        desc=f"learn_bpe: num_symbols={learn_merges}, lang={lang}, space mode={space}"
+        desc=f"learn_bpe: lang={lang}, space mode={space}"
         ):
 
         # stop the loop if the frequency of the most common pair is 1

@@ -207,12 +207,12 @@ if __name__ == "__main__":
 	probs, surs, surs_count = load_gold(goldpath)
 
 	if dropout:
-    	baseline_df = pd.read_csv(join(baselinedir, f"{source}_{target}{'' if space else '_ns'}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}_{mode}.csv"))
+		baseline_df = pd.read_csv(join(baselinedir, f"{source}_{target}{'' if space else '_ns'}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}_{mode}.csv"))
 		calc_score_merges(probs, surs, surs_count, baseline_df)
-    else:
+	else:
 		# no space case: take normal BPE scores as baseline. if normal case, take gold standard
 		if not space:
-			baseline_df = pd.read_csv(join(rootdir, 'reports/scores_normal_bpe', source+'_'+target+'.csv'))
+			baseline_df = pd.read_csv(join(rootdir, 'reports/scores_normal_bpe', f'{source}_{target}_{mode}.csv'))
 		else:
 			baseline_df = get_baseline_score(probs, surs, surs_count)
 		calc_align_scores(probs, surs, surs_count, baseline_df)

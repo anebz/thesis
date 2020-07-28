@@ -3,8 +3,10 @@ import os
 import sys
 import time
 import codecs
-from datetime import timedelta
+from tqdm import tqdm
 from os.path import join
+from datetime import timedelta
+from collections import Counter
 
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -61,8 +63,8 @@ def extract_alignments(i: int =-1, input_mode: bool =False):
 			outpath = join(bpedir, mode, f"input_{source}_{target}")
 		else:
 			print(f"Alignments for {num_symbols} symbols")
-			sourcepath = inputpath[source] if target_bpe else join(bpedir, 'segmentations', f"{source}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
-			targetpath = inputpath[target] if source_bpe else join(bpedir, 'segmentations', f"{target}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
+			sourcepath = inputpath[source] if target_bpe else join(bpedir, 'segmentations', f"{source}_{num_symbols}{'' if space else '_ns'}{'_'+str(i) if dropout else ''}.bpe")
+			targetpath = inputpath[target] if source_bpe else join(bpedir, 'segmentations', f"{target}_{num_symbols}{'' if space else '_ns'}{'_'+str(i) if dropout else ''}.bpe")
 			outpath = join(bpedir, mode, f"{num_symbols}{'_'+str(i) if i != -1 else ''}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}")
 
 		create_parallel_text(sourcepath, targetpath, outpath)
@@ -90,7 +92,7 @@ def merge_dropout_alignments():
         for i in range(dropout_samples):
 
             alpath = join(bpedir, mode, f"{num_symbols}_{i}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}.wgdfa")
-            for j, line in enumerate(pen(alpath, 'r').readlines()):
+            for j, line in enumerate(open(alpath, 'r').readlines()):
                 al = frozenset(line.strip().split("\t")[1].split())
 
                 # at the first iteration, just append the alignment
@@ -106,6 +108,7 @@ def merge_dropout_alignments():
                 thres_merge[num_symbols][j] += Counter(al)
 
         # write to output
+        os.chdir(join(bpedir, mode))
         unionfile = codecs.open(f'{num_symbols}_union.wgdfa', 'w')
         interfile = codecs.open(f'{num_symbols}_inter.wgdfa', 'w')
         thresfiles = {merge_t: codecs.open(f'{num_symbols}_thres_{merge_t}.wgdfa', 'w') for merge_t in merge_threshold}
