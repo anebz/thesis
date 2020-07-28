@@ -14,7 +14,7 @@ When replicating BPE, the best BPE result using \emph{Fastalign} as alignment al
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=12cm]{../reports/scores_normal_bpe/eng_deu_fastalign.png}
+    \includegraphics[width=13cm]{../reports/scores_normal_bpe/eng_deu_fastalign.png}
     \caption{Scores of BPE over baseline, using Fastalign}
 \end{figure}
 
@@ -22,7 +22,7 @@ In the case of \emph{Eflomal}, the baseline F1 score is 0.72, and the best F1 sc
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=12cm]{../reports/scores_normal_bpe/eng_deu_eflomal.png}
+    \includegraphics[width=13cm]{../reports/scores_normal_bpe/eng_deu_eflomal.png}
     \caption{Scores of BPE over baseline, using Eflomal}
 \end{figure}
 
@@ -30,7 +30,7 @@ The alignment algorithms, \emph{Fastalign} and \emph{Eflomal}, require one langu
 
 \section{Replication of BPE-dropout}
 
-BPE dropout is meant to be an improvement of BPE, therefore the desired score comparison is that of BPE dropout with respect to BPE. The BPE scores are taken as baseline, instead of the gold standard scores as in the previous case. As explained in the Methodology chapter~\ref{met:replbpedrop}, the BPE dropout pipeline is run a number of times, resulting in many possible segmentations. Out of these, three types of results are obtained: union, intersection and threshold.
+BPE-dropout is meant to be an improvement of BPE, therefore the desired score comparison is that of BPE-dropout with respect to BPE. The BPE scores are taken as baseline, instead of the gold standard scores as in the previous case. As explained in the Methodology chapter~\ref{met:replbpedrop}, the BPE dropout pipeline is run a number of times, resulting in many possible segmentations. Out of these, three types of results are obtained: union, intersection and threshold.
 
 \begin{itemize}
 	\item The \textbf{union} case takes all alignments into account, resulting in a big list of alignments per sentence. These most probably include the correct alignments, but there are many other wrong alignments. This case has low precision and high recall.
@@ -42,28 +42,28 @@ The following figures 6.3, 6.4 and 6.5. show the results for a \emph{dropout} ra
 
  \begin{figure}[!ht]
      \centering
-     \includegraphics[width=12cm]{../reports/scores_dropout_bpe/space/0.1/eng_deu_union_fastalign.png}
-     \caption{Scores for BPE-dropout with dropout 0.1, union mode}
+     \includegraphics[width=13cm]{../reports/scores_dropout_bpe/space/0.1/eng_deu_union_fastalign.png}
+     \caption{Scores for BPE-dropout with dropout rate 0.1, union mode}
  \end{figure}
  
  \begin{figure}[!ht]
      \centering
-     \includegraphics[width=12cm]{../reports/scores_dropout_bpe/space/0.1/eng_deu_inter_fastalign.png}
-     \caption{Scores for BPE-dropout with dropout 0.1, intersection mode}
+     \includegraphics[width=13cm]{../reports/scores_dropout_bpe/space/0.1/eng_deu_inter_fastalign.png}
+     \caption{Scores for BPE-dropout with dropout rate 0.1, intersection mode}
  \end{figure}
 
 It can be seen that the F1 score improves consistently the more BPE units have been merged. Since there are more merges, there are fewer units, most words are completely merged and the uncertainty of aligning BPE units is lower, since the sentence looks more and more similar to the raw sentence where there are just words. Regarding the threshold case, the following two figures show the scores for threshold 0.3 and 0.7, \textbf{which achieves the best F1 score, namely 0.635}.
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=12cm]{../reports/scores_dropout_bpe/space/0.1/eng_deu_0.3_thres_fastalign.png}
-    \caption{Scores for BPE-dropout with dropout 0.1, threshold mode at 0.3}
+    \includegraphics[width=13cm]{../reports/scores_dropout_bpe/space/0.1/eng_deu_0.3_thres_fastalign.png}
+    \caption{Scores for BPE-dropout with dropout rate 0.1, threshold mode at 0.3}
 \end{figure}
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=12cm]{../reports/scores_dropout_bpe/space/0.1/eng_deu_0.7_thres_fastalign.png}
-    \caption{Scores for BPE-dropout with dropout 0.1, threshold mode at 0.7}
+    \includegraphics[width=13cm]{../reports/scores_dropout_bpe/space/0.1/eng_deu_0.7_thres_fastalign.png}
+    \caption{Scores for BPE-dropout with dropout rate 0.1, threshold mode at 0.7}
 \end{figure}
 
 It is visible that the scores plot with the threshold at 0.3 resembles the union case more, and recall goes lower while the precision goes higher for larger threshold values. The optimal result is found at the threshold value of 0.7. This result is replicated when increasing the dropout rate up to 20\% as well as 30\%, and setting the alignment threshold at 0.5. \textbf{This shows that BPEs are robust to dropout}.
@@ -78,8 +78,8 @@ This theory is also confirmed in this thesis. As the experiment of only applying
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=12cm]{../reports/scores_dropout_bpe/space/0.1/eng_deu_0.7_thres_fastalign_eng.png}
-    \caption{Scores for BPE-dropout with dropout 0.1, threshold at 0.7 and BPE only in source language}
+    \includegraphics[width=13cm]{../reports/scores_dropout_bpe/space/0.1/eng_deu_0.7_thres_fastalign_eng.png}
+    \caption{Scores for BPE-dropout with dropout rate 0.1, threshold at 0.7 and BPE only in source language}
 \end{figure}
 
 Regarding the improvements of BPE dropout over normal BPE, the authors conclude the following:
@@ -92,7 +92,7 @@ This thesis has predominantly been run with a fixed size, relatively small corpu
 
 As the BPE dropout paper states, \emph{BPE dropout improves BPE consistently no matter how many merges are performed}. This result is replicated in this paper. Additionally, in the paper they use a fixed dropout rate and they give no information as per the threshold used in determining how to aggregate alignments. \textbf{By experimenting with different dropout and threshold rates, it was possible to improve the F1 score by selecting a dropout rate of 30\%, which is specific to the corpus, in this case English and German, creating 30 segmentations and selecting an alignment threshold of 0.5. This results in a F1 score of 0.685, an improvement of 2\% from the previous case}.
 
-\section{BPE dropout for other language pairs}
+\section{BPE-dropout for other language pairs}
 
 The better results of BPE-dropout over BPE proves that BPE-dropout performs better than BPE, at least in the English-German case, and the optimal hyperparameters for this case were using a dropout rate of 10\%, an alignment threshold of 0.7, and around 2000 merges. The 2000 merge hyperparameter might be dependent on the corpus, smaller corpora might not even have 2000 merges to make, while bigger corpora might obtain their optimal results for more merges. \textbf{But does BPE-dropout outperform BPE for other language pairs at a dropout rate of 10\% and an alignment threshold of 0.7?}
 
@@ -100,14 +100,14 @@ A couple of other language pairs were tested, namely English-Romanian, consistin
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=12cm]{../reports/scores_dropout_bpe/space/0.1/eng_ron_0.7_thres_fastalign.png}
-    \caption{Scores for BPE-dropout on English-Romanian with dropout 0.1, threshold at 0.7}
+    \includegraphics[width=13cm]{../reports/scores_dropout_bpe/space/0.1/eng_ron_0.7_thres_fastalign.png}
+    \caption{Scores for BPE-dropout on English-Romanian with dropout rate 0.1, threshold at 0.7}
 \end{figure}
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=12cm]{../reports/scores_dropout_bpe/space/0.1/eng_hin_0.7_thres_fastalign.png}
-    \caption{Scores for BPE-dropout on English-Hindi with dropout 0.1, threshold at 0.7}
+    \includegraphics[width=13cm]{../reports/scores_dropout_bpe/space/0.1/eng_hin_0.7_thres_fastalign.png}
+    \caption{Scores for BPE-dropout on English-Hindi with dropout rate 0.1, threshold at 0.7}
 \end{figure}
 
 \section{Improvement of the learn-BPE algorithm}
@@ -116,40 +116,56 @@ By modifying the algorithm to update the corpus after a merge, by introducing in
 
 After the improvement, the algorithm, on average, needs \textbf{55s to learn BPE merges in English, and 1:25min in German on corpora composed of 10.000 sentences}. The time difference between English and German is due to the fact that the words in German are generally lower, with a higher variance, and there are therefore more merge possibilities. In contrast, Sennrich et al.~\cite{sennrich2015neural}'s algorithm needs 2:15min for English and 3:20min for German. The algorithm presented here shows an improvement in speed of 2.5x for English and 2.4x for German. These tests have been performed on an Intel Core i5-7200U CPU at 2.5GHz, a 64-bit Windows OS with 8GB RAM.
 
-A C++ implementation of the BPE algorithm from Sennrich et al. can be found on \href{https://github.com/glample/fastBPE}{Github} This package makes use of C++'s advantage to handle memory better than Python, for instance by memory mapping the input file to read it efficiently, and by using multi-threading to pre-compute the BPE splits of all words in the input file. When applied to this thesis' dataset, it barely needs a few seconds to learn BPE codes, making it much faster than the algorithm developed in this thesis. However, this package does not include BPE dropout or any other word separation rather than \emph{</w>} at the end of the word; it is not possible to create BPE tokens without word boundaries using this method. It is assumed that it would not be very complicated to integrate these two aspects into the package, but given that this algorithm was created by a PhD student, there are no guarantees of maintenance in the future. In contrast, this thesis' algorithm takes more time but depending on \emph{dropout} and \emph{space} parameters, the algorithm is adapted to both scenarios.
+A C++ implementation of the BPE algorithm from Sennrich et al. can be found on \href{https://github.com/glample/fastBPE}{Github} This package makes use of C++'s advantage to handle memory better than Python, for instance by memory mapping the input file to read it efficiently, and by using multi-threading to pre-compute the BPE splits of all words in the input file. When applied to this thesis' dataset, it barely needs a few seconds to learn BPE codes, making it much faster than the algorithm developed in this thesis. However, this package does not include BPE-dropout or any other word separation rather than \emph{</w>} at the end of the word; it is not possible to create BPE tokens without word boundaries using this method. It is assumed that it would not be very complicated to integrate these two aspects into the package, but given that this algorithm was created by a PhD student, there are no guarantees of maintenance in the future. In contrast, this thesis' algorithm takes more time but depending on \emph{dropout} and \emph{space} parameters, the algorithm is adapted to both scenarios.
 
-\section{No space results}
+\section{No-space results}
 
 Learning BPE units that can handle merges among words takes more time, since there are more possibilities to merge; each end of the word and each beginning of the word can now be merged. In the previous case, there was only a fixed number of merges that could be done inside a word, once the whole word was merged into one unit, no other merges were possible. Now however, that word can be merged with its previous or subsequent tokens.
 
-As with the space case, the algorithm starts relatively slow, at around 0.7 BPE merges per second. While the most frequent merge in the space case is \emph{\_t, h} for English and \emph{e, n} for German, in the no space case the most frequent merges are \emph{e, \_} for English and \emph{e, n} again for German. In the English case, the pair \emph{e, \_} is much more frequent than the pair \emph{\_t, h}, and it takes more time for this pair to get merged. Afterwards, the number of merges per second increases until plateauing at 50 merges per second in English, and slightly lower in German. The runtime is \textbf{3:50min for 10.000 merges in English and 4:10min in German}. Since there are more merge possibilities, the algorithm was also run \textbf{for 20.000 merges, with a runtime of 9:30min in English and 10min in German}.
+As with the space case, the algorithm starts relatively slow, at around 0.7 BPE merges per second. While the most frequent merge in the space case is \emph{\_t, h} for English and \emph{e, n} for German, in the no-space case the most frequent merges are \emph{e, \_} for English and \emph{e, n} again for German. In the English case, the pair \emph{e, \_} is much more frequent than the pair \emph{\_t, h}, and it takes more time for this pair to get merged. Afterwards, the number of merges per second increases until plateauing at 50 merges per second in English, and slightly lower in German. The runtime is \textbf{3:50min for 10.000 merges in English and 4:10min in German}. Since there are more merge possibilities, the algorithm was also run \textbf{for 20.000 merges, with a runtime of 9:30min in English and 10min in German}.
 
 Further down the pipeline, alignments are performed without any notion of what words are, and \emph{Fastalign} and \emph{Eflomal} are not thought to handle multiword-to-multiword alignments. It is therefore expected that the scores will be lower than in the space case, and it is also expected that the more BPE merges, the bigger the segmentations, the more words will be merged together. For instance, if the multiword unit \emph{in\_the\_street} is aligned to \emph{auf\_der\_Strasse}, the following mapping would be performed: \emph{in-auf}, \emph{in-der}, \emph{in-Strasse}, \emph{the-auf}, \emph{the-der} and so on. This brings the precision down dramatically, since most of these alignments are incorrect. For the case of no dropout, the best result for BPE without space separations is a F1 score of 0.477, obtained at 200 merges, which is a very low number of merges compared to the previous best scores. The F1 score is also poor relative to the case where merges between words are no allowed. Regardless, given that there is no notion as to what a word constitutes, this result cannot be poorly regarded.
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=12cm]{../reports/scores_normal_bpe/eng_deu_ns_fastalign.png}
-    \caption{Scores for no space BPE, no dropout}
+    \includegraphics[width=13cm]{../reports/scores_normal_bpe/eng_deu_ns_fastalign.png}
+    \caption{Scores for no-space BPE}
+\end{figure}
+
+As the following figures show, BPE-dropout outperforms BPE also in no-space mode, making this improvement consistent regardless if word boundaries are considered or not. It can be therefore concluded, that \textbf{BPE-dropout outperforms BPE in all experiments done in this thesis, with word boundaries or without}. For a dropout rate of 10\%, results already improve wtih an F1 score of 0.523 for 200 merges and an alignment threshold of 0.7. The maximum F1 score is obtained at a dropout rate of 20\%, with an \textbf{F1 score of 0.559 for 500 merges and an alignment threshold of 0.5}, which constitutes an improvement of 10.5\% with respect to no-space BPE with no dropout.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=13cm]{../reports/scores_dropout_bpe/no space/0.1/scores_ns_0.7_thres.png}
+    \caption{Scores for no-space BPE-dropout with dropout rate 0.1, threshold at 0.7}
 \end{figure}
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=12cm]{../reports/scores_dropout_bpe/no space/0.1/scores_ns_0.7_thres.png}
-    \caption{Scores for no space BPE with dropout 0.1, threshold at 0.7}
-\end{figure}
-
-For the dropout rate of 10\%, results already improve wtih a F1 score of 0.523 for 200 merges and an alignment threshold of 0.7. The maximum F1 score is obtained at a dropout rate of 20\%, with a F1 score of 0.559 for 500 merges and an alignment threshold of 0.5.
-
-\begin{figure}[!ht]
-    \centering
-    \includegraphics[width=12cm]{../reports/scores_dropout_bpe/no space/0.2/scores_ns_0.5_thres.png}
-    \caption{Scores for no space BPE with dropout 0.2, threshold at 0.5}
+    \includegraphics[width=13cm]{../reports/scores_dropout_bpe/no space/0.2/eng_deu_ns_0.5_thres.png}
+    \caption{Scores for no-space BPE-dropout with dropout rate 0.2, threshold at 0.5}
 \end{figure}
 
 Experiments with higher dropout rates have also been conducted, namely a dropout rate of 50\% which is very large, half the merges are dropped, with a F1 score of 0.529 for 4000 merges and an alignment threshold of 0.3. These parameters are considerably different than the ones previously. The ideal score happens at 4000 merges, which makes sense that it is a bigger number since so many merges are dropped. And the alignment threshold is also very low compared to previous cases, meaning that most alignments are accepted creating a sort of union.
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=12cm]{../reports/scores_dropout_bpe/no space/0.5/scores_ns_0.3_thres.png}
-    \caption{Scores for no space BPE with dropout 0.5, threshold at 0.3}
+    \includegraphics[width=13cm]{../reports/scores_dropout_bpe/no space/0.5/scores_ns_0.3_thres.png}
+    \caption{Scores for no-space BPE-dropout with dropout rate 0.5, threshold at 0.3}
+\end{figure}
+
+\section{No-space results for other language pairs}
+
+Similarly to the case of BPE-dropout in space mode, where it was shown that BPE-dropout outperforms BPE with a dropout rate of 10\% and an alignment threshold of 0.7, it is also interesting to see the performance of BPE-dropout in no-space mode in other language pairs, in this case with the optimal hyperparameters of no-space mode, namely a dropout rate of 20\% and an alignment threshold of 0.5. The following figures show the performance of BPE-dropout given the baseline of BPE in no-space mode, for the language pairs English-Romanian and English-Hindi. At the ideal hyperparameter of 500 merges, the F1 score improvement of BPE-dropout over BPE in English-Hindi is of 6.2\%, and 8.4\% in English-Romanian.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=13cm]{../reports/scores_dropout_bpe/no space/0.2/eng_ron_ns_0.5_thres_fastalign.png}
+    \caption{Scores for no-space BPE-dropout on English-Romanian with dropout rate 0.2, threshold at 0.5}
+\end{figure}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=13cm]{../reports/scores_dropout_bpe/no space/0.2/eng_hin_ns_0.5_thres_fastalign.png}
+    \caption{Scores for no-space BPE-dropout on English-Hindi with dropout rate 0.2, threshold at 0.5}
 \end{figure}

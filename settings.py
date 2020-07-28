@@ -4,15 +4,15 @@ import glob
 from os.path import join
 
 word_sep = u'\u2581'
-source, target = 'eng', 'ron' #eng, deu, ron, hin
+source, target = 'eng', 'hin' #eng, deu, ron, hin
 source_bpe, target_bpe = False, False # both can't be true at the same time
 
 space = False
-dropout = 0
-dropout_samples = 10
+dropout = 0.2
+dropout_samples = 5
 learn_merges = 10000
-merges = [100, 200, 500, 1000, 2000, 4000, 8000]
-merge_threshold = [0.7]
+merges = [100, 200, 500, 1000, 2000]
+merge_threshold = [0.5]
 
 rootdir = os.getcwd()
 if rootdir.split(os.sep)[-1] == 'src':
