@@ -164,8 +164,29 @@ Similarly to the case of BPE-dropout in space mode, where it was shown that BPE-
     \caption{Scores for no-space BPE-dropout on English-Romanian with dropout rate 0.2, threshold at 0.5}
 \end{figure}
 
+\clearpage
 \begin{figure}[!ht]
     \centering
     \includegraphics[width=13cm]{../reports/scores_dropout_bpe/no space/0.2/eng_hin_ns_0.5_thres_fastalign.png}
     \caption{Scores for no-space BPE-dropout on English-Hindi with dropout rate 0.2, threshold at 0.5}
 \end{figure}
+
+\section{Summary}
+
+The F1 score results of this thesis are summarized as follows:
+
+\begin{quote}
+    Eng-Deu word alignment score: 0.6\\
+    Eng-Deu BPE score: 0.609\\
+    Eng-Deu BPE-dropout score: 0.635\\
+    Eng-Deu BPE-dropout hyperparameters: dropout rate 10\%, 2000 merges, alignment threshold 0.7, 10 segmentations\\
+    Eng-Deu BPE-dropout best score: 0.685 at dropout rate 30\%, 2000 merges, alignment threshold 0.5, 30 segmentations\\
+    Eng-Deu BPE score, BPE only in Eng: 0.56\\
+    Eng-Deu BPE-dropout score, BPE only in Eng: 0.59\\
+    Eng-Ron BPE-dropout improvement over BPE: 1.5\%\\
+    Eng-Hin BPE-dropout improvement over BPE: 2.8\%\\
+    Improvement of learn-BPE algorithm: speedup of 2.5x\\
+    Eng-Deu no-space BPE-dropout improvement over no-space BPE: 10.5\%\\
+    Eng-Ron no-space BPE-dropout improvement over no-space BPE: 8.4\%\\
+    Eng-Hin no-space BPE-dropout improvement over no-space BPE: 6.2\%\\
+\end{quote}
