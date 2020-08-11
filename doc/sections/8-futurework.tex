@@ -1,0 +1,38 @@
+% Template for a Thesis
+%
+% 8-futurework.tex
+%
+% Future work
+
+\chapter{Future work}\label{ch:futurework}
+
+As future work, other language pairs could be explored, especially those not involving English, or other languages with different tokenization. It would be specifically interesting to try out the no space mode with languages without any space tokenization. The capabilities of BPE-dropout in no space mode would be tested this way.
+
+Additionally, in this thesis only the sampling method of Dropout has been explored. This is the way to obtain different segmentations from the same raw corpus, which in this case is done very simply and randomly with a dropout rate. It is hypothesized that if a random sampling already improves the results of BPE, a slightly more intelligent one might improve it even further. Besides, different scoring methods could be explored other than the maximum pair frequency as in BPE. Regarding merging, instead of merging sequences based on their independent frequency, there might be an attempt to make this merging based on the sequence length. This is an example of how BPE would merge a long word:
+
+\begin{quote}
+	i n d e p e n d e n t l y\\
+	in d e p e n d e n t l y\\
+	in d e p e n d e n t ly\\
+	...\\
+	indep end ent ly\\
+	independ ent ly\\
+	independent ly\\
+	independently\\
+\end{quote}
+
+Instead of creating many short sequences, such as \emph{indep end ent ly}, a different method would be to make a unit as big as possible and then merge short sequences to it. This way, the sequence \emph{independent} would be created before than in the previous case.
+
+\begin{quote}
+	i n d e p e n d e n t l y\\
+	in d e p e n d e n t l y\\
+	in de p e n d e n t l y\\
+	in dep e n d e n t l y\\
+	indep e n d e n t l y\\
+	indepe n d e n t l y\\
+	...\\
+	independ en t ly\\
+	independen t ly\\
+	independent ly\\
+	independently\\
+\end{quote}

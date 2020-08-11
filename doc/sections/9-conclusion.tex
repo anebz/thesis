@@ -1,0 +1,17 @@
+% Template for a Thesis
+%
+% 8-conclusion.tex
+%
+% Conclusion
+
+\chapter{Conclusion}\label{ch:conclusion}
+
+This thesis has broadly analysed all tokenization algorithms, while explaining BPE in depth providing examples, code snippets to make the algorithm understandable, and adding use cases, resources and references. The replication process of the performance of BPE has also been minutely detailed. Regarding evaluation methods, the background of which has been explained in the literature review section, primarily Fastalign has been used, clarifying in detail how it works.
+
+Additionally, the improvement over BPE, BPE-dropout has also been meticulously described, its algorithm outlined, the improvement over BPE illustrated, its results replicated, and its own drawbacks exposed as well. It has been shown that by iterating over some of the hyperparameters that BPE-dropout uses, its results have been slightly improved by 2\%.
+
+By going over the original BPE algorithm, this thesis has optimized the algorithm to learn BPE units by making it faster, namely 2.5 times faster. The algorithm has also been adapted to handle the case of space and no space tokenization, which was not present in the original algorithm.
+
+To the knowledge of the author, this is the first piece of research dealing with no space tokenization, and no space BPE. This function is integrated into the pipeline, so that by tweaking some parameters in the global variable file in the repository, all the consequent pipeline is adapted to the specific case.
+
+Throughout the thesis it is proven that BPE-dropout outperforms BPE even in no-space case, confirming the general improvement of BPE-dropout. This is also confirmed by seeing that BPE-dropout outperforms BPE in various languages, other than English-German.
