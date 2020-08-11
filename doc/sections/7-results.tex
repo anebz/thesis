@@ -178,15 +178,26 @@ The F1 score results of this thesis are summarized as follows:
 \begin{quote}
     Eng-Deu word alignment score: 0.6\\
     Eng-Deu BPE score: 0.609\\
-    Eng-Deu BPE-dropout score: 0.635\\
-    Eng-Deu BPE-dropout hyperparameters: dropout rate 10\%, 2000 merges, alignment threshold 0.7, 10 segmentations\\
-    Eng-Deu BPE-dropout best score: 0.685 at dropout rate 30\%, 2000 merges, alignment threshold 0.5, 30 segmentations\\
     Eng-Deu BPE score, BPE only in Eng: 0.56\\
+    Eng-Deu BPE-dropout score: 0.635
+\end{quote}
+
+The best hyperparameters for Eng-Deu BPE-dropout are: dropout rate 10\%, 2000 merges, alignment threshold 0.7, 10 segmentations. Best scores for this setup are:
+
+\begin{quote}
+    Eng-Deu BPE-dropout: 0.685\\
     Eng-Deu BPE-dropout score, BPE only in Eng: 0.59\\
     Eng-Ron BPE-dropout improvement over BPE: 1.5\%\\
-    Eng-Hin BPE-dropout improvement over BPE: 2.8\%\\
+    Eng-Hin BPE-dropout improvement over BPE: 2.8\%
+\end{quote}
+
+The improvements achieved in this thesis are outlined as follows:
+
+\begin{quote}
     Improvement of learn-BPE algorithm: speedup of 2.5x\\
     Eng-Deu no-space BPE-dropout improvement over no-space BPE: 10.5\%\\
     Eng-Ron no-space BPE-dropout improvement over no-space BPE: 8.4\%\\
     Eng-Hin no-space BPE-dropout improvement over no-space BPE: 6.2\%\\
 \end{quote}
+
+For clarity and interpretability, all the codes and materials used for the development of this thesis are published in \href{https://github.com/anebz/thesis/}.

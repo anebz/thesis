@@ -6,6 +6,8 @@
 
 \chapter{Literature review}\label{ch:literature}
 
+This chapter outlines the literature review for this thesis. It contains basic explanations of the concepts explained, the historical development, graphs and figures, examples, different variants and comparisons among them, and references to all papers and articles mentioned. The chapter is divided into two sections, namely tokenization and translation. The topics handled in each section are independent, but come together in the development of this thesis.
+
 \section{Tokenization}\label{sec:tokenization}
 
 \subsection{Introduction}
@@ -25,7 +27,7 @@ Tokenization is the first major step in language processing. The main idea is si
     Text after tokenization: ['I', 'ate', 'a', 'burger', 'today', 'and', 'it', 'was', 'good']
 \end{quote}
 
-In this example, the tokenization process is simple. First, locate the word boundaries and split words by whitespaces. Next, remove symbols and punctuation marks as both contain no definitive meaning. However, tokenization in real life is not always that easy: some punctuation marks are relevant to the meaning of the words around them.
+In this example, the tokenization process is simple. First, locate the word boundaries and split words by whitespaces. Next, remove symbols and punctuation marks as both contain no definitive meaning. However, tokenization in real life is not always that easy: some punctuation marks are relevant to the meaning of the words around them, for example \emph{don't}: should it be tokenized as \emph{do, n't} or \emph{don, ', t}? There is no correct answer, different libraries or applications take a differente approach.
 
 \paragraph{How to deal with punctuation marks?}
 
@@ -127,7 +129,7 @@ In the first case, \textit{well} is an adverb and in the second it is a noun. \e
 
 Another drawback is that word embeddings are not well equipped to deal with \textbf{out of vocabulary (oov) words}. Word embeddings are created based on limited vocabulary size known to the system. If a foreign or misspelled word is detected, it will be given a universal unknown <UNK> embedding, that will be the same for all unknown words. Therefore, all unknown words in NLP will be treated similarly as if they have the same meaning. The information within these words is lost due to the mapping from OOV to UNK.
 
-Another issue with word tokens is related to the \textbf{vocabulary size}. Generally, pre-trained models are trained on a large volume of the text corpus. As such, if the vocabulary is built with all the unique words in such a large corpus, it creates a huge vocabulary. This opens the door to \emph{character tokenization}, since in this case the vocabulary depends on the number of characters, which is significantly lower than the number of all different words.
+Another issue with word tokens is the huge \textbf{vocabulary size}. Generally, pre-trained models are trained on a large volume of the text corpus. As such, if the vocabulary is built with all the unique words in such a large corpus, it creates a huge vocabulary. A current state-of-the-art deep learning architecture, Transformer XL~\cite{dai2019transformerxl}, has a vocabulary size of 267,735. This opens the door to \emph{character tokenization}, since in this case the vocabulary depends on the number of characters, which is significantly lower than the number of all different words.
 
 These problems are not to be mistaken with tokenization problems, tokenization is merely a way to an end. In most cases however, they are used to create embeddings. And if embeddings from word tokens have drawbacks, the tokenization method is changed in order to create different tokens, in order to create other types of embeddings.
     
@@ -157,7 +159,7 @@ As an in-betweener between word and character tokenization, subword tokenization
 
 \subsubsection{Subword level tokenization}
 
-Subword tokenization is the task of splitting the text into subwords or n-gram characters. For example, words like \emph{lower} can be segmented as \emph{low-er}, \emph{smartest} as \emph{smart-est}, and so on. In the event of an OOV word such as \emph{eorner}, this tokenizer will divide it into \emph{eorn-er} and effectivey obtain some semantic information. Very common subwords such as \emph{ing}, \emph{ion}, usually with a morphological sense, are learnt through repetition. The word \emph{unfriendly} would be split into \emph{un-friend-ly}.
+Subword tokenization is the task of splitting the text into subwords or n-gram characters. These algorithms leave most common words as they are, but they decompose rare words in meaningful subword units. The word \emph{unfriendly} might be considered a rare word and decomposed as \emph{un-friend-ly}. Words like \emph{lower} might be segmented as \emph{low-er}, \emph{smartest} as \emph{smart-est}, and so on. In the event of an OOV word such as \emph{greoter}, this tokenizer will divide it into \emph{greot-er} and effectivey obtain some semantic information. Very common subwords such as \emph{ing}, \emph{ion}, usually with a morphological sense, are learnt through repetition. This is especially useful in agglutinative languages such as Turkish, where you can form (almost) arbitrarily long complex words by stringing together some subwords.
 
 \begin{figure}[!ht]
     \centering
@@ -165,7 +167,12 @@ Subword tokenization is the task of splitting the text into subwords or n-gram c
     \caption{Representation of the word 'unfriendly' in subword units}
 \end{figure}
 
-At the time of writing (2020), the most powerful deep learning architectures are based on Transformers (Vaswani et al., 2017~\cite{vaswani2017attention}), and these rely on subword tokenization algorithms to prepare the vocabulary.
+At the time of writing (2020), the most powerful deep learning architectures are based on Transformers (Vaswani et al., 2017~\cite{vaswani2017attention}), and these rely on subword tokenization algorithms to prepare the vocabulary. BERT~\cite{devlin2018bert} makes the following tokenization. The \#\# symbol means that the rest of the token should be attached to the previous one, without space, for the case when we might need to decode predictions and reverse the tokenization.
+
+\begin{quote}
+    Raw text: I have a new GPU.\\
+    Text after tokenization: ['i', 'have', 'a', 'new', 'gp', '\#\#u', '!']
+\end{quote}
 
 \paragraph{Subword level algorithms}
 
@@ -203,11 +210,13 @@ Unigram language modelling (Kudo, 2018~\cite{kudo-2018-subword}) is based on the
     \item Repeat step 3–5 until reaching the subword vocabulary size (defined in step 2) or there are no changes (step 5).
 \end{enumerate}
 
-Kudo argues that the unigram LM model is more flexible than BPE because it is based on a probabilistic LM and can output multiple segmentations with their probabilities.
+At a given step, Unigram LM computes a loss from the corpus and the current vocabulary. Then, for each subword, it evaluates how much the loss would augment if the subword was removed from the vocabulary. It sorts the subwords by this quantity (that represents how worse the loss becomes if the token is removed) and removes all the worst \emph{p} tokens (for instance p could be 10\% or 20\%). It then repeats the process until the vocabulary has reached the desired size, always keeping the base characters, to be able to tokenize any word written with them, like BPE or WordPiece. Contrary to BPE and WordPiece that work out rules in a certain order that can then be applied in the same order when tokenizing new text, Unigram LM has several ways of tokenizing a new text. 
+
+Kudo argues that the unigram LM model is more flexible than BPE because it is based on a probabilistic LM and can output multiple segmentations with their probabilities. Instead of starting with a group of base symbols and learning merges with some rule, like BPE or WordPiece, it starts from a large vocabulary (for instance, all pretokenized words and the most common substrings) that it will trim down progressively. It is not used directly for any of the pretrained models in the library, but it is used in conjunction with SentencePiece, explained below.
 
 \paragraph{WordPiece}\label{subsubsec:wordpiece}
 
-WordPiece (Schuster and Nakajima, 2012~\cite{schuster2012japanese}) was initially used to solve Japanese and Korean voice problem. It is similar to BPE in many ways, except that it forms a new subword based on likelihood, not on the next highest frequency pair. These are the steps of the algorithm:
+WordPiece (Schuster and Nakajima, 2012~\cite{schuster2012japanese}) was initially used to solve Japanese and Korean voice problem, and is used in BERT~\cite{devlin2018bert}. It is similar to BPE in many ways, except that it forms a new subword based on likelihood, not on the next highest frequency pair. These are the steps of the algorithm:
 
 \begin{enumerate}
     \item Get a large enough corpus.
@@ -225,18 +234,16 @@ WordPiece and BPE only differ in step 6, since BPE merges the token combination 
     Score(A,B) = Frequency(A,B) / Frequency(A) * Frequency(B)
 \end{quote}
 
-The token pair with the highest score will be selected. It might be the case that \textit{Frequency('so', 'on')} is very high but their individual frequencies are also high. Hence with the WordPiece algorithm, 'soon' will not be merged as the overall score is low. In another example, \textit{Frequency('Jag','gery')} might be low but if their individual frequencies are also low, 'Jag' and 'gery' might be joined to form 'Jaggery'.
-
-BERT (Devlin et al., 2018~\cite{devlin2018bert}) uses WordPiece as its tokenization method, yet the precise tokenization algorithm and/or code has not been made public. This example shows the tokenization step and how it handles OOV words.
+The token pair with the highest score will be selected. It might be the case that \textit{Frequency('so', 'on')} is very high but their individual frequencies are also high. Hence with the WordPiece algorithm, 'soon' will not be merged as the overall score is low. In another example, \textit{Frequency('Jag','gery')} might be low but if their individual frequencies are also low, 'Jag' and 'gery' might be joined to form 'Jaggery'. WordPiece evaluates what it loses by merging two symbols and makes sure it is worth it. BERT (Devlin et al., 2018~\cite{devlin2018bert}) uses WordPiece as its tokenization method, yet the precise tokenization algorithm and/or code has not been made public. This example shows the tokenization step and how it handles OOV words.
 
 \begin{quote}
-    original tokens = ["John", "Johanson", "'s",  "house"]
+    original tokens = ["John", "Johanson", "'s",  "house"]\\
     bert tokens = ["[CLS]", "john", "johan", "\#\#son", "'", "s", "house", "[SEP]"]
 \end{quote}
 
 \paragraph{SentencePiece}
 
-SentencePiece (Kudo et al. 2018~\cite{kudo2018sentencepiece}) is a subword tokenization type that has an \href{https://github.com/google/sentencepiece}{extensive Github repository} with freely available code.
+All the tokenization methods so far required some form of pretokenization, which constitutes a problem, since not all languages use spaces to separate words. This is a problem that the architecture XLM~\cite{lample2019crosslingual} solves by using specific pretokenizers for each of those languages, Chinese, Japanese and Thai for instance. To solve this problem, SentencePiece (Kudo et al. 2018~\cite{kudo2018sentencepiece}) treats the input as a raw stream, includes the space in the set of characters to use, then uses BPE or unigram LM to construct the appropriate vocabulary. It has an \href{https://github.com/google/sentencepiece}{extensive Github repository} with freely available code.
 
 As the repository states, it is an unsupervised text tokenizer and detokenizer where the vocabulary size is predetermined prior to the neural model training. It implements subword units (e.g., BPE~\ref{subsubsec:bpe}) and unigram LM~\ref{subsubsec:unigramlm}) with the extension of direct training from raw sentences. It does not depend on language-specific pre or post-processing.
 
@@ -250,7 +257,7 @@ Approaching ambiguity in text as a regularization parameter for downstream model
     \caption{Representation of the SentencePiece tokenization in a sequence of text}
 \end{figure}
 
-The number of unique tokens in SentencePiece is predetermined, the segmentation model is trained such that the final vocabulary size is fixed, e.g., 8k, 16k, or 32k. This is different from BPE (Sennrich et al., 2015~\cite{sennrich2015neural}) which uses the number of merge operations instead. The number of merge operations is a BPE-specific parameter and not applicable to other segmentation algorithms, including unigram, word and character level algorithms.
+The number of unique tokens in SentencePiece is predetermined, the segmentation model is trained such that the final vocabulary size is fixed, e.g., 8k, 16k, or 32k. This is different from BPE (Sennrich et al., 2015~\cite{sennrich2015neural}) which uses the number of merge operations instead. The number of merge operations is a BPE-specific parameter and not applicable to other segmentation algorithms, including unigram, word and character level algorithms. Most current deep learning architectures, such as ALBERT~\cite{lan2019albert} or XLNet~\cite{yang2019xlnet} use SentencePiece with Unigram LM.
 
 \subsubsection{Tokenization without word boundaries}\label{subsec:wordtokwowb}
 
@@ -310,13 +317,13 @@ Now we can calculate the pairs of characters and their frequencies, as well as t
 from collections import Counter
 
 def get_stats(tokens):
-    pairs = Counter()
-    for sent in tokens:
-        for word in sent[1:].split(' _'):
-            symbols = ('_' + word).split()
-            for j in range(len(symbols) - 1):
-                pairs[symbols[j], symbols[j+1]] += 1
-    return pairs
+  pairs = Counter()
+  for sent in tokens:
+    for word in sent[1:].split(' _'):
+      symbols = ('_' + word).split()
+      for j in range(len(symbols) - 1):
+        pairs[symbols[j], symbols[j+1]] += 1
+  return pairs
 
 pairs = get_stats(tokens)
 >>> pairs = Counter({('_t', 'h'): 2, ('h', 'i'): 2, ('i', 's'): 2, 
@@ -336,18 +343,18 @@ There we can see each bigram and its frequency. For example, ('\_t', 'h') occurs
 import re
 
 def merge_pair_in_corpus(tokens, pair):
-    # convert list of sentences into one big string
-    # in order to do the substitution once
-    tokens = '\n'.join(tokens)
+  # convert list of sentences into one big string
+  # in order to do the substitution once
+  tokens = '\n'.join(tokens)
 
-    # regex to capture the pair
-    p = re.compile(r'(?<!\S)' + re.escape(' '.join(pair)) + r'(?!\S)')
+  # regex to capture the pair
+  p = re.compile(r'(?<!\S)' + re.escape(' '.join(pair)) + r'(?!\S)')
 
-    # substitute the unmerged pair by the merged pair
-    tokens = p.sub(''.join(pair), tokens)
+  # substitute the unmerged pair by the merged pair
+  tokens = p.sub(''.join(pair), tokens)
 
-    tokens = tokens.split('\n')
-    return tokens
+  tokens = tokens.split('\n')
+  return tokens
 
 tokens = merge_pair_in_corpus(tokens, most_frequent_pair)
 >>> tokens = ['_th i s _i s _th i s .']
@@ -363,16 +370,15 @@ vocab = []
 tokens = read_corpus(corpus)
 
 for _ in range(vocab_size):
+  pairs = get_stats(tokens)
 
-    pairs = get_stats(tokens)
+  # frequency of the most common pair is 1, break loop
+  if pairs.most_common(1)[0][1] == 1:
+      break
 
-    # frequency of the most common pair is 1, break loop
-    if pairs.most_common(1)[0][1] == 1:
-        break
-
-    most_frequent_pair = pairs.most_common(1)[0][0]
-    vocab.append(most_frequent_pair)
-    tokens = merge_pair_in_corpus(tokens, most_frequent_pair)
+  most_frequent_pair = pairs.most_common(1)[0][0]
+  vocab.append(most_frequent_pair)
+  tokens = merge_pair_in_corpus(tokens, most_frequent_pair)
 
 >>> tokens = ['_this _i s _this .']
 \end{python}
@@ -399,19 +405,19 @@ oov = ['_' + ' '.join(list(oov))]
 
 i = 0
 while True:
-    pairs = get_stats(oov)
-    # find the pairs available in the vocab learnt before
-    idx = [vocab.index(i) for i in pairs if i in vocab]
+  pairs = get_stats(oov)
+  # find the pairs available in the vocab learnt before
+  idx = [vocab.index(i) for i in pairs if i in vocab]
 
-    if len(idx) == 0:
-        print("BPE completed")
-        break
+  if len(idx) == 0:
+    print("BPE completed")
+    break
 
-    # choose the most frequent pair which appears in the OOV word
-    best = merges[min(idx)]
+  # choose the most frequent pair which appears in the OOV word
+  best = merges[min(idx)]
 
-    # merge the best pair
-    oov = merge_vocab(best, oov)
+  # merge the best pair
+  oov = merge_vocab(best, oov)
 
 >>> oov = '_th e s e'
 \end{python}

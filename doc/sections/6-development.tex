@@ -33,9 +33,8 @@ merges = [100, 200, 500, 1000, 2000, 4000, 6000, 8000]
 rootdir = os.getcwd()
 if rootdir.split(os.sep)[-1] == 'src':
     rootdir = os.sep.join(rootdir.split(os.sep)[:-1])
-datadir = join(rootdir, 'data')
-inputdir = join(datadir, 'input', source+'-'+target)
-bpedir = join(datadir, 'normal_bpe')
+inputdir = join(rootdir, 'data', 'input', source+'-'+target)
+bpedir = join(rootdir, 'data', 'normal_bpe')
 baselinedir = join(rootdir, 'reports', 'scores_normal_bpe')
 scoredir = join(rootdir, 'reports', 'scores_normal_bpe')
 goldpath = join(inputdir, source+'_'+target+'.gold')
@@ -163,9 +162,9 @@ def learn_bpe(argsinput: str) -> list:
 After the loop ends, the merge list is saved into a \emph{.bpe} file. The following code includes this function as well as the main function that calls out all functions.
 
 \begin{python}
-#learn_bpe.py
+# learn_bpe.py
 def write_bpe(lang: str, most_freq_merges: list):
-  bpe_file = codecs.open(join(datadir, lang+'.model'), 'w', encoding='utf-8')
+  bpe_file = codecs.open(join(inputdir, lang+'.model'), 'w', encoding='utf-8')
   bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
   bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
   return
@@ -199,7 +198,7 @@ def load_data() -> (list, list, list):
   for lang in langs:
     argsinput = codecs.open(inputpath[lang], encoding='utf-8')
     corpora.append(read_corpus(argsinput))
-    bpe_model = codecs.open(join(datadir, lang+'.model'), encoding='utf-8').readlines()
+    bpe_model = codecs.open(join(inputdir, lang+'.model'), encoding='utf-8').readlines()
     bpe_model = [tuple(item.strip('\r\n ').split(' ')) for item in bpe_model]
     bpe_models.append(bpe_model[1:])
   return langs, bpe_models, corpora
@@ -578,7 +577,7 @@ dropout = 0.1
 dropout_samples = 10
 merge_threshold = [0.3, 0.5, 0.7, 0.9]
 
-bpedir = join(datadir, 'dropout_bpe' if dropout > 0 else 'normal_bpe')
+bpedir = join(rootdir, 'data', 'dropout_bpe' if dropout > 0 else 'normal_bpe')
 scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 else 'normal_bpe'))
 \end{python}
 
