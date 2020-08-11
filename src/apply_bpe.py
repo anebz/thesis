@@ -13,7 +13,6 @@ from learn_bpe import read_bpe_model, read_corpus
 
 def load_data() -> (list, list, list):
 
-    os.chdir(datadir)
     langs = [source, target]
     bpe_models = []
     corpora = []

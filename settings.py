@@ -3,31 +3,33 @@ import os
 import glob
 from os.path import join
 
-word_sep = u'\u2581'
-source, target = 'eng', 'hin' #eng, deu, ron, hin
-source_bpe, target_bpe = False, False # both can't be true at the same time
+word_sep = u'\u2581' # symbol to use for word separators
+source, target = 'eng', 'hin' # eng, deu, ron, hin
+source_bpe, target_bpe = False, False # Set True to source to make BPE only on source mode, same in Target. both can't be true at the same time
 
-space = False
-dropout = 0.2
-dropout_samples = 5
-learn_merges = 10000
-merges = [100, 200, 500, 1000, 2000]
-merge_threshold = [0.5]
+space = False # True for space mode, False for no space mode
+learn_merges = 10000 # how many BPE units to learn in learn_bpe.py
+merges = [100, 200, 500, 1000, 2000] # create segmentations with different number of merges
+dropout = 0.2 # dropout rate
+dropout_samples = 5 # how many samples to create in dropout mode
+merge_threshold = [0.3, 0.5, 0.7] # alignment threshold for dropout mode
 
+# paths for input files
 rootdir = os.getcwd()
 if rootdir.split(os.sep)[-1] == 'src':
     rootdir = os.sep.join(rootdir.split(os.sep)[:-1])
-datadir = join(rootdir, 'data')
-inputdir = join(datadir, 'input', source+'-'+target)
-bpedir = join(datadir, 'dropout_bpe' if dropout > 0 else 'normal_bpe')
-baselinedir = join(rootdir, 'reports', 'scores_normal_bpe')
-scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 else 'normal_bpe'))
+inputdir = join(rootdir, 'data', 'input', source+'-'+target)
 goldpath = join(inputdir, source+'_'+target+'.gold')
-
 inputpath = {}
 for filename in glob.glob(join(inputdir, "*.txt")):
     inputpath[filename.split(os.sep)[-1].split('_')[0]] = filename
 
+# paths for intermediate files
+bpedir = join(rootdir, 'data', 'dropout_bpe' if dropout > 0 else 'normal_bpe')
+baselinedir = join(rootdir, 'reports', 'scores_normal_bpe')
+scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 else 'normal_bpe'))
+
+# paths for alignment algorithms
 mode = "fastalign" #fastalign, eflomal
 fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 atools_path = join(rootdir, "tools/fast_align/build/atools")

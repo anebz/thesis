@@ -1,27 +1,10 @@
 # thesis
 
-Master thesis repo
+Repository for my Master thesis on **The effects of word segmentation quality on word alignments**. The thesis PDF can be found [here](https://github.com/anebz/thesis/blob/master/doc/main.pdf). This repository handles the following functions:
 
-* Alignment models: FastAlign, Eflomal
-* Datasets: eng_deu, eng_fra
-* Sampling methods: Dropout, (maybe something else?!)
-* Tokenization: space mode, Chaos/no space mode
+* Datasets: English-German, English-Romanian, English-Hindi. To any other datasets, add a folder with the names of the language pairs in `data/input` and under it the txt files with the following format: 'eng_with_X.txt', for X number of sentences and for both languages, and the gold standard. See examples in `data/input` 
+* Alignment models: Fastalign, Eflomal. For installation, see section 5.2.3. of the [thesis](https://github.com/anebz/thesis/blob/master/doc/main.pdf)
+* Sampling methods: Dropout
+* Tokenization: space mode, no space mode
 
-## tasks
-
-* [ ] extract_alignments: maybe do fast align in one big file? both ways seem to work
-
-### BPE improvement, after thesis
-
-* [ ] BPE improvement without dropout. comple t ely
-  * divide and conquer, first make big chunks then merge them together instead of adding characters to the biggest chunk one by one
-  * I assigned a score to BPEs based on their **depth of merge tree**. the depth score
-  * When applying the BPE model to the text, I would give priority to the high score BPEs.
-  * book. bo ok -> book. min merge tree depth is 2. could also be 3, bo, boo, book. to get more meaningful chunks
-  * t h, both 0, then th:1. th:1, e:0, the:2
-  * un:1 accept:3 able:3. acceptable has higher score than unaccept. if 2 chunks have same score, join the larger ones.
-
-## resources
-
-* [You token to me](https://github.com/VKCOM/YouTokenToMe)
-* [Comments on the unigram LM paper](http://www.timoschick.com/paper%20picks/2020/04/14/bpe-is-suboptimal-for-lm-pretraining.html)
+These parameters and others can be set in `settings.py`.
