@@ -30,7 +30,7 @@ The alignment algorithms, \emph{Fastalign} and \emph{Eflomal}, require one langu
 
 \section{Replication of BPE-dropout}
 
-BPE-dropout is meant to be an improvement of BPE, therefore the desired score comparison is that of BPE-dropout with respect to BPE. The BPE scores are taken as baseline, instead of the gold standard scores as in the previous case. As explained in the Methodology chapter~\ref{met:replbpedrop}, the BPE dropout pipeline is run a number of times, resulting in many possible segmentations. Out of these, three types of results are obtained: union, intersection and threshold.
+BPE-dropout is meant to be an improvement of BPE, therefore the desired score comparison is that of BPE-dropout with respect to BPE. The BPE scores are taken as baseline, instead of the gold standard scores as in the previous case. \textbf{The solid lines in the figures represent the BPE-dropout results, whereas the dotted lines correspond to BPE results}. As explained in the Methodology chapter~\ref{met:replbpedrop}, the BPE dropout pipeline is run a number of times, resulting in many possible segmentations. Out of these, three types of results are obtained: union, intersection and threshold.
 
 \begin{itemize}
 	\item The \textbf{union} case takes all alignments into account, resulting in a big list of alignments per sentence. These most probably include the correct alignments, but there are many other wrong alignments. This case has low precision and high recall.
@@ -52,7 +52,7 @@ The following figures 6.3, 6.4 and 6.5. show the results for a \emph{dropout} ra
      \caption{Scores for BPE-dropout with dropout rate 0.1, intersection mode}
  \end{figure}
 
-It can be seen that the F1 score improves consistently the more BPE units have been merged. Since there are more merges, there are fewer units, most words are completely merged and the uncertainty of aligning BPE units is lower, since the sentence looks more and more similar to the raw sentence where there are just words. Regarding the threshold case, the following two figures show the scores for threshold 0.3 and 0.7, \textbf{which achieves the best F1 score, namely 0.635}.
+It can be seen that the F1 score improves consistently the more BPE units have been merged. Since there are more merges, there are fewer units, most words are completely merged and the uncertainty of aligning BPE units is lower, since the sentence looks more and more similar to the raw sentence where there are just words. However, in no case does BPE-dropout improve BPE when union and intersection are considered exclusively. Regarding the threshold case, the following two figures show the scores for threshold 0.3 and 0.7, \textbf{which achieves the best F1 score n, namely 0.635, and an improvement of BPE of 3.5\%}.
 
 \begin{figure}[!ht]
     \centering

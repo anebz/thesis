@@ -141,7 +141,7 @@ OOV words, misspellings or rare words are handled better, since they are broken 
 
 Character level models are unrestricted in their vocabulary and see the input "as-is". Since the vocabulary is much lower, the model's performance is much better than in the word tokens case. Tokenizing sequences at the character level has shown some impressive results.
 
-Radfor et al. (2017)~\cite{radford2017learning} from OpenAI showed that character level models can capture the semantic properties of text. Kalchbrenner et al.(2016)~\cite{kalchbrenner2016neural} from Deepmind and Leet et al. (2017)~\cite{lee-etal-2017-fully} both demonstrated translation at the character level. These are particularly compelling results as the task of translation captures the semantic understanding of the underlying text.
+Radford et al. (2017)~\cite{radford2017learning} from OpenAI showed that character level models can capture the semantic properties of text. Kalchbrenner et al. (2016)~\cite{kalchbrenner2016neural} from Deepmind and Leet et al. (2017)~\cite{lee-etal-2017-fully} both demonstrated translation at the character level. These are particularly compelling results as the task of translation captures the semantic understanding of the underlying text.
 
 \paragraph{Character level algorithms}
 
@@ -171,7 +171,7 @@ At the time of writing (2020), the most powerful deep learning architectures are
 
 \begin{quote}
     Raw text: I have a new GPU.\\
-    Text after tokenization: ['i', 'have', 'a', 'new', 'gp', '\#\#u', '!']
+    Text after tokenization: ['i', 'have', 'a', 'new', 'gp', '\#\#u', '.']
 \end{quote}
 
 \paragraph{Subword level algorithms}
@@ -327,8 +327,7 @@ def get_stats(tokens):
 
 pairs = get_stats(tokens)
 >>> pairs = Counter({('_t', 'h'): 2, ('h', 'i'): 2, ('i', 's'): 2, 
-                    ('_i', 's'): 1, ('i', 's,'): 1, ('_', 'i'): 1, 
-                    ('_i', 't'): 1, ('t', '?'): 1})
+                    ('_i', 's'): 1, ('i', 's,'): 1, ('_', 'i'): 1, ('_i', 't'): 1})
 
 most_frequent_pair = pairs.most_common(1)[0][0]
 >>> most_frequent_pair = ('_t', 'h')
@@ -381,6 +380,7 @@ for _ in range(vocab_size):
   tokens = merge_pair_in_corpus(tokens, most_frequent_pair)
 
 >>> tokens = ['_this _i s _this .']
+>>> vocab = [('_t', 'h'), ('_th', 'i'), ('_thi', 's')]
 \end{python}
 
 In each step of the iteration, the \emph{get\_stats} function iterates all the characters in the corpus, so the complexity is O(len(corpus) * length of sentence), for an average sentence length. Obtaining the most frequent pair takes constant time, since the object \emph{pairs} is a Counter object and includes a function to retrieve the most frequent item. At the step of \emph{merge\_pair\_in\_corpus}, the corpus is iterated in its entirety again, with a complexity of O(len(corpus) * len(sent)). Therefore, the algorithm has a complexity of O(num\_merges * len(corpus) * len(sent)). Iterating num\_merges amount of times cannot be avoided, but operating through all the characters in the corpus is computationally very expensive. One of the contributions of this thesis is an optimization of this algorithm, as will be shown in the following chapters.
