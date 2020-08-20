@@ -4,15 +4,15 @@ import glob
 from os.path import join
 
 word_sep = u'\u2581' # symbol to use for word separators
-source, target = 'eng', 'hin' # eng, deu, ron, hin
+source, target = 'eng', 'deu' # eng, deu, ron, hin
 source_bpe, target_bpe = False, False # Set True to source to make BPE only on source mode, same in Target. both can't be true at the same time
 
-space = False # True for space mode, False for no space mode
+space = True # True for space mode, False for no space mode
 learn_merges = 10000 # how many BPE units to learn in learn_bpe.py
-merges = [100, 200, 500, 1000, 2000] # create segmentations with different number of merges
-dropout = 0.2 # dropout rate
-dropout_samples = 5 # how many samples to create in dropout mode
-merge_threshold = [0.3, 0.5, 0.7] # alignment threshold for dropout mode
+merges = [2000] # create segmentations with different number of merges
+dropout = 0.1 # dropout rate
+dropout_samples = 10 # how many samples to create in dropout mode
+merge_threshold = [0.7] # alignment threshold for dropout mode
 
 # paths for input files
 rootdir = os.getcwd()
@@ -30,7 +30,7 @@ baselinedir = join(rootdir, 'reports', 'scores_normal_bpe')
 scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if dropout > 0 else 'normal_bpe'))
 
 # paths for alignment algorithms
-mode = "fastalign" #fastalign, eflomal
+mode = "eflomal" #fastalign, eflomal
 fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")
 atools_path = join(rootdir, "tools/fast_align/build/atools")
 eflomal_path = join(rootdir, "tools/eflomal")

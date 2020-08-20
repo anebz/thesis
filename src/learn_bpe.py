@@ -50,7 +50,7 @@ def read_corpus(corpus: list) -> list:
 
         if space:
             # add word_sep to each beginning of word and join by space
-            tokens.append(' '.join([f'{word_sep} '.join(word) for word in line]))
+            tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
         else:
             # join all words by word_sep
             tokens.append(f' {word_sep} '.join([' '.join(word) for word in line]))
@@ -65,7 +65,6 @@ def get_stats(tokens: list) -> (Counter, dict):
         ('s', 'h'): 5,
         ('h', 'e'): 6
     }
-
     idx = {
         ('t', 'h'): {
             # keys are indexes in corpus, values are frequency of appearance
