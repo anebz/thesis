@@ -257,7 +257,11 @@ Approaching ambiguity in text as a regularization parameter for downstream model
     \caption{Representation of the SentencePiece tokenization in a sequence of text}
 \end{figure}
 
-The number of unique tokens in SentencePiece is predetermined, the segmentation model is trained such that the final vocabulary size is fixed, e.g., 8k, 16k, or 32k. This is different from BPE (Sennrich et al., 2015~\cite{sennrich2015neural}) which uses the number of merge operations instead. The number of merge operations is a BPE-specific parameter and not applicable to other segmentation algorithms, including unigram, word and character level algorithms. Most current deep learning architectures, such as ALBERT~\cite{lan2019albert} or XLNet~\cite{yang2019xlnet} use SentencePiece with Unigram LM.
+The number of unique tokens in SentencePiece is predetermined, the segmentation model is trained such that the final vocabulary size is fixed, e.g., 8k, 16k, or 32k. This is different from BPE (Sennrich et al., 2015~\cite{sennrich2015neural}) which uses the number of merge operations instead. The number of merge operations is a BPE-specific parameter and not applicable to other segmentation algorithms, including unigram, word and character level algorithms. Most current deep learning architectures, such as ALBERT~\cite{lan2019albert} or XLNet~\cite{yang2019xlnet} use SentencePiece with Unigram LM..
+
+\paragraph{Subword level tokenization drawbacks}
+
+Due to the fact that subword units are obtained in an unsupervised way, that is, without any notion of linguistics or grammar, they do not have a meaning. These subword units are merely obtained by frequency in the corpus, not derived from any linguistic point of view. Therefore, subword units might not be appropriate for parsing.
 
 \subsubsection{Tokenization without word boundaries}\label{subsec:wordtokwowb}
 

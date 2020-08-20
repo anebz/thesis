@@ -52,18 +52,16 @@ Regarding directories and paths, the tree view of the project is displayed in th
 \end{figure}
 
 \clearpage
-\section{Replication of BPE results}
+\section{Pipeline of BPE and subword alignments}
 
-The first programming task in this thesis has been to replicate the BPE results from Sennrich et al.~\cite{sennrich2015neural}. In order to modularize the code in clear units, these have been the steps:
+The first programming task in this thesis has been to implement the BPE algorithm, replicate the results from Sennrich et al.~\cite{sennrich2015neural} and implement the word alignment pipeline, including the mapping from subword alignments to word alignments. In order to modularize the code in clear units, these have been the steps. In the following sections, each step will be explained in detail, with comments and examples for each function.
 
 \begin{enumerate}
     \item Write the learn-BPE from corpus algorithm
     \item Write the apply-BPE to corpus algorithm
-    \item Write extract alignments script
+    \item Write extract alignments script, including subword alignment to word alignment mapping
     \item Write calculate alignment scores script
 \end{enumerate}
-
-In the following sections, each step will be explained in detail, with comments and examples for each function.
 
 \subsection{Learn-BPE algorithm}\label{subsec:learnbpe}
 
@@ -91,14 +89,13 @@ def read_corpus(corpus: list) -> list:
     \_t h a t \_w e \_s h o u l d 
     \_c h e r r y - p i c k \_.',
     ...
-]
+  ]
   '''
   tokens = []
   for line in corpus:
     line = line.split('\t')[1].strip('\r\n ')
     line = line.split()
     line[0] = str.lower(line[0])
-
     # add word_sep to each beginning of word and join by space
     tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
   return tokens
@@ -245,7 +242,7 @@ After this step, in the directory \emph{../data/normal\_bpe/segmentations/} vari
 
 \emph{deu} or \emph{eng} refers to the language, and the numbers are the amount of merges that have been applied into this file. For examples, see~\ref{met:applybpe}.
 
-\subsection{Extract alignments}\label{dev:extractalign}
+\subsection{Extract alignments and map subword alignments to word alignments}\label{dev:extractalign}
 
 This step requires some prior installation of the alignment software. The thesis has been conducted in a Linux environment, so the installation guide is adapted to this case. The installation of the software in any other OS is however possible, as long as the user adapts the commands to their OS. Initially, if not present in the system, it is mandatory to \href{https://cmake.org/install/}{install Cmake}. The installation steps for \emph{Fastalign} are as follows, in bash. The path \emph{path/to/project} should be the path to where the README, data folders and so on are present. Here, a new folder named \emph{tools} is created to save the alignment algorithms.
 
@@ -314,7 +311,7 @@ def create_parallel_text(sourcepath: str, targetpath: str, outpath: str):
   return
 \end{python}
 
-\emph{Fastalign} and \emph{eflomal} work by issuing a command on the OS terminal, and they generate forward and reverse alignments. This is handled by the \emph{create\_fwd\_rev\_files} function, which creates \emph{.fwd} and \emph{.rev} files with the corresponding file name.
+\emph{Fastalign} and \emph{Eflomal} work by issuing a command on the OS terminal, and they generate forward and reverse alignments. This is handled by the \emph{create\_fwd\_rev\_files} function, which creates \emph{.fwd} and \emph{.rev} files with the corresponding file name.
 
 \begin{python}
 # extract_alignments.py
@@ -348,7 +345,7 @@ def create_gdfa_file(outpath: str):
   return
 \end{python}
 
-As explained in the \textit{Extract alignment} subsection in the Methodology chapter~\ref{subsec:extractalign}, the alignment aligns whitespace-separated units, which are generally words but in this case are subword, or BPE units. In order to actually make alignments between words, the subword alignments need to be transformed into word alignments. The function \emph{load\_and\_map\_segmentations} loads the BPE files and maps each BPE unit to its corresponding word. The comments on the function display a simple example to illustrate this concept. This is an auxiliary function in order to map the alignments later. Afterwards, by calling \emph{bpe\_word\_align}, the mapping from subword alignments to word alignments is made. Lastly, the new alignments are saved in a file with the extension \emph{.wgdfa}.
+As explained in the \textit{Extract alignment and map subword alignments to word alignments} subsection in the Methodology chapter~\ref{subsec:extractalign}, the alignment aligns whitespace-separated units, which are generally words but in this case are subword, or BPE units. In order to actually make alignments between words, the subword alignments need to be transformed into word alignments. The function \emph{load\_and\_map\_segmentations} loads the BPE files and maps each BPE unit to its corresponding word. The comments on the function display a simple example to illustrate this concept. This is an auxiliary function in order to map the alignments later. Afterwards, by calling \emph{bpe\_word\_align}, the mapping from subword alignments to word alignments is made. Lastly, the new alignments are saved in a file with the extension \emph{.wgdfa}.
 
 \begin{python}
 # extract_alignments.py
@@ -619,6 +616,7 @@ if __name__ == "__main__":
       apply_bpe()
 \end{python}
 
+\clearpage
 \subsection{Extract alignments with dropout}
 
 The only change in this step is that the \emph{extract\_alignment}~\ref{dev:extractalign} function is called \emph{dropout\_samples} times, which changes the function to write the alignments in the new format, namely, changing the variables \emph{sourcepath} and \emph{targetpath}. Additionally, the gold standard's alignments do not need to be calculated since the baseline are the BPE scores rather than the gold standard scores. The rest of the alignment algorithm remains unchanged.
@@ -693,6 +691,7 @@ def merge_dropout_alignments():
   return
 \end{python}
 
+\clearpage
 Afterwards, the function \emph{calc\_score\_merges} opens these files and calculates the score, much in the way as the \emph{calc\_align\_score} algorithm from the previous section.
 
 \begin{python}
@@ -741,6 +740,7 @@ if __name__ == "__main__":
     calc_score_merges()
 \end{python}
 
+\clearpage
 \section{Improvement of learn-BPE algorithm}\label{dev:improvbpe}
 
 As explained in the methodology~\ref{sec:improvlearnbpe}, the main improvement in the learn-BPE algorithm is to only update previous and next tokens to the merged pair, as well as saving the indexes where each pair occurs. These improvements are built on top of the code shown in~\ref{subsec:learnbpe}. 
@@ -772,7 +772,7 @@ def learn_bpe(corpus: list, bpe_model: list): list:
   return most_freq_merges
 \end{python}
 
-These are the modifications introduced in the \emph{get\_stats} function so that it saves the pair indexes. In the \emph{idx} data structure, not only is the index saved, but also the amount of appearances of each pair in that sentence. This is done to ensure that if the pair ('t', 'h') in index 0 now becomes ('t', 'he') because of the ('h', 'e') merge, and the frequency of ('t', 'h') is reduced by one, it might be assumed that ('t', 'h') no longer appears in that sentence. But this would be a mistake, since there might be other instances of ('t', 'h') in the sentence that are not altered by this merge. We only want to say that ('t', 'h') no longer appears in index 0 when all instances of ('t', 'h') have been merged with other sequences. This is the motivation behind storing the amount of appearances of each pair in a sentence.
+These are the modifications introduced in the \emph{get\_stats} function so that it saves the pair indexes. In the \emph{idx} data structure, not only is the index saved, but also the amount of appearances of each pair in that sentence. This is done to ensure that if the pair ('t', 'h') in index 0 now becomes ('t', 'he') because of the ('h', 'e') merge, and the frequency of ('t', 'h') is reduced by one, it might be assumed that ('t', 'h') no longer appears in that sentence. But this would be a mistake, since there might be other instances of ('t', 'h') in the sentence that are not altered by this merge. It is only relevant to say that ('t', 'h') no longer appears in index 0 when all instances of ('t', 'h') have been merged with other sequences. This is the motivation behind storing the amount of appearances of each pair in a sentence.
 
 \begin{python}
 # learn_bpe.py

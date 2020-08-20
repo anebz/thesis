@@ -164,29 +164,30 @@ Similarly to the case of BPE-dropout in space mode, where it was shown that BPE-
     \caption{Scores for no-space BPE-dropout on English-Romanian with dropout rate 0.2, threshold at 0.5}
 \end{figure}
 
-\clearpage
 \begin{figure}[!ht]
     \centering
     \includegraphics[width=13cm]{../reports/scores_dropout_bpe/no space/0.2/eng_hin_ns_0.5_thres_fastalign.png}
     \caption{Scores for no-space BPE-dropout on English-Hindi with dropout rate 0.2, threshold at 0.5}
 \end{figure}
 
+\clearpage
 \section{Summary}
 
-The F1 score results of this thesis are summarized as follows:
+The F1 score results of this thesis are summarized as follows. In general, Fastalign has been used in contrast to Eflomal. If some of the results do not mention any alignment algorithm, it refers to Fastalign. Otherwise, it is explicitly said that it is Eflomal.
 
 \begin{quote}
     Eng-Deu word alignment score: 0.6\\
-    Eng-Deu BPE score: 0.609\\
-    Eng-Deu BPE score, BPE only in Eng: 0.56\\
-    Eng-Deu BPE-dropout score: 0.635
+    Eng-Deu BPE score, Fastalign: 0.609\\
+    Eng-Deu BPE score, Eflomal: 0.72\\
+    Eng-Deu BPE score, BPE only in Eng: 0.56
 \end{quote}
 
-The best hyperparameters for Eng-Deu BPE-dropout are: dropout rate 10\%, 2000 merges, alignment threshold 0.7, 10 segmentations. Best scores for this setup are:
+The best hyperparameters for Eng-Deu BPE-dropout are: dropout rate 10\%, 2000 merges, alignment threshold 0.7, and 10 segmentations. The best scores for this setup are:
 
 \begin{quote}
-    Eng-Deu BPE-dropout: 0.685\\
-    Eng-Deu BPE-dropout score, BPE only in Eng: 0.59\\
+    Eng-Deu BPE-dropout improvement over BPE, BPE only in Eng: 3\%\\
+    Eng-Deu BPE-dropout improvement over BPE, Fastalign: 3.5\%\\
+    Eng-Deu BPE-dropout improvement over BPE, Eflomal: 5.2\%\\
     Eng-Ron BPE-dropout improvement over BPE: 1.5\%\\
     Eng-Hin BPE-dropout improvement over BPE: 2.8\%
 \end{quote}
@@ -197,7 +198,7 @@ The improvements achieved in this thesis are outlined as follows:
     Improvement of learn-BPE algorithm: speedup of 2.5x\\
     Eng-Deu no-space BPE-dropout improvement over no-space BPE: 10.5\%\\
     Eng-Ron no-space BPE-dropout improvement over no-space BPE: 8.4\%\\
-    Eng-Hin no-space BPE-dropout improvement over no-space BPE: 6.2\%\\
+    Eng-Hin no-space BPE-dropout improvement over no-space BPE: 6.2\%
 \end{quote}
 
-For clarity and interpretability, all the codes and materials used for the development of this thesis are published in \href{https://github.com/anebz/thesis/}.
+For clarity and interpretability, all the codes and materials used for the development of this thesis are published in \href{https://github.com/anebz/thesis/}{the author's Github account}.

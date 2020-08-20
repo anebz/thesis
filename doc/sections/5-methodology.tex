@@ -6,20 +6,11 @@
 
 \chapter{Methodology}\label{ch:methodology}
 
-This chapter explains the technical content of this thesis in broad strokes, the methodology used and the general idea of each method employed. For a more in-depth analysis and code snippets and explanations, refer to the Development chapter~\ref{ch:development}. The results, plots and graphs are displayed in the Results chapter~\ref{ch:results}. This thesis, first of all, aims to replicate the results of BPE and BPE dropout.
+This chapter explains the technical content of this thesis in broad strokes, the methodology used and the general idea of each method employed. For a more in-depth analysis and code snippets and explanations, refer to the Development chapter~\ref{ch:development}. The results, plots and graphs are displayed in the Results chapter~\ref{ch:results}.
 
-\section{Replication of BPE}
+\section{Data}
 
-Using Sennrich et al.'s~\cite{sennrich2015neural} \href{https://github.com/rsennrich/subword-nmt/}{code on Github}, the first goal of the thesis is to replicate the BPE algorithm, and gauge how good the BPE units are by using an alignment algorithm and matching it against a gold standard. For that, these steps are undertaken:
-
-\begin{enumerate}
-	\item Write learn-BPE from corpus algorithm
-	\item Write apply-BPE to corpus algorithm
-	\item Write extract alignment script
-	\item Write calculate alignment scores script
-\end{enumerate}
-
-The corpus employed in this thesis is a 10k sentence English-German corpus. As an excerpt of three sentences from the corpora:
+The main dataset used throughout the thesis consists of a subset of 10.000 sentences of the English - German corpus~\cite{koehn2005epc}. The gold standard for this language pair has been obtained from the \href{http://www-i6.informatik.rwth-aachen.de/goldAlignment/}{Gold Alignment for the Europarl German-English Corpus}. Additionally, the English - Hindi corpus ~\cite{mcenery2000emille}, consisting of 3.000 sentences has been used, with its corresponding \href{https://web.eecs.umich.edu/~mihalcea/wpt05/}{gold standard}, and a subset of 50.000 sentences from the English - Romanian~\cite{mihalcea2003evaluation} corpus have also been used, obtaining the gold standard from the same source as the data. This an excerpt of three sentences from the English-German corpora, which will be used further along the chapter to illustrate examples and make the algorithms easier to understand by visually providing the previous state of the sentences and after the algorithm.
 
 \begin{quote}
 	English\\
@@ -31,6 +22,17 @@ The corpus employed in this thesis is a 10k sentence English-German corpus. As a
 	22	Sie werden bei den EU-Bürgern gewiß das Gefühl für das Recht auf Freizügigkeit stärken , und sie werden gewiß auch behinderten Fahrern Vorteile bringen .\\
 	23	Der ursprüngliche Vorschlag der Kommission wurde vom Parlament in erster Lesung ohne Änderungen verabschiedet .
 \end{quote}
+
+\section{Pipeline of BPE and subword alignments}
+
+Using Sennrich et al.'s~\cite{sennrich2015neural} \href{https://github.com/rsennrich/subword-nmt/}{code on Github}, the first goal of the thesis is to replicate the BPE algorithm, and gauge how good the BPE units are by using an alignment algorithm and converting subword alignments to word alignments, and finally matching it against a gold standard. For that, these steps are undertaken:
+
+\begin{enumerate}
+	\item Write learn-BPE from corpus algorithm
+	\item Write apply-BPE to corpus algorithm
+	\item Write extract alignment script, including subword alignment to word alignment mapping
+	\item Write calculate alignment scores script
+\end{enumerate}
 
 Each step of the pipeline will be detailed as follows.
 
@@ -69,7 +71,6 @@ The learnt vocabulary can be applied to a corpus. In the case of this thesis, th
 	\end{enumerate}
 \end{enumerate}
 
-\clearpage
 This is what the excerpts from the example corpora above look like after 100 merges, that is, after the 100 most common units in the language have been merged:
 
 \begin{quote}
@@ -83,7 +84,7 @@ This is what the excerpts from the example corpora above look like after 100 mer
 	\_der \_ur s p r ü ng lich e \_V or sch la g \_der \_Ko mm iss ion \_w ur de \_v o m \_P ar la ment \_in \_er ster \_L es ung \_o h n e \_Ä nder ungen \_vera b sch ie det \_.
 \end{quote}
 
-In English, \emph{\_the}, \emph{\_and}, \emph{ment} and other very common words and affix/suffixes have been merged. As for German, we can see very common words being merged such as \emph{\_die}, \emph{\_das}, \emph{\_bei} and so on. The same sentences after 1000 merges:
+In English, \emph{\_the}, \emph{\_and}, \emph{ment} and other very common words and affix/suffixes have been merged. As for German, very common words are being merged such as \emph{\_die}, \emph{\_das}, \emph{\_bei} and so on. The same sentences after 1000 merges:
 
 \begin{quote}
 	English\\
@@ -97,7 +98,7 @@ In English, \emph{\_the}, \emph{\_and}, \emph{ment} and other very common words 
 \end{quote}
 
 \clearpage
-We can see bigger subwords being merged, such as \emph{reading}, \emph{first}, \emph{zweite} and so on. And the sentences after 4000 merges:
+Bigger subwords are being merged, such as \emph{reading}, \emph{first}, \emph{zweite} and so on. And the sentences after 4000 merges:
 
 \begin{quote}
 	English\\
@@ -112,9 +113,9 @@ We can see bigger subwords being merged, such as \emph{reading}, \emph{first}, \
 
 Most words are merged, except \emph{\_dis abled} in English, and \emph{\_T ransp ortausschuß} in German for instance. At this point, the corpus is not composed of words anymore, but rather of subwords.
 
-\subsection{Extract alignments}\label{subsec:extractalign}
+\subsection{Extract alignments and map subword alignments to word alignments}\label{subsec:extractalign}
 
-To evaluate if the BPE units are good, bilingual corpora are aligned  and then compared against a gold standard. The motivation behind alignment and how it works can be found in~\ref{ch:translation}. The challenge here lies in the fact that if the BPEs are of good quality, the alignment algorithm will align subword items correctly, and therefore in the subword-to-word mapping, the word alignments will have a high score relative to the gold standard.
+To evaluate if the BPE units are good, the segmentations for each language are aligned, these subword alignments mapped into word alignments, and then compared against a gold standard. The motivation behind alignment and how it works can be found in~\ref{ch:translation}. The challenge here lies in the fact that if the BPEs are of good quality, the alignment algorithm will align subword items correctly, and therefore in the subword-to-word mapping, the word alignments will have a high score relative to the gold standard.
 
 On the first step, alignment, two algorithms have been used, namely \emph{Fastalign} and \emph{Eflomal}. The software installation guides can be found in the development section~\ref{ch:development}. These algorithms take English text and German as input and create an alignment file as output. For the example above:
 
@@ -184,7 +185,7 @@ One of the drawbacks of the algorithm to learn-BPE units is that every time a pa
 
 \subsection{Updating only neighboring sequences}
 
-In order to understand the magnitude of this computation, let us explore the step of merging a pair in the corpus. We can use this small corpus as an example:
+In order to understand the magnitude of this computation, let us explore the step of merging a pair in the corpus. This small corpus can serve as an example:
 
 \begin{quote}
 	0	A start and the end .\\
@@ -232,7 +233,7 @@ All the other pairs remain unchanged. This is the major improvement of this thes
 
 If a pair is very frequent, it is safe to assume that it will be present in the majority of the sentences in the corpus. In the example above, the last sentence does not contain the ('n', 'd') pair. In a bigger corpus, the more merges are done, the rarer they become. It is therefore useful to only visit those sentences where the pair is present. If the merged pair only appears in 10\% of the corpus' sentences, it is a waste of resources to visit all sentences. This can be solved by saving the index where each pair appears. This way, each pair has its frequency associated to it, as well as a list of indexes where it is present. Creating this index list can be done in the initial step of the algorithm when the corpus is read and iterated completely, each pair's frequency computed for the first time, and the indexes recorded.
 
-This way, when accessing the most frequent pair in the corpus, we can also access to the sentences they are present in, and iterate only those.
+This way, when accessing the most frequent pair in the corpus, it is also possible to access to the sentences they are present in, and iterate only those.
 
 \section{BPE without word boundaries}
 

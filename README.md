@@ -8,3 +8,61 @@ Repository for my Master thesis on **The effects of word segmentation quality on
 * Tokenization: space mode, no space mode
 
 These parameters and others can be set in `settings.py`.
+
+## Project structure
+
+```
+.
+├── data
+│   ├── input
+│   │   ├── eng-deu
+│   │   │   ├── eng_with_10k.txt   # input txt file with 10k english sentences
+│   │   │   ├── deu_with_10k.txt
+│   │   │   ├── eng_deu.gold       # gold standard alignments
+│   │   │   ├── eng.model          # merge list for english, space mode
+│   │   │   ├── deu.model
+│   │   │   ├── eng_ns.model       # merge list for english, no space mode
+│   │   │   └── deu_ns.model
+│   │   ├── eng-ron
+│   │   └── eng-hin
+│   ├── normal_bpe
+│   │   ├── segmentations      # files obtained by applying BPE to corpus
+│   │   │   └── *.bpe
+│   │   ├── fastalign          # files obtained from fastalign 
+│   │   │   └── *.wgdfa
+│   │   └── eflomal            # files obtained from eflomal 
+│   │       └── .wgdfa
+│   └── dropout_bpe
+│       ├── segmentations
+│       │   └── *.bpe
+│       ├── fastalign
+│       │   └── *.wgdfa
+│       └── eflomal
+├── doc                        # LaTeX files for the writing of the thesis
+│   ├── figures
+│   ├── sections
+│   └── *.tex files
+├── reports
+│   ├── scores_normal_bpe      # scores for BPE
+│   │   └── *.csv, *.png
+│   └── scores_dropout_bpe     # scores for BPE dropout space/no space, and depending on dropout rate
+│       ├── space
+│       │   ├── 0.1
+│       │   └── 0.2
+│       |       └── *.csv, *.png
+│       └── no space
+│           └── 0.1
+│               └── *.csv, *.png
+├── src                        # python files
+│   ├── learn_bpe.py
+│   ├── apply_bpe.py
+│   ├── extract_alignments.py
+│   └── calc_align_score.py
+├── tools                        # fastalign, eflomal installation directories
+│   ├── fastalign
+│   └── eflomal
+├── .gitignore
+├── README.md
+├── requirements.txt
+└── settings.py
+```
