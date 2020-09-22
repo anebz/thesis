@@ -8,6 +8,7 @@ source, target = 'eng', 'deu' # eng, deu, ron, hin
 source_bpe, target_bpe = False, False # Set True to source to make BPE only on source mode, same in Target. both can't be true at the same time
 
 space = True # True for space mode, False for no space mode
+scoring = True
 learn_merges = 10000 # how many BPE units to learn in learn_bpe.py
 merges = [2000] # create segmentations with different number of merges
 dropout = 0.1 # dropout rate

@@ -99,13 +99,16 @@ def get_stats(tokens: list) -> (Counter, dict):
     return pairs, idx
 
 
-def update_tokens(tokens: list, idx: dict, pairs: Counter, pair: tuple) -> (list, dict, Counter):
+def update_tokens(tokens: list, scores: Counter, pairs: Counter, idx: dict, pair: tuple) -> (list, Counter, Counter, dict):
 
-    def update_freqs(pairs, idx, pair, new_pair=-1):
+    def update_freqs(scores, pairs, idx, pair, new_pair=-1):
 
         # decrease freq from pairs
         pairs[pair] -= 1
-        if pairs[pair] <= 0: del pairs[pair]
+        scores[pair] -= 1
+        if scoring:
+            scores[pair] -= len(pair[0].replace(word_sep, '')) + len(pair[1].replace(word_sep, '')) - 2
+        if pairs[pair] <= 0: del pairs[pair]; del scores[pair]
 
         # decrease freq from idx
         idx[pair][i] -= 1
@@ -114,9 +117,12 @@ def update_tokens(tokens: list, idx: dict, pairs: Counter, pair: tuple) -> (list
 
         if new_pair != -1:
             pairs[new_pair] += 1
+            scores[new_pair] += 1
+            if scoring:
+                scores[new_pair] += len(new_pair[0].replace(word_sep, '')) + len(new_pair[1].replace(word_sep, '')) - 2
             idx[new_pair][i] += 1
 
-        return pairs, idx
+        return scores, pairs, idx
 
     merged_pair = ''.join(pair)
     p = re.compile(r'(?<!\S)' + re.escape(' '.join(pair)) + r'(?!\S)')
@@ -127,8 +133,9 @@ def update_tokens(tokens: list, idx: dict, pairs: Counter, pair: tuple) -> (list
         # merge pair in the sentence
         sent = p.sub(merged_pair, tokens[i])
 
-        # sentence remains unchanged. Delete pair from pairs and idx and continue
+        # sentence remains unchanged. Delete pair from scores, pairs and idx and continue
         if sent == tokens[i]:
+            del scores[pair]
             del pairs[pair]
             del idx[pair][i]
             if len(idx[pair]) <= 0:
@@ -163,7 +170,7 @@ def update_tokens(tokens: list, idx: dict, pairs: Counter, pair: tuple) -> (list
                 '''
                 prev = (sent[k].split()[-1], pair[0])
                 new_pair = (prev[0], merged_pair)
-                pairs, idx = update_freqs(pairs, idx, prev, new_pair)
+                scores, pairs, idx = update_freqs(scores, pairs, idx, prev, new_pair)
 
             if space and not sent[k+1].split() and word_sep not in pair[0][0]:
                 '''
@@ -180,7 +187,7 @@ def update_tokens(tokens: list, idx: dict, pairs: Counter, pair: tuple) -> (list
                 else:
                     after = (pair[1], pair[0])
                     new_pair = (merged_pair, merged_pair)
-                    pairs, idx = update_freqs(pairs, idx, after, new_pair)
+                    scores, pairs, idx = update_freqs(scores, pairs, idx, after, new_pair)
 
             elif sent[k+1].split() and (word_sep not in sent[k+1].split()[0] if space else True):
                 '''
@@ -190,12 +197,12 @@ def update_tokens(tokens: list, idx: dict, pairs: Counter, pair: tuple) -> (list
                 '''
                 after = (pair[1], sent[k+1].split()[0])
                 new_pair = (merged_pair, after[1])
-                pairs, idx = update_freqs(pairs, idx, after, new_pair)
+                scores, pairs, idx = update_freqs(scores, pairs, idx, after, new_pair)
 
             # decrease freq of merged bigram
-            pairs, idx = update_freqs(pairs, idx, pair)
+            scores, pairs, idx = update_freqs(scores, pairs, idx, pair)
 
-    return tokens, idx, pairs
+    return tokens, scores, pairs, idx
 
 
 def learn_bpe(corpus: list) -> list:
@@ -209,25 +216,21 @@ def learn_bpe(corpus: list) -> list:
     """
 
     tokens = read_corpus(corpus)
-
     pairs, idx = get_stats(tokens)
-
+    scores = pairs.copy()
     most_freq_merges = []
-    for i in tqdm(
-        range(learn_merges), 
-        desc=f"learn_bpe: lang={lang}, space mode={space}"
-        ):
 
-        # stop the loop if the frequency of the most common pair is 1
-        if pairs.most_common(1)[0][1] == 1:
-            break
+    for i in tqdm(range(learn_merges), desc=f"learn_bpe: lang={lang}, space mode={space}"):
         try:
-            most_frequent = pairs.most_common(1)[0][0]
+            most_frequent = scores.most_common(1)[0]
         except:
             break
+        # stop the loop if the frequency of the most common pair is 1
+        if most_frequent[1] == 1:
+            break
 
-        most_freq_merges.append(most_frequent)
-        tokens, idx, pairs = update_tokens(tokens, idx, pairs, most_frequent)
+        most_freq_merges.append(most_frequent[0])
+        tokens, scores, pairs, idx = update_tokens(tokens, scores, pairs, idx, most_frequent[0])
 
     return most_freq_merges
 
