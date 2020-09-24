@@ -22,3 +22,29 @@ Example of 3 characters
 
 * Scoring system, the higher the pair length, higher score
 * Fast merging of long words: important, particular, proposal, therefore
+
+## Extended experiments
+
+format: num_merges,prec,rec,f1,AER
+
+### 1. word - char
+
+* eng-deu: ,0.099,0.082,0.09,0.91
+* eng-hin: ,0.075,0.064,0.069,0.931
+
+### 2. word - BPE-no-space
+
+previously refers to BPE-no-space - BPE-no-space
+
+* eng-deu previously
+  * 200,0.406,0.578,0.477,0.524
+  * 500,0.384,0.555,0.454,0.548
+* eng-deu now
+  * 200,0.456,0.526,**0.489**,0.512
+  * 500,0.437,0.535,**0.481**,0.52
+* eng-hin previously
+  * 200,0.244,0.35,0.288,0.712
+  * 500,0.215,0.322,0.258,0.742
+* eng-hin now
+  * 200,0.277,0.317,**0.296**,0.704
+  * 500,0.245,0.322,**0.278**,0.722
