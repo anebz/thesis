@@ -10,7 +10,7 @@ source_bpe, target_bpe = False, True # Set True to source to make BPE only on so
 
 space = False # True for space mode, False for no space mode
 scoring = False # True to activate the scoring method
-dropout = 0.1 # dropout rate
+dropout = 0.2 # dropout rate
 
 learn_merges = 10000 # how many BPE units to learn in learn_bpe.py
 merges = [200, 500] # create segmentations with different number of merges

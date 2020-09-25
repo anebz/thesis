@@ -118,11 +118,12 @@ def plot_scores(df: pd.DataFrame, baseline_df: pd.DataFrame, scoredir: str):
 		df.plot(kind='line', x=columns[0], y=column, color=color, ax=ax)
 
 	if dropout:
-		baseline_df = baseline_df.sort_values('num_symbols')
-		columns = list(baseline_df)
-		for column, color in zip(columns[1:], colors):
-			baseline_df.plot(kind='line', x=columns[0], y=column,
-							 color=color, ax=ax, legend=False, linestyle='dashed')
+		if not baseline_df.empty:
+			baseline_df = baseline_df.sort_alues('num_symbols')
+			columns = list(baseline_df)
+			for column, color in zip(columns[1:], colors):
+				baseline_df.plot(kind='line', x=columns[0], y=column,
+									color=color, ax=ax, legend=False, linestyle='dashed')
 	else:
 		for baseline_results, color in zip(list(baseline_df.iloc[0][1:]), colors):
 			plt.axhline(y=baseline_results, color=color, linestyle='dashed')
@@ -207,7 +208,11 @@ if __name__ == "__main__":
 	probs, surs, surs_count = load_gold(goldpath)
 
 	if dropout:
-		baseline_df = pd.read_csv(join(baselinedir, f"{source}_{target}{'' if space else '_ns'}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}_{mode}.csv"))
+		try:
+			baseline_df = pd.read_csv(join(baselinedir, f"{source}_{target}{'' if space else '_ns'}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}_{mode}.csv"))
+		except:
+			print("Baseline not available")
+			baseline_df = pd.DataFrame()
 		calc_score_merges(probs, surs, surs_count, baseline_df)
 	else:
 		# no space case: take normal BPE scores as baseline. if normal case, take gold standard

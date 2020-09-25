@@ -36,10 +36,12 @@ format: num_merges,prec,rec,f1,AER
 
 previously refers to BPE-no-space - BPE-no-space
 
+align_thres=0.7, target_bpe=True
+
 * eng-deu previously
   * 200,0.406,0.578,0.477,0.524
   * 500,0.384,0.555,0.454,0.548
-* eng-deu now
+* eng-deu now (eports/scores_normal_bpe/eng_deu_ns_fastalign.csv)
   * 200,0.456,0.526,**0.489**,0.512
   * 500,0.437,0.535,**0.481**,0.52
 * eng-hin previously
@@ -48,3 +50,14 @@ previously refers to BPE-no-space - BPE-no-space
 * eng-hin now
   * 200,0.277,0.317,**0.296**,0.704
   * 500,0.245,0.322,**0.278**,0.722
+
+### 3. word - BPE-no-space-dropout
+
+dropout=0.2, align_thres=0.5, target_bpe=True
+
+* eng-deu (reports/scores_dropout_bpe/no space/0.2/eng_deu_ns_0.5_thres_fastalign_deu.csv)
+  * 200,0.582,0.487,0.53,0.469
+  * 500,0.61,0.497,0.548,0.452
+* eng-hin (same but with _hin.csv ending)
+  * 200,0.404,0.281,0.331,0.669
+  * 500,0.394,0.292,0.335,0.665

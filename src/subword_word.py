@@ -117,13 +117,13 @@ def load_and_map_segmentations(num_symbols: str, i: int =-1) -> dict:
             bpes[source] = []
             for line in argsinput:
                 line = line.split('\t')[1].strip('\r\n ').split(' ')
-                bpes[source].append(list(range(len(line))))
+                bpes[source].append([[x] for x in list(range(len(line)))])
         elif source_bpe and lang == target:
             argsinput = codecs.open(inputpath[target], encoding='utf-8')
             bpes[target] = []
             for line in argsinput:
                 line = line.split('\t')[1].strip('\r\n ').split(' ')
-                bpes[target].append(list(range(len(line))))
+                bpes[target].append([[x] for x in list(range(len(line)))])
         else:
             argsinput = codecs.open(segmentpath, encoding='utf-8')
             if space:
