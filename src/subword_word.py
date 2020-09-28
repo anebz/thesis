@@ -10,46 +10,8 @@ from settings import *
 
 def map_subword_to_word(corpus: list, bpes: dict, lang: str) -> dict:
     '''
-    SPACE MODE
-    Input: list of sentences with subword separation
-    corpus =  [
-        '_We _do _no t _be li eve _.',
-        '_Thi s _is _a _sent ence _.',
-        ...
-    ]
-    Output: dictionary of each language and 
-    a list of indexes pointing to which word each element (_do) belongs to
-    bpe = {
-        source:
-        [
-            [0, 1, 2, 2, 3, 3, 3, 4],
-            [0, 0, 1, 2, 3, 4, 5],
-            ...
-        ],
-        target:
-        [
-            ...
-        ],
-    }
-        
-    '''
-    bpes[lang] = []
-    for sent in corpus:
-        mapping = [0]
-        i = 0
-        for subw in sent.split()[1:]:
-            if subw[0] == word_sep:
-                i += 1
-            mapping.append(i)
-        bpes[lang].append(mapping)
-    return bpes
-
-
-def map_multiple_to_word(corpus: list, bpes: dict, lang: str) -> dict:
-    '''
-    NO SPACE MODE
-    Input: list of sentences with subword separation
-    corpus =  [
+    Input: list of sentences with subword separation. Can be in space mode or not.
+    corpus = [
         'b u t▁this▁is▁no t▁w hat▁hap pen s▁.',
         'th e▁ ice▁cre am_.',
         ...
@@ -68,13 +30,15 @@ def map_multiple_to_word(corpus: list, bpes: dict, lang: str) -> dict:
             ...
         ],
     }
-        
     '''
 
     bpes[lang] = []
     for sent in corpus:
         sent_bpes = []
-        j = 0
+
+        # start at 0 in no space mode, start at -1 in space mode
+        j = 0 if sent[0] != word_sep else -1
+        
         for word in sent.split():
 
             if word == word_sep:
@@ -126,10 +90,7 @@ def load_and_map_segmentations(num_symbols: str, i: int =-1) -> dict:
                 bpes[target].append([[x] for x in list(range(len(line)))])
         else:
             argsinput = codecs.open(segmentpath, encoding='utf-8')
-            if space:
-                bpes = map_subword_to_word(argsinput, bpes, lang)
-            else:
-                bpes = map_multiple_to_word(argsinput, bpes, lang)
+            bpes = map_subword_to_word(argsinput, bpes, lang)
     return bpes
 
 
@@ -150,7 +111,7 @@ def bpe_word_align(bpes: dict, bpe_aligns: list) -> str:
         for al in bpe_al.split('\t')[1].split():
             firstal, secondal = al.split('-')
             if space:
-                new_al = str(sent1[int(firstal)]) + '-' + str(sent2[int(secondal)])
+                new_al = str(sent1[int(firstal)][0]) + '-' + str(sent2[int(secondal)][0])
                 word_aligns.add(new_al)
             else:
                 for el1 in sent1[int(firstal)]:

@@ -42,7 +42,7 @@ def apply_bpe(langs: list, bpe_models: list, corpora: list, i: int =-1):
     for lang, bpe_model, corpus in zip(langs, bpe_models, corpora):
 
         str_corpus = '\n'.join(corpus)
-        for j, bigram in enumerate(tqdm(bpe_model[:merges[-1]], desc=f"apply_bpe: dropout={dropout}, lang={lang}")):
+        for j, bigram in enumerate(tqdm(bpe_model[:merges[-1]], desc=f"apply_bpe: space={space}, dropout={dropout}, lang={lang}")):
 
             if j+1 in merges:
                 write_bpe(lang, j+1, str_corpus, i)

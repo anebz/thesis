@@ -119,7 +119,7 @@ def plot_scores(df: pd.DataFrame, baseline_df: pd.DataFrame, scoredir: str):
 
 	if dropout:
 		if not baseline_df.empty:
-			baseline_df = baseline_df.sort_alues('num_symbols')
+			baseline_df = baseline_df.sort_values('num_symbols')
 			columns = list(baseline_df)
 			for column, color in zip(columns[1:], colors):
 				baseline_df.plot(kind='line', x=columns[0], y=column,
