@@ -25,8 +25,6 @@ Example of 3 characters
 
 ## Extended experiments
 
-format: num_merges,prec,rec,f1,AER
-
 ### 1. word - char
 
 TODO run again
@@ -46,18 +44,13 @@ Scores for BPE-no-space - BPE-no-space
 | ---------- |:----------:|:---------:|:------:|:--------:|:-----:|
 | eng-deu    | 200        | 0.406     | 0.578  | 0.477    | 0.524 |
 | eng-deu    | 500        | 0.384     | 0.555  | 0.454    | 0.548 |
-
------
-
-| Lang pairs | num_merges | Precision | Recall | F1 score | AER   |
-| ---------- |:----------:|:---------:|:------:|:--------:|:-----:|
 | eng-hin    | 200        | 0.244     | 0.35   | 0.288    | 0.712 |
 | eng-hin    | 500        | 0.215     | 0.322  | 0.258    | 0.742 |
 
 Scores for word - BPE-no-space
 
 | Lang pairs | num_merges | Precision | Recall | F1 score  | AER   |
-| ---------- |:----------:|:---------:|:------:|:------ --:|:-----:|
+| ---------- |:----------:|:---------:|:------:|:---------:|:-----:|
 | eng-deu    | 200        | 0.456     | 0.526  | **0.489** | 0.512 |
 | eng-deu    | 500        | 0.437     | 0.535  | 0.481     | 0.52  |
 | eng-hin    | 200        | 0.277     | 0.317  | **0.296** | 0.704 |
@@ -71,11 +64,6 @@ dropout=0.2, align_thres=0.5, target_bpe=True. Scores in `reports/scores_dropout
 | ---------- |:----------:|:---------:|:------:|:---------:|:-----:|
 | eng-deu    | 200        | 0.582     | 0.487  | 0.53      | 0.469 |
 | eng-deu    | 500        | 0.61      | 0.497  | **0.548** | 0.452 |
-
------
-
-| Lang pairs | num_merges | Precision | Recall | F1 score  | AER   |
-| ---------- |:----------:|:---------:|:------:|:---------:|:-----:|
 | eng-hin    | 200        | 0.404     | 0.281  | 0.331     | 0.669 |
 | eng-hin    | 500        | 0.394     | 0.292  | **0.335** | 0.665 |
 
