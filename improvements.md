@@ -29,35 +29,112 @@ format: num_merges,prec,rec,f1,AER
 
 ### 1. word - char
 
-* eng-deu: ,0.099,0.082,0.09,0.91
-* eng-hin: ,0.075,0.064,0.069,0.931
+TODO run again
+
+| Lang pairs | num_merges | Precision | Recall | F1 score | AER   |
+| ---------- |:----------:|:---------:|:------:|:--------:|:-----:|
+| eng-deu    |            | 0.099     | 0.082  | 0.09     | 0.91  |
+| eng-hin    |            | 0.075     | 0.064  | 0.069    | 0.931 |
 
 ### 2. word - BPE-no-space
 
-previously refers to BPE-no-space - BPE-no-space
+align_thres=0.7, target_bpe=True. scores in `eports/scores_normal_bpe/eng_X_ns_fastalign.csv`
 
-align_thres=0.7, target_bpe=True
+Scores for BPE-no-space - BPE-no-space
 
-* eng-deu previously
-  * 200,0.406,0.578,0.477,0.524
-  * 500,0.384,0.555,0.454,0.548
-* eng-deu now (eports/scores_normal_bpe/eng_deu_ns_fastalign.csv)
-  * 200,0.456,0.526,**0.489**,0.512
-  * 500,0.437,0.535,**0.481**,0.52
-* eng-hin previously
-  * 200,0.244,0.35,0.288,0.712
-  * 500,0.215,0.322,0.258,0.742
-* eng-hin now
-  * 200,0.277,0.317,**0.296**,0.704
-  * 500,0.245,0.322,**0.278**,0.722
+| Lang pairs | num_merges | Precision | Recall | F1 score | AER   |
+| ---------- |:----------:|:---------:|:------:|:--------:|:-----:|
+| eng-deu    | 200        | 0.406     | 0.578  | 0.477    | 0.524 |
+| eng-deu    | 500        | 0.384     | 0.555  | 0.454    | 0.548 |
+
+-----
+
+| Lang pairs | num_merges | Precision | Recall | F1 score | AER   |
+| ---------- |:----------:|:---------:|:------:|:--------:|:-----:|
+| eng-hin    | 200        | 0.244     | 0.35   | 0.288    | 0.712 |
+| eng-hin    | 500        | 0.215     | 0.322  | 0.258    | 0.742 |
+
+Scores for word - BPE-no-space
+
+| Lang pairs | num_merges | Precision | Recall | F1 score  | AER   |
+| ---------- |:----------:|:---------:|:------:|:------ --:|:-----:|
+| eng-deu    | 200        | 0.456     | 0.526  | **0.489** | 0.512 |
+| eng-deu    | 500        | 0.437     | 0.535  | 0.481     | 0.52  |
+| eng-hin    | 200        | 0.277     | 0.317  | **0.296** | 0.704 |
+| eng-hin    | 500        | 0.245     | 0.322  | 0.278     | 0.722 |
 
 ### 3. word - BPE-no-space-dropout
 
-dropout=0.2, align_thres=0.5, target_bpe=True
+dropout=0.2, align_thres=0.5, target_bpe=True. Scores in `reports/scores_dropout_bpe/no space/0.2/eng_X_ns_0.5_thres_fastalign_X.csv`
 
-* eng-deu (reports/scores_dropout_bpe/no space/0.2/eng_deu_ns_0.5_thres_fastalign_deu.csv)
-  * 200,0.582,0.487,0.53,0.469
-  * 500,0.61,0.497,0.548,0.452
-* eng-hin (same but with _hin.csv ending)
-  * 200,0.404,0.281,0.331,0.669
-  * 500,0.394,0.292,0.335,0.665
+| Lang pairs | num_merges | Precision | Recall | F1 score  | AER   |
+| ---------- |:----------:|:---------:|:------:|:---------:|:-----:|
+| eng-deu    | 200        | 0.582     | 0.487  | 0.53      | 0.469 |
+| eng-deu    | 500        | 0.61      | 0.497  | **0.548** | 0.452 |
+
+-----
+
+| Lang pairs | num_merges | Precision | Recall | F1 score  | AER   |
+| ---------- |:----------:|:---------:|:------:|:---------:|:-----:|
+| eng-hin    | 200        | 0.404     | 0.281  | 0.331     | 0.669 |
+| eng-hin    | 500        | 0.394     | 0.292  | **0.335** | 0.665 |
+
+better results than #exp2
+
+### 4. BPE-space - BPE-no-space
+
+| Lang pairs | num_merges | Precision | Recall | F1 score  | AER   |
+| ---------- |:----------:|:---------:|:------:|:---------:|:-----:|
+| eng-deu    | 200        | 0.422     | 0.583  | 0.49      | 0.511 |
+| eng-deu    | 500        | 0.447     | 0.6    | **0.512** | 0.489 |
+| eng-deu    | 1000       | 0.392     | 0.54   | 0.454     | 0.547 |
+| eng-deu    | 2000       | 0.325     | 0.487  | 0.39      | 0.612 |
+
+-----
+
+| Lang pairs | num_merges | Precision | Recall | F1 score  | AER   |
+| ---------- |:----------:|:---------:|:------:|:---------:|:-----:|
+| eng-hin    | 200        | 0.266     | 0.367  | **0.308** | 0.692 |
+| eng-hin    | 500        | 0.244     | 0.343  | 0.285     | 0.715 |
+| eng-hin    | 1000       | 0.193     | 0.296  | 0.234     | 0.766 |
+| eng-hin    | 2000       | 0.152     | 0.268  | 0.194     | 0.806 |
+
+Better F1 than #exp2
+
+### 5. BPE-space - BPE-no-space-dropout
+
+| Lang pairs | num_merges | Precision | Recall | F1 score  | AER   |
+| ---------- |:----------:|:---------:|:------:|:---------:|:-----:|
+| eng-deu    | 200        | 0.523     | 0.538  | 0.53      | 0.47  |
+| eng-deu    | 500        | 0.607     | 0.557  | **0.581** | 0.419 |
+| eng-deu    | 1000       | 0.63      | 0.532  | 0.577     | 0.423 |
+| eng-deu    | 2000       | 0.59      | 0.478  | 0.528     | 0.472 |
+
+-----
+
+| Lang pairs | num_merges | Precision | Recall | F1 score  | AER   |
+| ---------- |:----------:|:---------:|:------:|:---------:|:-----:|
+| eng-hin    | 200        | 0.358     | 0.341  | 0.349     | 0.651 |
+| eng-hin    | 500        | 0.407     | 0.331  | **0.365** | 0.635 |
+| eng-hin    | 1000       | 0.357     | 0.306  | 0.33      | 0.67  |
+| eng-hin    | 2000       | 0.294     | 0.255  | 0.273     | 0.727 |
+
+### 6. BPE-space-dropout - BPE-no-space-dropout
+
+dropout=0.2, align_thres=0.5
+
+| Lang pairs | num_merges | Precision | Recall | F1 score  | AER   |
+| ---------- |:----------:|:---------:|:------:|:---------:|:-----:|
+| eng-deu    | 200        | 0.567     | 0.516  | 0.54      | 0.46  |
+| eng-deu    | 500        | 0.621     | 0.556  | **0.587** | 0.413 |
+| eng-deu    | 1000       | 0.641     | 0.537  | 0.584     | 0.415 |
+| eng-deu    | 2000       | 0.603     | 0.49   | 0.541     | 0.459 |
+
+-----
+
+| Lang pairs | num_merges | Precision | Recall | F1 score  | AER   |
+| ---------- |:----------:|:---------:|:------:|:---------:|:-----:|
+| eng-hin    | 200        | 0.351     | 0.319  | 0.334     | 0.666 |
+| eng-hin    | 500        | 0.404     | 0.328  | **0.362** | 0.638 |
+| eng-hin    | 1000       | 0.338     | 0.296  | 0.316     | 0.685 |
+| eng-hin    | 2000       | 0.313     | 0.266  | 0.288     | 0.712 |
