@@ -2,6 +2,7 @@
 import os
 import sys
 import time
+import json
 import codecs
 from tqdm import tqdm
 from os.path import join
@@ -15,7 +16,6 @@ from subword_word import *
 
 
 def create_parallel_text(sourcepath: str, targetpath: str, outpath: str):
-
 	sourceinput = codecs.open(sourcepath, "r", "utf-8")
 	targetinput = codecs.open(targetpath, "r", "utf-8")
 	fa_file = codecs.open(outpath + '.txt', "w", "utf-8")
@@ -52,8 +52,7 @@ def create_gdfa_file(outpath: str):
 	return
 
 
-def extract_alignments(i: int =-1, input_mode: bool =False):
-
+def extract_alignments(i: int=-1, input_mode: bool=False):
 	for num_symbols in merges:
 
 		if input_mode:
@@ -63,9 +62,16 @@ def extract_alignments(i: int =-1, input_mode: bool =False):
 			outpath = join(bpedir, mode, f"input_{source}_{target}")
 		else:
 			print(f"Alignments for {num_symbols} symbols")
-			sourcepath = inputpath[source] if target_bpe else join(bpedir, 'segmentations', f"{source}_{num_symbols}{'' if space else '_ns'}{'_'+str(i) if dropout else ''}.bpe")
-			targetpath = inputpath[target] if source_bpe else join(bpedir, 'segmentations', f"{target}_{num_symbols}{'' if space else '_ns'}{'_'+str(i) if dropout else ''}.bpe")
-			outpath = join(bpedir, mode, f"{num_symbols}{'_'+str(i) if i != -1 else ''}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}")
+			if params[target]['bpe']:
+				sourcepath = inputpath[source]
+			else:
+				sourcepath =  join(bpedir, 'segmentations', f"{source}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
+			if params[source]['bpe']:
+				targetpath = inputpath[target]
+			else: 
+				targetpath = join(bpedir, 'segmentations', f"{target}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
+			
+			outpath = join(bpedir, mode, f"{num_symbols}{'_'+str(i) if i != -1 else ''}")
 
 		create_parallel_text(sourcepath, targetpath, outpath)
 		create_fwd_rev_files(outpath)
@@ -86,12 +92,12 @@ def extract_alignments(i: int =-1, input_mode: bool =False):
 
 def merge_dropout_alignments():
     union_merge, inter_merge, thres_merge = {}, {}, {}
-    for num_symbols in tqdm(merges, desc=f"merge_dropout: dropout={dropout}, union, inter, thres"):
+    for num_symbols in tqdm(merges, desc=f"merge_dropout: dropout={dropout}, thres"):
         union_merge[num_symbols], inter_merge[num_symbols], thres_merge[num_symbols] = [], [], []
 
         for i in range(dropout_samples):
 
-            alpath = join(bpedir, mode, f"{num_symbols}_{i}{'_'+source if source_bpe else ''}{'_'+target if target_bpe else ''}.wgdfa")
+            alpath = join(bpedir, mode, f"{num_symbols}_{i}.wgdfa")
             for j, line in enumerate(open(alpath, 'r').readlines()):
                 al = frozenset(line.strip().split("\t")[1].split())
 
@@ -109,13 +115,13 @@ def merge_dropout_alignments():
 
         # write to output
         os.chdir(join(bpedir, mode))
-        unionfile = codecs.open(f'{num_symbols}_union.wgdfa', 'w')
-        interfile = codecs.open(f'{num_symbols}_inter.wgdfa', 'w')
+        #unionfile = codecs.open(f'{num_symbols}_union.wgdfa', 'w')
+        #interfile = codecs.open(f'{num_symbols}_inter.wgdfa', 'w')
         thresfiles = {merge_t: codecs.open(f'{num_symbols}_thres_{merge_t}.wgdfa', 'w') for merge_t in merge_threshold}
 
         for i in range(len(union_merge[num_symbols])):
-            unionfile.write(f"{i}\t{' '.join(union_merge[num_symbols][i])}\n")
-            interfile.write(f"{i}\t{' '.join(inter_merge[num_symbols][i])}\n")
+            #unionfile.write(f"{i}\t{' '.join(union_merge[num_symbols][i])}\n")
+            #interfile.write(f"{i}\t{' '.join(inter_merge[num_symbols][i])}\n")
 
             # get alignments more common than the merge_threshold %
             for merge_t in merge_threshold:
@@ -126,8 +132,7 @@ def merge_dropout_alignments():
 
 
 if __name__ == "__main__":
-
-	print(f"Extracting alignments with {mode} for source={source} and target={target}, dropout={dropout}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
+	print(f"Extracting alignments: {json.dumps(params, indent=2)}")
 	t0 = time.time()
 	os.makedirs(join(bpedir, mode), exist_ok=True)
 	if not os.path.isfile(join(bpedir, mode, f'input_{source}_{target}.gdfa')):
