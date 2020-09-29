@@ -40,7 +40,6 @@ def map_subword_to_word(corpus: list, bpes: dict, lang: str) -> dict:
         j = 0 if sent[0] != word_sep else -1
         
         for word in sent.split():
-
             if word == word_sep:
                 # word is simply '_', doesn't belong to anything
                 j += 1
@@ -71,26 +70,19 @@ def map_subword_to_word(corpus: list, bpes: dict, lang: str) -> dict:
 
 
 def load_and_map_segmentations(num_symbols: str, i: int =-1) -> dict:
-
     bpes = {}
-    for lang in [source, target]:
-        segmentpath = join(bpedir, 'segmentations', f"{lang}_{num_symbols}{'' if space else '_ns'}{'_'+str(i) if i != -1 else ''}.bpe")
 
-        if target_bpe and lang == source:
-            argsinput = codecs.open(inputpath[source], encoding='utf-8')
-            bpes[source] = []
-            for line in argsinput:
-                line = line.split('\t')[1].strip('\r\n ').split(' ')
-                bpes[source].append([[x] for x in list(range(len(line)))])
-        elif source_bpe and lang == target:
-            argsinput = codecs.open(inputpath[target], encoding='utf-8')
-            bpes[target] = []
-            for line in argsinput:
-                line = line.split('\t')[1].strip('\r\n ').split(' ')
-                bpes[target].append([[x] for x in list(range(len(line)))])
-        else:
+    for lang in [source, target]:
+        if params[lang]['bpe']:
+            segmentpath = join(bpedir, 'segmentations', f"{lang}_{num_symbols}{'_'+str(i) if i != -1 else ''}.bpe")
             argsinput = codecs.open(segmentpath, encoding='utf-8')
             bpes = map_subword_to_word(argsinput, bpes, lang)
+        else:
+            argsinput = codecs.open(inputpath[lang], encoding='utf-8')
+            bpes[lang] = []
+            for line in argsinput:
+                line = line.split('\t')[1].strip('\r\n ').split(' ')
+                bpes[lang].append([[x] for x in list(range(len(line)))])
     return bpes
 
 
@@ -110,14 +102,9 @@ def bpe_word_align(bpes: dict, bpe_aligns: list) -> str:
         # iterate each alignment
         for al in bpe_al.split('\t')[1].split():
             firstal, secondal = al.split('-')
-            if space:
-                new_al = str(sent1[int(firstal)][0]) + '-' + str(sent2[int(secondal)][0])
-                word_aligns.add(new_al)
-            else:
-                for el1 in sent1[int(firstal)]:
-                    for el2 in sent2[int(secondal)]:
-                        new_al = str(el1) + '-' + str(el2)
-                        word_aligns.add(new_al)
+            for el1 in sent1[int(firstal)]:
+                for el2 in sent2[int(secondal)]:
+                    word_aligns.add(f"{el1}-{el2}")
 
-        all_word_aligns += str(i) + "\t" + ' '.join(word_aligns) + "\n"
+        all_word_aligns += f"{i}\t{' '.join(word_aligns)}\n"
     return all_word_aligns

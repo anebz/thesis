@@ -6,11 +6,20 @@ from os.path import join
 word_sep = u'\u2581' # symbol to use for word separators
 source, target = 'eng', 'deu' # eng, deu, ron, hin
 mode = "fastalign"  # fastalign, eflomal
-source_bpe, target_bpe = False, False # Set True to source to make BPE only on source mode, same in Target. both can't be true at the same time
 
-space = False # True for space mode, False for no space mode
 scoring = False # True to activate the scoring method
 dropout = 0.2 # dropout rate
+
+params = {
+    source: {
+        'space': True,
+        'bpe': False
+    },
+    target: {
+        'space': False,
+        'bpe': True
+    }
+}
 
 learn_merges = 10000 # how many BPE units to learn in learn_bpe.py
 merges = [200, 500, 1000, 2000] # create segmentations with different number of merges

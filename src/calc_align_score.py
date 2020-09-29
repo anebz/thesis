@@ -123,22 +123,21 @@ def calc_score_merges(probs, surs, surs_count):
     scorespath = join(scoredir, str(dropout))
     os.makedirs(scorespath, exist_ok=True)
 
-	''' currently not doing union and intersection cases
-    for merge_type in ['union', 'inter']:
-        scores = []
-        for num_symbols in merges:
-            mergefilepath = join(bpedir, mode, f'{num_symbols}_{merge_type}.wgdfa')
-
-            score = [int(num_symbols)]
-            score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
-            scores.append(score)
-
-       	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
-        scorename = join(scorespath, f"{source}_{target}_{merge_type}_{mode}")
-
-        print(f"Scores saved into {scorename}")
-        df.to_csv(scorename+'.csv', index=False)
-        plot_scores(df, scorename)
+    ''' currently not doing union and intersection cases
+	for merge_type in ['union', 'inter']:
+		scores = []
+		for num_symbols in merges:
+			mergefilepath = join(bpedir, mode, f'{num_symbols}_{merge_type}.wgdfa')
+			score = [int(num_symbols)]
+			score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
+			scores.append(score)
+			
+		df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+		scorename = join(scorespath, f"{source}_{target}_{merge_type}_{mode}")
+		
+		print(f"Scores saved into {scorename}")
+		df.to_csv(scorename+'.csv', index=False)
+		plot_scores(df, scorename)
 	'''
 
     # threshold case, iterate all merge_thresholds saved
@@ -162,7 +161,7 @@ def calc_score_merges(probs, surs, surs_count):
 
 if __name__ == "__main__":
 
-	print(f"Calculating alignment scores for source={source} and target={target}, source_bpe={source_bpe}, target_bpe={target_bpe}.")
+	print(f"Calculating alignment scores for: {json.dumps(params, indent=2)}")
 	probs, surs, surs_count = load_gold(goldpath)
 
 	if dropout:

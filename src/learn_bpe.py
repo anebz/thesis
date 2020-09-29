@@ -15,7 +15,7 @@ from settings import *
 def read_bpe_model(lang: str) -> (list, int):
     # check if a BPE model for this language exists
     # if so, only create new BPE model if learn_merges > symbols in the model
-    model_path = join(inputdir, f"{lang}{'' if space else '_ns'}.model")
+    model_path = join(inputdir, f"{lang}{'' if params[lang]['space'] else '_ns'}.model")
     if os.path.isfile(model_path):
         bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
         model_symbols = bpe_model[0].strip('\r\n').split()[1] if bpe_model else 0
@@ -26,7 +26,7 @@ def read_bpe_model(lang: str) -> (list, int):
     return bpe_model, model_symbols
 
 
-def read_corpus(corpus: list) -> list:
+def read_corpus(lang: str, corpus: list) -> list:
     """
     Read corpus, strip index and new line characters.
     In space mode, each word has a word_sep symbol at the beginning to signal it's the beginning of the word.
@@ -48,7 +48,7 @@ def read_corpus(corpus: list) -> list:
         line = line.split('\t')[1].strip('\r\n ').split()
         line[0] = str.lower(line[0])
 
-        if space:
+        if params[lang]['space']:
             # add word_sep to each beginning of word and join by space
             tokens.append(' '.join([word_sep + ' '.join(word) for word in line]))
         else:
@@ -58,7 +58,7 @@ def read_corpus(corpus: list) -> list:
     return tokens
 
 
-def get_stats(tokens: list) -> (Counter, dict):
+def get_stats(lang: str, tokens: list) -> (Counter, dict):
     """
     Count frequency of all bigrams, the indexes where they occur and the frequency per index.
     pairs = {
@@ -88,7 +88,7 @@ def get_stats(tokens: list) -> (Counter, dict):
     pairs = Counter()
     idx = defaultdict(lambda: defaultdict(int))
     for i, sent in enumerate(tokens):
-        if space:
+        if params[lang]['space']:
             # get stats for each word independently, no bigrams between different words
             for word in sent[1:].split(' '+word_sep):
                 pairs, idx = get_pairs_idx(pairs, idx, word_sep + word)
@@ -99,7 +99,7 @@ def get_stats(tokens: list) -> (Counter, dict):
     return pairs, idx
 
 
-def update_tokens(tokens: list, scores: Counter, pairs: Counter, idx: dict, pair: tuple) -> (list, Counter, Counter, dict):
+def update_tokens(lang: str, tokens: list, scores: Counter, pairs: Counter, idx: dict, pair: tuple) -> (list, Counter, Counter, dict):
 
     def update_freqs(scores, pairs, idx, pair, new_pair=-1):
 
@@ -160,7 +160,7 @@ def update_tokens(tokens: list, scores: Counter, pairs: Counter, idx: dict, pair
         sent = sent.split(merged_pair)
         for k in range(len(sent[:-1])):
 
-            if sent[k].split() and (sent[k][-1] == ' ' and word_sep not in pair[0][0] if space else True):
+            if sent[k].split() and (sent[k][-1] == ' ' and word_sep not in pair[0][0] if params[lang]['space'] else True):
                 '''
                 conditions to update the **previous** token:
                 * if sent[k] isn't empty. if it is, there's no previous token to update.
@@ -172,7 +172,7 @@ def update_tokens(tokens: list, scores: Counter, pairs: Counter, idx: dict, pair
                 new_pair = (prev[0], merged_pair)
                 scores, pairs, idx = update_freqs(scores, pairs, idx, prev, new_pair)
 
-            if space and not sent[k+1].split() and word_sep not in pair[0][0]:
+            if params[lang]['space'] and not sent[k+1].split() and word_sep not in pair[0][0]:
                 '''
                 conditions to update the **after** token when merged bigrams are consecutive:
                 * in space mode specifically, when the pair's first character isn't the beginning of the word
@@ -189,7 +189,7 @@ def update_tokens(tokens: list, scores: Counter, pairs: Counter, idx: dict, pair
                     new_pair = (merged_pair, merged_pair)
                     scores, pairs, idx = update_freqs(scores, pairs, idx, after, new_pair)
 
-            elif sent[k+1].split() and (word_sep not in sent[k+1].split()[0] if space else True):
+            elif sent[k+1].split() and (word_sep not in sent[k+1].split()[0] if params[lang]['space'] else True):
                 '''
                 conditions to update the **after** token in a more general case:
                 * if sent[k] isn't empty. if it is, there's no after token to update.
@@ -205,7 +205,7 @@ def update_tokens(tokens: list, scores: Counter, pairs: Counter, idx: dict, pair
     return tokens, scores, pairs, idx
 
 
-def learn_bpe(corpus: list) -> list:
+def learn_bpe(lang: str, corpus: list) -> list:
     """
     Learn BPE operations from vocabulary.
     Steps:
@@ -215,12 +215,12 @@ def learn_bpe(corpus: list) -> list:
     4. Update bigrams in corpus 
     """
 
-    tokens = read_corpus(corpus)
-    pairs, idx = get_stats(tokens)
+    tokens = read_corpus(lang, corpus)
+    pairs, idx = get_stats(lang, tokens)
     scores = pairs.copy()
     most_freq_merges = []
 
-    for i in tqdm(range(learn_merges), desc=f"learn_bpe: lang={lang}, space mode={space}"):
+    for i in tqdm(range(learn_merges), desc=f"learn_bpe: lang={lang}, space mode={params[lang]['space']}"):
         try:
             most_frequent = scores.most_common(1)[0]
         except:
@@ -230,13 +230,13 @@ def learn_bpe(corpus: list) -> list:
             break
 
         most_freq_merges.append(most_frequent[0])
-        tokens, scores, pairs, idx = update_tokens(tokens, scores, pairs, idx, most_frequent[0])
+        tokens, scores, pairs, idx = update_tokens(lang, tokens, scores, pairs, idx, most_frequent[0])
 
     return most_freq_merges
 
 
 def write_bpe(lang, most_freq_merges):
-    bpe_file = codecs.open(join(inputdir, f"{lang}{'' if space else '_ns'}.model"), 'w', encoding='utf-8')
+    bpe_file = codecs.open(join(inputdir, f"{lang}{'' if params[lang]['space'] else '_ns'}.model"), 'w', encoding='utf-8')
     bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
     bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
     return
@@ -253,5 +253,5 @@ if __name__ == '__main__':
             print(f"A model for lang={lang} with at least {learn_merges} symbols already exists")
             continue
 
-        most_freq_merges = learn_bpe(argsinput)
+        most_freq_merges = learn_bpe(lang, argsinput)
         write_bpe(lang, most_freq_merges)

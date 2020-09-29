@@ -62,14 +62,15 @@ def extract_alignments(i: int=-1, input_mode: bool=False):
 			outpath = join(bpedir, mode, f"input_{source}_{target}")
 		else:
 			print(f"Alignments for {num_symbols} symbols")
-			if params[target]['bpe']:
-				sourcepath = inputpath[source]
-			else:
-				sourcepath =  join(bpedir, 'segmentations', f"{source}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
 			if params[source]['bpe']:
-				targetpath = inputpath[target]
+				sourcepath = join(bpedir, 'segmentations', f"{source}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
+			else:
+				sourcepath = inputpath[source]
+
+			if params[target]['bpe']:
+				targetpath = join(bpedir, 'segmentations',f"{target}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
 			else: 
-				targetpath = join(bpedir, 'segmentations', f"{target}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
+				targetpath = inputpath[target]
 			
 			outpath = join(bpedir, mode, f"{num_symbols}{'_'+str(i) if i != -1 else ''}")
 
@@ -103,14 +104,14 @@ def merge_dropout_alignments():
 
                 # at the first iteration, just append the alignment
                 if i == 0:
-                    union_merge[num_symbols].append(al)
-                    inter_merge[num_symbols].append(al)
+                    #union_merge[num_symbols].append(al)
+                    #inter_merge[num_symbols].append(al)
                     thres_merge[num_symbols].append(Counter(al))
                     continue
                 
                 # do union, intersection or frequency addition
-                union_merge[num_symbols][j] |= al
-                inter_merge[num_symbols][j] &= al
+                #union_merge[num_symbols][j] |= al
+                #inter_merge[num_symbols][j] &= al
                 thres_merge[num_symbols][j] += Counter(al)
 
         # write to output
