@@ -54,7 +54,6 @@ def create_gdfa_file(outpath: str):
 
 def extract_alignments(i: int=-1, input_mode: bool=False):
 	for num_symbols in merges:
-
 		if input_mode:
 			print(f"Alignments for input files")
 			sourcepath = inputpath[source]
@@ -63,12 +62,14 @@ def extract_alignments(i: int=-1, input_mode: bool=False):
 		else:
 			print(f"Alignments for {num_symbols} symbols")
 			if params[source]['bpe']:
-				sourcepath = join(bpedir, 'segmentations', f"{source}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
+				sourcepath = join(bpedir, 'segmentations',
+				                  f"{source}_{num_symbols}{'_'+str(i) if params[source]['dropout'] else ''}.bpe")
 			else:
 				sourcepath = inputpath[source]
 
 			if params[target]['bpe']:
-				targetpath = join(bpedir, 'segmentations',f"{target}_{num_symbols}{'_'+str(i) if dropout else ''}.bpe")
+				targetpath = join(bpedir, 'segmentations',
+				                  f"{target}_{num_symbols}{'_'+str(i) if params[target]['dropout'] else ''}.bpe")
 			else: 
 				targetpath = inputpath[target]
 			
@@ -93,11 +94,10 @@ def extract_alignments(i: int=-1, input_mode: bool=False):
 
 def merge_dropout_alignments():
     union_merge, inter_merge, thres_merge = {}, {}, {}
-    for num_symbols in tqdm(merges, desc=f"merge_dropout: dropout={dropout}, thres"):
+    for num_symbols in tqdm(merges, desc=f"merging dropout align files"):
         union_merge[num_symbols], inter_merge[num_symbols], thres_merge[num_symbols] = [], [], []
 
         for i in range(dropout_samples):
-
             alpath = join(bpedir, mode, f"{num_symbols}_{i}.wgdfa")
             for j, line in enumerate(open(alpath, 'r').readlines()):
                 al = frozenset(line.strip().split("\t")[1].split())
@@ -120,7 +120,7 @@ def merge_dropout_alignments():
         #interfile = codecs.open(f'{num_symbols}_inter.wgdfa', 'w')
         thresfiles = {merge_t: codecs.open(f'{num_symbols}_thres_{merge_t}.wgdfa', 'w') for merge_t in merge_threshold}
 
-        for i in range(len(union_merge[num_symbols])):
+        for i in range(len(thres_merge[num_symbols])):
             #unionfile.write(f"{i}\t{' '.join(union_merge[num_symbols][i])}\n")
             #interfile.write(f"{i}\t{' '.join(inter_merge[num_symbols][i])}\n")
 
@@ -139,7 +139,7 @@ if __name__ == "__main__":
 	if not os.path.isfile(join(bpedir, mode, f'input_{source}_{target}.gdfa')):
 		extract_alignments(input_mode=True)
 
-	if dropout > 0:
+	if max(params[source]['dropout'], params[target]['dropout']):
 		for i in range(dropout_samples):
 			print(f"Iteration {i+1}")
 			extract_alignments(i)

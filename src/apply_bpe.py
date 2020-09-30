@@ -41,7 +41,7 @@ def apply_bpe(lang: str, bpe_model: list, corpus: str, i: int=-1):
         if j+1 in merges:
             write_bpe(lang, j+1, str_corpus, i)
 
-        if random.uniform(0, 1) < dropout:
+        if random.uniform(0, 1) < params[lang]['dropout']:
             continue
 
         str_corpus = str_corpus.replace(' '.join(bigram), ''.join(bigram))
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     
     for lang, bpe_model, corpus in zip([source, target], bpe_models, corpora):
         print(f"{lang} parameters: {json.dumps(params[lang], indent=2)}")
-        if dropout > 0:
+        if params[lang]['dropout']:
             for i in range(dropout_samples):
                 print(f"Iteration {i+1}")
                 apply_bpe(lang, bpe_model, corpus, i)

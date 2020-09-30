@@ -103,7 +103,7 @@ def calc_align_scores(probs: dict, surs: dict, surs_count: float, i: int=-1) -> 
 
 	scores = []
 	for num_symbols in merges:
-		alfile = join(bpedir, mode, f"{num_symbols}{'_'+str(i) if dropout else ''}.wgdfa")
+		alfile = join(bpedir, mode, f"{num_symbols}.wgdfa")
 
 		score = [int(num_symbols)]
 		score.extend(list(calc_score(alfile, probs, surs, surs_count)))
@@ -111,16 +111,15 @@ def calc_align_scores(probs: dict, surs: dict, surs_count: float, i: int=-1) -> 
 
 	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 
-	scorename = scoredir + '/' + source + '_' + target + '_' + mode
-	if not dropout:
-		print(f"Scores saved into {scorename}")
-		df.to_csv(scorename+'.csv', index=False)
-		plot_scores(df, scorename)
+	scorename = join(scoredir,  f"{source}_{target}_{mode}")
+	print(f"Scores saved into {scorename}")
+	df.to_csv(scorename+'.csv', index=False)
+	plot_scores(df, scorename)
 	return df
 
 # functions for dropout mode
 def calc_score_merges(probs, surs, surs_count):
-    scorespath = join(scoredir, str(dropout))
+    scorespath = join(scoredir, str(max(params[source]['dropout'], params[target]['dropout'])))
     os.makedirs(scorespath, exist_ok=True)
 
     ''' currently not doing union and intersection cases
@@ -164,7 +163,7 @@ if __name__ == "__main__":
 	print(f"Calculating alignment scores for: {json.dumps(params, indent=2)}")
 	probs, surs, surs_count = load_gold(goldpath)
 
-	if dropout:
+	if max(params[source]['dropout'], params[target]['dropout']):
 		calc_score_merges(probs, surs, surs_count)
 	else:
 		calc_align_scores(probs, surs, surs_count)
