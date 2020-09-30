@@ -25,14 +25,32 @@ Example of 3 characters
 
 ## Extended experiments
 
+### 0 Baseline
+
+Baseline BPE
+
+| Lang pairs |Space mode | F1 score |
+| ---------- |:---------:|:--------:|
+| eng-deu    | Yes       | 0.609    |
+| eng-deu    | No        | 0.477    |
+| eng-hin    | Yes       | 0.381    |
+| eng-hin    | No        | 0.288    |
+
+Baseline BPE-dropout
+
+| Lang pairs |Space mode | F1 score |
+| ---------- |:---------:|:--------:|
+| eng-deu    | Yes       | 0.635    |
+| eng-deu    | No        | 0.559    |
+| eng-hin    | Yes       | 0.396    |
+| eng-hin    | No        | 0.32     |
+
 ### 1. word - char
 
-TODO run again
-
-| Lang pairs | num_merges | Precision | Recall | F1 score | AER   |
-| ---------- |:----------:|:---------:|:------:|:--------:|:-----:|
-| eng-deu    |            | 0.099     | 0.082  | 0.09     | 0.91  |
-| eng-hin    |            | 0.075     | 0.064  | 0.069    | 0.931 |
+| Lang pairs |Precision | Recall | F1 score | AER   |
+| ---------- |:--------:|:------:|:--------:|:-----:|
+| eng-deu    | 0.163    | 0.171  | 0.167    | 0.833 |
+| eng-hin    | 0.13     | 0.121  | 0.125    | 0.875 |
 
 ### 2. word - BPE-no-space
 
