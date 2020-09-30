@@ -15,7 +15,7 @@ from settings import *
 def read_bpe_model(lang: str) -> (list, int):
     # check if a BPE model for this language exists
     # if so, only create new BPE model if learn_merges > symbols in the model
-    model_path = join(inputdir, f"{lang}{'' if params[lang]['space'] else '_ns'}.model")
+    model_path = join(inputdir, f"{lang}{'' if params[lang]['space'] else '_ns'}{'_scoring' if scoring else ''}.model")
     if os.path.isfile(model_path):
         bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
         model_symbols = bpe_model[0].strip('\r\n').split()[1] if bpe_model else 0
@@ -236,7 +236,8 @@ def learn_bpe(lang: str, corpus: list) -> list:
 
 
 def write_bpe(lang, most_freq_merges):
-    bpe_file = codecs.open(join(inputdir, f"{lang}{'' if params[lang]['space'] else '_ns'}.model"), 'w', encoding='utf-8')
+    filename = f"{lang}{'' if params[lang]['space'] else '_ns'}{'_scoring' if scoring else ''}.model"
+    bpe_file = codecs.open(join(inputdir, filename), 'w', encoding='utf-8')
     bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
     bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
     return

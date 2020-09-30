@@ -114,7 +114,7 @@ def calc_align_scores(probs: dict, surs: dict, surs_count: float, i: int=-1) -> 
 	scorename = join(scoredir,  f"{source}_{target}_{mode}")
 	print(f"Scores saved into {scorename}")
 	df.to_csv(scorename+'.csv', index=False)
-	plot_scores(df, scorename)
+	#plot_scores(df, scorename)
 	return df
 
 # functions for dropout mode
@@ -136,7 +136,7 @@ def calc_score_merges(probs, surs, surs_count):
 		
 		print(f"Scores saved into {scorename}")
 		df.to_csv(scorename+'.csv', index=False)
-		plot_scores(df, scorename)
+		#plot_scores(df, scorename)
 	'''
 
     # threshold case, iterate all merge_thresholds saved
@@ -154,7 +154,7 @@ def calc_score_merges(probs, surs, surs_count):
         
         print(f"Scores saved into {scorename}")
         df.to_csv(scorename+'.csv', index=False)
-        plot_scores(df, scorename)
+        #plot_scores(df, scorename)
     return
 
 

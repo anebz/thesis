@@ -74,7 +74,7 @@ def load_and_map_segmentations(num_symbols: str, i: int =-1) -> dict:
 
     for lang in [source, target]:
         if params[lang]['bpe']:
-            segmentpath = join(bpedir, 'segmentations', f"{lang}_{num_symbols}{'_'+str(i) if i != -1 else ''}.bpe")
+            segmentpath = join(bpedir, 'segmentations', f"{lang}_{num_symbols}{'_'+str(i) if params[lang]['dropout'] else ''}.bpe")
             argsinput = codecs.open(segmentpath, encoding='utf-8')
             bpes = map_subword_to_word(argsinput, bpes, lang)
         else:
