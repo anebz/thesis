@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 import os
 import sys
-import glob
 import json
 import codecs
-import random
-import collections
 import pandas as pd
 import seaborn as sns
-from tqdm import tqdm
 from os.path import join
 import matplotlib.pyplot as plt
-from collections import Counter
 
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))

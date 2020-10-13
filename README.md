@@ -3,11 +3,51 @@
 Repository for my Master thesis on **The effects of word segmentation quality on word alignments**. The thesis PDF can be found [here](https://github.com/anebz/thesis/blob/master/doc/main.pdf). This repository handles the following functions:
 
 * Datasets: English-German, English-Romanian, English-Hindi. To any other datasets, add a folder with the names of the language pairs in `data/input` and under it the txt files with the following format: 'eng_with_X.txt', for X number of sentences and for both languages, and the gold standard. See examples in `data/input` 
-* Alignment models: Fastalign, Eflomal. For installation, see section 5.2.3. of the [thesis](https://github.com/anebz/thesis/blob/master/doc/main.pdf)
+* Alignment models: Fastalign, Eflomal
 * Sampling methods: Dropout
 * Tokenization: space mode, no space mode
 
 These parameters and others can be set in `settings.py`.
+
+## Installation and run
+
+Fastalign installation
+
+```bash
+sudo apt-get install libgoogle-perftools-dev libsparsehash-dev
+cd /path/to/project
+mkdir tools
+cd tools
+git clone https://github.com/clab/fast_align.git
+cd fast_align
+mkdir build
+cd build
+cmake ..
+make
+```
+
+Eflomal installation
+
+```bash
+cd /path/to/project/tools
+git clone https://github.com/robertostling/eflomal.git
+cd eflomal
+make
+sudo make install
+python3 setup.py install
+```
+
+Install dependencies
+
+```bash
+pip -r install requirements.txt
+```
+
+Modify `settings.py` for your desired parameters. To run all pipeline:
+
+```bash
+./run.sh
+```
 
 ## Project structure
 

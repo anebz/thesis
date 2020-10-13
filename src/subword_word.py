@@ -1,7 +1,7 @@
 import os
-from os.path import join
 import sys
 import codecs
+from os.path import join
 
 # import global variables from settings.py
 sys.path.insert(1, join(sys.path[0], '..'))
