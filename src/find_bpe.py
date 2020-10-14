@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+import os
 import sys
+import json
 import codecs
 from tqdm import tqdm
 from os.path import join
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
@@ -47,5 +49,17 @@ if __name__ == "__main__":
 
             # obtain segmentation mappings and save to unit_maps
             for i, unit_source in enumerate(source_line):
+                unit_source = unit_source.replace(word_sep, '')
                 if almaps[i]:
                     unit_maps[unit_source].extend(list(map(target_line.__getitem__, almaps[i])))
+
+    # delete one character mappings and replace the word separator by space
+    for key, value in unit_maps.items():
+        modified_value = []
+        for i, elem in enumerate(value):
+            if len(elem.replace(word_sep, '')) > 1:
+                modified_value.append(elem.replace(word_sep, ' '))
+        unit_maps[key] = Counter(modified_value)
+
+    with open(join(bpedir, 'mapping.json'), 'w', encoding='utf8') as out:
+        json.dump(unit_maps, out, indent=2, ensure_ascii=False)
