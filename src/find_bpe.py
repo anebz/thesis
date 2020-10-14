@@ -31,7 +31,11 @@ def parse_segmentations(source_line: str, target_line: str) -> (str, str):
     Input: '0   _This _is _a _sentence\n'
     Output: ['_This', '_is', '_a', '_sentence']
     '''
-    return source_line.strip('\n').split(), target_line.strip('\n').split()
+    source_line = source_line.strip('\n').split('\t')[1]
+    source_line = str.lower(source_line[0])+source_line[1:]
+    source_line = source_line.split()
+    target_line = target_line.strip('\n').split()
+    return source_line, target_line
 
 
 if __name__ == "__main__":
@@ -40,10 +44,10 @@ if __name__ == "__main__":
     unit_maps = defaultdict(list)
     for it in range(dropout_samples):
         alfile = codecs.open(join(bpedir, mode, f'{symb}_{it}.gdfa'), 'r', 'utf-8')
-        segm_source = codecs.open(join(bpedir, 'segmentations', f'{source}_{symb}.bpe'), 'r', 'utf-8')
-        segm_target = codecs.open(join(bpedir, 'segmentations', f'{target}_{symb}_{it}.bpe'), 'r', 'utf-8')
+        sourcefile = codecs.open(inputpath[source], 'r', 'utf-8')
+        targetfile = codecs.open(join(bpedir, 'segmentations', f'{target}_{symb}_{it}.bpe'), 'r', 'utf-8')
 
-        for al_line, source_line, target_line in zip(alfile, segm_source, segm_target):
+        for al_line, source_line, target_line in zip(alfile, sourcefile, targetfile):
             almaps = parse_alignment(al_line)
             source_line, target_line = parse_segmentations(source_line, target_line)
 
