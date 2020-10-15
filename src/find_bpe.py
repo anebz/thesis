@@ -32,10 +32,34 @@ def parse_segmentations(source_line: str, target_line: str) -> (str, str):
     Output: ['_This', '_is', '_a', '_sentence']
     '''
     source_line = source_line.strip('\n').split('\t')[1]
-    source_line = str.lower(source_line[0])+source_line[1:]
-    source_line = source_line.split()
-    target_line = target_line.strip('\n').split()
-    return source_line, target_line
+
+    # lower the first character in the sentence
+    source_line = source_line[0].lower() + source_line[1:]
+
+    # map german characters to English equivalents
+    char_map = {ord('ä'): 'ae', ord('ü'): 'ue', ord('ö'): 'oe', ord('ß'): 'ss'}
+    target_line = target_line.translate(char_map).strip('\n')
+    return source_line.split(), target_line.split()
+
+
+def parse_mapping(unit_maps: defaultdict(list)) -> defaultdict(list):
+    '''
+    obtain most common mappings and print the mappings and the percentage they appear in.
+    For example, "wi" appears in 18.33% of all mappings.
+    Input: [
+        "we": ["w", "wi", "ir", "r_", "wi", "wir_", ...],
+        "do": ["i", "n", "ch", ...], ...
+    ]
+    Output: {
+        "we": {"wi": "0.1833", "wir▁": "0.1497", ...},
+        "do": {"i": "0.0715", "n": "0.0709", "ch": "0.0582", ...}, ...
+    }
+    '''
+    
+    for key, value in unit_maps.items():
+        c = Counter(value)
+        unit_maps[key] = {i: f"{c[i]/len(value):.4f}" for i, _ in c.most_common(15)}
+    return unit_maps
 
 
 if __name__ == "__main__":
@@ -57,13 +81,7 @@ if __name__ == "__main__":
                 if almaps[i]:
                     unit_maps[unit_source].extend(list(map(target_line.__getitem__, almaps[i])))
 
-    # delete one character mappings and replace the word separator by space
-    for key, value in unit_maps.items():
-        modified_value = []
-        for i, elem in enumerate(value):
-            if len(elem.replace(word_sep, '')) > 1:
-                modified_value.append(elem.replace(word_sep, ' '))
-        unit_maps[key] = Counter(modified_value)
+    unit_maps = parse_mapping(unit_maps)
 
     with open(join(bpedir, 'mapping.json'), 'w', encoding='utf8') as out:
         json.dump(unit_maps, out, indent=2, ensure_ascii=False)
