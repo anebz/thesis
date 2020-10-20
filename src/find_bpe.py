@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import sys
 import json
 import codecs
@@ -11,7 +12,8 @@ from collections import defaultdict, Counter
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
-threshold = 0.15
+r = re.compile('[^a-zA-Z]')
+threshold = 0.2
 
 def parse_alignment(al_line: str) -> defaultdict(list):
     '''
@@ -33,9 +35,9 @@ def parse_segmentations(source_line: str, target_line: str) -> (str, str):
     Output: ['_This', '_is', '_a', '_sentence']
     '''
     source_line = source_line.strip('\n').split('\t')[1]
-
     # lower the first character in the sentence
     source_line = source_line[0].lower() + source_line[1:]
+    source_line = r.sub(' ', source_line)
 
     # map german characters to English equivalents
     char_map = {ord('ä'): 'ae', ord('ü'): 'ue', ord('ö'): 'oe', ord('ß'): 'ss'}
@@ -69,7 +71,7 @@ def parse_mapping() -> defaultdict(Counter):
             # obtain segmentation mappings and save to unit_maps
             for i, unit_source in enumerate(source_line):
                 # only consider English units with 1+ letters
-                if len(''.join(filter(str.isalpha, unit_source))) > 1:
+                if len(r.sub(' ', unit_source)) > 1:
                     for idx in almaps[i]:
                         sent = target_line[idx].replace(word_sep, '')
                         if len(sent) > 1:
@@ -118,7 +120,8 @@ def aggregate_mappings(unit_maps: defaultdict(Counter)) -> dict:
 
         # get the characters with the highest scores. maximum subarray of the scores array
         best_mapping = ''.join(list(map(longest.__getitem__, max_subarray(score))))
-        all_maps[eng_word] = best_mapping
+        if len(best_mapping) > 1:
+            all_maps[eng_word] = best_mapping
     return all_maps
 
 
