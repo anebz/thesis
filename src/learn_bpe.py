@@ -2,6 +2,7 @@
 import os
 import re
 import sys
+import json
 import codecs
 from tqdm import tqdm
 from os.path import join
@@ -14,7 +15,7 @@ from settings import *
 def read_bpe_model(lang: str) -> (list, int):
     # check if a BPE model for this language exists
     # if so, only create new BPE model if learn_merges > symbols in the model
-    model_path = join(inputdir, f"{lang}{'' if params[lang]['space'] else '_ns'}{'_scoring' if scoring else ''}.model")
+    model_path = join(inputdir, f"{lang}{'' if params[lang]['space'] else '_ns'}{'_scoring' if scoring else ''}{'_'+str(it) if it >= 0 else ''}.model")
     if os.path.isfile(model_path):
         bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
         model_symbols = bpe_model[0].strip('\r\n').split()[1] if bpe_model else 0
@@ -23,6 +24,22 @@ def read_bpe_model(lang: str) -> (list, int):
         model_symbols = 0
         
     return bpe_model, model_symbols
+
+
+def join_best_mappings(lang: str, text: str) -> str:
+    if it > 0 and lang == target:
+        print(f"Iteration {it} of mapping mode")
+        with open(join(rootdir, 'data', f'best_mappings.json'), 'r', encoding='utf-8') as JSON:
+            mappings = json.load(JSON)
+
+        deu_maps = []
+        for k, v in mappings.items():
+            deu_maps.append(' '.join(list(v)))
+        deu_maps.sort(key=len, reverse=True)
+
+        for elem in deu_maps:
+            text = text.replace(elem, ''.join(elem.split()))
+    return text
 
 
 def read_corpus(lang: str, corpus: list) -> list:
@@ -44,6 +61,9 @@ def read_corpus(lang: str, corpus: list) -> list:
 
     tokens = []
     for line in corpus:
+        char_map = {ord('ä'): 'ae', ord('ü'): 'ue',
+                    ord('ö'): 'oe', ord('ß'): 'ss'}
+        line = line.translate(char_map)
         line = line.split('\t')[1].strip('\r\n ').split()
         line[0] = str.lower(line[0])
 
@@ -54,6 +74,7 @@ def read_corpus(lang: str, corpus: list) -> list:
             # join all words by word_sep
             tokens.append(f' {word_sep} '.join([' '.join(word) for word in line]))
 
+    tokens = join_best_mappings(lang, '\n'.join(tokens)).split('\n')
     return tokens
 
 
@@ -235,7 +256,7 @@ def learn_bpe(lang: str, corpus: list) -> list:
 
 
 def write_bpe(lang, most_freq_merges):
-    filename = f"{lang}{'' if params[lang]['space'] else '_ns'}{'_scoring' if scoring else ''}.model"
+    filename = f"{lang}{'' if params[lang]['space'] else '_ns'}{'_scoring' if scoring else ''}{'_'+str(it) if it >= 0 else ''}.model"
     bpe_file = codecs.open(join(inputdir, filename), 'w', encoding='utf-8')
     bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
     bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
@@ -245,6 +266,9 @@ def write_bpe(lang, most_freq_merges):
 if __name__ == '__main__':
 
     for lang in [source, target]:
+        
+        if not params[lang]['bpe']:
+            continue
 
         argsinput = codecs.open(inputpath[lang], encoding='utf-8')
         _, model_symbols = read_bpe_model(lang)

@@ -6,23 +6,25 @@ from os.path import join
 word_sep = u'\u2581' # symbol to use for word separators
 source, target = 'eng', 'deu' # eng, deu, ron, hin
 mode = "fastalign"  # fastalign, eflomal
-scoring = True # True to activate the scoring method
+scoring = False # True to activate the scoring method
+it = 3
+threshold = 0.1
 
 params = {
     source: {
-        'bpe': True,
+        'bpe': False,
         'space': True,
         'dropout': 0
     },
     target: {
         'bpe': True,
         'space': False,
-        'dropout': 0.2
+        'dropout': 0.5
     }
 }
 
 learn_merges = 10000 # how many BPE units to learn in learn_bpe.py
-merges = [200, 500, 1000, 2000] # create segmentations with different number of merges
+merges = [8000] # create segmentations with different number of merges
 dropout_samples = 10 # how many samples to create in dropout mode
 merge_threshold = [0.5, 0.7] # alignment threshold for dropout mode
 

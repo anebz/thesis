@@ -13,7 +13,6 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
 r = re.compile('[^a-zA-Z]')
-threshold = 0.2
 
 def parse_alignment(al_line: str) -> defaultdict(list):
     '''
@@ -73,13 +72,17 @@ def parse_mapping() -> defaultdict(Counter):
                 # only consider English units with 1+ letters
                 if len(r.sub(' ', unit_source)) > 1:
                     for idx in almaps[i]:
-                        sent = target_line[idx].replace(word_sep, '')
-                        if len(sent) > 1:
-                            unit_maps[unit_source][sent] += 1
+                        if len(target_line[idx].replace(word_sep, '')) > 1:
+                            unit_maps[unit_source][target_line[idx]] += 1
     
-    for k, v in unit_maps.items():
+    for k, v in unit_maps.copy().items():
         all_sum = sum(v.values())
-        unit_maps[k] = {i: f"{v[i]/all_sum:.4f}" for i, _ in v.most_common(15)}
+        # the most common words have 20000+ mappings, the highest 'to' with over 70.000
+        # this condition ensures that only popular words are considered
+        if all_sum > 5000:
+            unit_maps[k] = {i: f"{v[i]/all_sum:.4f}" for i, _ in v.most_common(15)}
+        else:
+            del unit_maps[k]
     return unit_maps
 
 
@@ -103,11 +106,29 @@ def max_subarray(arr: list) -> list:
     return range(beg, end)
 
 
+def most_common_substring(lst: list) -> str:
+    '''
+    link: https://stackoverflow.com/a/32611507/4569908
+    Given a list of strings, returns the most common substring
+    Input: lst = ["wi", "wir▁", "ir▁", "wir", "▁wir▁", "uns", "en", "mu"]
+    Output: "wi"
+    '''
+    substrs = lambda x: Counter(x[i:i+j] for i in range(len(x)) for j in range(1, len(x) - i + 1))
+    subs = Counter()
+    for val in lst:
+        subs += substrs(val)
+    return list(filter(lambda elem: len(elem) > 1, list(zip(*subs.most_common()))[0]))[0]
+
+
 def aggregate_mappings(unit_maps: defaultdict(Counter)) -> dict:
     all_maps = {}
     for eng_word, deu_maps in unit_maps.items():
-        # obtain the longest sequence
-        longest = max(deu_maps, key=lambda x: len(x))
+        # obtain the longest sequence that contains the most common unit
+        most_common_unit = most_common_substring(deu_maps)
+        for longest in sorted(deu_maps, reverse=True):
+            if most_common_unit in longest:
+                break
+        
         # scores for each character
         score = [0 for i in range(len(longest))]
 
@@ -130,10 +151,26 @@ if __name__ == "__main__":
     symb = merges[0]
     unit_maps = parse_mapping()
 
-    with open(join(rootdir, 'mapping.json'), 'w', encoding='utf8') as out:
+    with open(join(rootdir, 'data', f'mapping_{it}.json'), 'w', encoding='utf8') as out:
         json.dump(unit_maps, out, indent=2, ensure_ascii=False)
 
     all_maps = aggregate_mappings(unit_maps)
 
-    with open(join(rootdir, 'best_mappings.json'), 'w', encoding='utf8') as out:
+    with open(join(rootdir, 'data', f'best_mappings_{it}.json'), 'w', encoding='utf8') as out:
         json.dump(all_maps, out, indent=2, ensure_ascii=False)
+
+    # joined maps
+    joined_maps = dict()
+    for fname in glob.glob(join(rootdir, 'data', 'best_mappings_*.json')):
+        mappings = json.load(open(fname, 'r', encoding='utf-8'))
+        if joined_maps == dict():
+            joined_maps = mappings
+            continue
+        for k, v in mappings.items():
+            if k in joined_maps:
+                joined_maps[k] = max(joined_maps[k], v, key=len)
+            else:
+                joined_maps[k] = v
+
+    with open(join(rootdir, 'data', f'best_mappings.json'), 'w', encoding='utf8') as out:
+        json.dump(joined_maps, out, indent=2, ensure_ascii=False)
