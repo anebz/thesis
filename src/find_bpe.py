@@ -74,16 +74,21 @@ def parse_mapping() -> defaultdict(Counter):
                     for idx in almaps[i]:
                         if len(target_line[idx].replace(word_sep, '')) > 1:
                             unit_maps[unit_source][target_line[idx]] += 1
+
+    # get the segments ordered by number of mappings
+    counter_map = {}
+    for k, v in unit_maps.items():
+        counter_map[k] = sum(v.values())
+    counter_map = [k for k, v in reversed(sorted(counter_map.items(), key=lambda item: item[1]))]
     
-    for k, v in unit_maps.copy().items():
+    # get only the most frequent 250 segments
+    shorter_unit_map = {}
+    for segment in counter_map[:250]:
+        v = unit_maps[segment]
         all_sum = sum(v.values())
-        # the most common words have 20000+ mappings, the highest 'to' with over 70.000
-        # this condition ensures that only popular words are considered
-        if all_sum > 5000:
-            unit_maps[k] = {i: f"{v[i]/all_sum:.4f}" for i, _ in v.most_common(15)}
-        else:
-            del unit_maps[k]
-    return unit_maps
+        shorter_unit_map[segment] = {i: f"{v[i]/all_sum:.4f}" for i, _ in v.most_common(15)}
+
+    return shorter_unit_map
 
 
 def max_subarray(arr: list) -> list:
