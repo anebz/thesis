@@ -13,6 +13,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
 r = re.compile('[^a-zA-Z]')
+threshold = 0.2
 
 def parse_alignment(al_line: str) -> defaultdict(list):
     '''
@@ -81,9 +82,9 @@ def parse_mapping() -> defaultdict(Counter):
         counter_map[k] = sum(v.values())
     counter_map = [k for k, v in reversed(sorted(counter_map.items(), key=lambda item: item[1]))]
     
-    # get only the most frequent 250 segments
+    # get only the most frequent 1500 segments
     shorter_unit_map = {}
-    for segment in counter_map[:250]:
+    for segment in counter_map[:1500]:
         v = unit_maps[segment]
         all_sum = sum(v.values())
         shorter_unit_map[segment] = {i: f"{v[i]/all_sum:.4f}" for i, _ in v.most_common(15)}
@@ -127,6 +128,7 @@ def most_common_substring(lst: list) -> str:
 
 def aggregate_mappings(unit_maps: defaultdict(Counter)) -> dict:
     all_maps = {}
+    good_subwords = []
     for eng_word, deu_maps in unit_maps.items():
         # obtain the longest sequence that contains the most common unit
         most_common_unit = most_common_substring(deu_maps)
@@ -148,7 +150,8 @@ def aggregate_mappings(unit_maps: defaultdict(Counter)) -> dict:
         best_mapping = ''.join(list(map(longest.__getitem__, max_subarray(score))))
         if len(best_mapping) > 1:
             all_maps[eng_word] = best_mapping
-    return all_maps
+            good_subwords.append(best_mapping)
+    return all_maps, good_subwords
 
 
 if __name__ == "__main__":
@@ -156,26 +159,18 @@ if __name__ == "__main__":
     symb = merges[0]
     unit_maps = parse_mapping()
 
-    with open(join(rootdir, 'data', f'mapping_{it}.json'), 'w', encoding='utf8') as out:
-        json.dump(unit_maps, out, indent=2, ensure_ascii=False)
+    all_maps, good_subwords = aggregate_mappings(unit_maps)
 
-    all_maps = aggregate_mappings(unit_maps)
-
-    with open(join(rootdir, 'data', f'best_mappings_{it}.json'), 'w', encoding='utf8') as out:
-        json.dump(all_maps, out, indent=2, ensure_ascii=False)
-
-    # joined maps
+    # join subwords
     joined_maps = dict()
-    for fname in glob.glob(join(rootdir, 'data', 'best_mappings_*.json')):
-        mappings = json.load(open(fname, 'r', encoding='utf-8'))
-        if joined_maps == dict():
-            joined_maps = mappings
-            continue
-        for k, v in mappings.items():
-            if k in joined_maps:
-                joined_maps[k] = max(joined_maps[k], v, key=len)
-            else:
-                joined_maps[k] = v
+    if os.path.isfile(join(rootdir, 'data', f'subwords.txt')):
+        with open(join(rootdir, 'data', f'subwords.txt'), 'r', encoding='utf8') as subwordf:
+            prev_subwords = subwordf.readlines()
 
-    with open(join(rootdir, 'data', f'best_mappings.json'), 'w', encoding='utf8') as out:
-        json.dump(joined_maps, out, indent=2, ensure_ascii=False)
+        for subw in good_subwords:
+            if subw not in prev_subwords:
+                prev_subwords.append(subw)
+        good_subwords = prev_subwords
+    else:
+        with open(join(rootdir, 'data', f'subwords.txt'), 'w', encoding='utf8') as out:
+            out.write('\n'.join(good_subwords))
