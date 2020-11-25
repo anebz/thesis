@@ -155,7 +155,7 @@ def calc_score_merges(probs, surs, surs_count):
 if __name__ == "__main__":
 
 	print(f"Calculating alignment scores for: {json.dumps(params, indent=2)}")
-	probs, surs, surs_count = load_gold(goldpath)
+	probs, surs, surs_count = load_gold(join(inputdir, source+'_'+target+'.gold'))
 
 	if max(params[source]['dropout'], params[target]['dropout']):
 		calc_score_merges(probs, surs, surs_count)

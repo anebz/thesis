@@ -1,13 +1,13 @@
 # global variables
 import os
-import glob
+import sys
 from os.path import join
 
 word_sep = u'\u2581' # symbol to use for word separators
 source, target = 'eng', 'deu' # eng, deu, ron, hin
 mode = "fastalign"  # fastalign, eflomal
 scoring = False # True to activate the scoring method
-it = 3
+it = 0
 threshold = 0.1
 
 params = {
@@ -19,7 +19,7 @@ params = {
     target: {
         'bpe': True,
         'space': False,
-        'dropout': 0.5
+        'dropout': 0.3
     }
 }
 
@@ -33,12 +33,10 @@ rootdir = os.getcwd()
 if rootdir.split(os.sep)[-1] == 'src':
     rootdir = os.sep.join(rootdir.split(os.sep)[:-1])
 inputdir = join(rootdir, 'data', 'input', source+'-'+target)
-goldpath = join(inputdir, source+'_'+target+'.gold')
 
-# input files should be in the format of 'eng_with_10k.txt'
 inputpath = {}
-for filename in glob.glob(join(inputdir, "*.txt")):
-    inputpath[filename.split(os.sep)[-1].split('_')[0]] = filename
+inputpath[source] = join(inputdir, 'train.'+source)
+inputpath[target] = join(inputdir, 'train.'+target)
 
 # paths for intermediate files
 baselinedir = join(rootdir, 'reports', 'scores_normal_bpe')
