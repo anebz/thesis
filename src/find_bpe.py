@@ -12,6 +12,8 @@ from collections import defaultdict, Counter
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
+threshold = 0.1
+most_freq_segments = 5000
 r = re.compile('[^a-zA-Z]')
 
 def parse_alignment(al_line: str) -> defaultdict(list):
@@ -33,7 +35,11 @@ def parse_segmentations(source_line: str, target_line: str) -> (str, str):
     Input: '0   _This _is _a _sentence\n'
     Output: ['_This', '_is', '_a', '_sentence']
     '''
-    source_line = source_line.strip('\n').split('\t')[1]
+    source_line = source_line.strip('\n')
+    try:
+        source_line = source_line.split('\t')[1]
+    except:
+        pass
     # lower the first character in the sentence
     source_line = source_line[0].lower() + source_line[1:]
     source_line = r.sub(' ', source_line)
@@ -44,7 +50,7 @@ def parse_segmentations(source_line: str, target_line: str) -> (str, str):
     return source_line.split(), target_line.split()
 
 
-def parse_mapping() -> defaultdict(Counter):
+def parse_mapping(symb: int) -> defaultdict(Counter):
     '''
     obtain most common mappings from source language to target language,
     and print the mappings and the percentage they appear in. Steps:
@@ -62,7 +68,6 @@ def parse_mapping() -> defaultdict(Counter):
         alfile = codecs.open(join(bpedir, mode, f'{symb}_{it}.gdfa'), 'r')
         sourcefile = codecs.open(inputpath[source], 'r')
         targetfile = codecs.open(join(bpedir, 'segmentations', f'{target}_{symb}_{it}.bpe'), 'r', 'utf-8')
-
         for al_line, source_line, target_line in zip(alfile, sourcefile, targetfile):
             almaps = parse_alignment(al_line)
             source_line, target_line = parse_segmentations(source_line, target_line)
@@ -81,12 +86,12 @@ def parse_mapping() -> defaultdict(Counter):
         counter_map[k] = sum(v.values())
     counter_map = [k for k, v in reversed(sorted(counter_map.items(), key=lambda item: item[1]))]
     
-    # get only the most frequent 250 segments
+    # get only the most frequent segments
     shorter_unit_map = {}
-    for segment in counter_map[:250]:
+    for segment in counter_map[:most_freq_segments]:
         v = unit_maps[segment]
         all_sum = sum(v.values())
-        shorter_unit_map[segment] = {i: f"{v[i]/all_sum:.4f}" for i, _ in v.most_common(15)}
+        shorter_unit_map[segment] = {i: f"{v[i]/all_sum:.4f}" for i, _ in v.most_common(10)}
 
     return shorter_unit_map
 
@@ -127,6 +132,7 @@ def most_common_substring(lst: list) -> str:
 
 def aggregate_mappings(unit_maps: defaultdict(Counter)) -> dict:
     all_maps = {}
+    subwords = []
     for eng_word, deu_maps in unit_maps.items():
         # obtain the longest sequence that contains the most common unit
         most_common_unit = most_common_substring(deu_maps)
@@ -148,21 +154,16 @@ def aggregate_mappings(unit_maps: defaultdict(Counter)) -> dict:
         best_mapping = ''.join(list(map(longest.__getitem__, max_subarray(score))))
         if len(best_mapping) > 1:
             all_maps[eng_word] = best_mapping
-    return all_maps
+            if best_mapping not in subwords:
+                subwords.append(best_mapping)
+    return all_maps, subwords
 
 
 if __name__ == "__main__":
 
     symb = merges[0]
-    unit_maps = parse_mapping()
-
-    with open(join(rootdir, 'data', f'mapping_{it}.json'), 'w', encoding='utf8') as out:
-        json.dump(unit_maps, out, indent=2, ensure_ascii=False)
-
-    all_maps = aggregate_mappings(unit_maps)
-
-    with open(join(rootdir, 'data', f'best_mappings_{it}.json'), 'w', encoding='utf8') as out:
-        json.dump(all_maps, out, indent=2, ensure_ascii=False)
+    unit_maps = parse_mapping(symb)
+    all_maps, subwords = aggregate_mappings(unit_maps)
 
     # joined maps
     joined_maps = dict()
@@ -177,5 +178,6 @@ if __name__ == "__main__":
             else:
                 joined_maps[k] = v
 
-    with open(join(rootdir, 'data', f'best_mappings.json'), 'w', encoding='utf8') as out:
-        json.dump(joined_maps, out, indent=2, ensure_ascii=False)
+    print(f"Writing {len(subwords)} subwords")
+    with open(join(rootdir, 'data', 'best_mappings.txt'), 'w', encoding='utf8') as out:
+        out.write('\n'.join(subwords))

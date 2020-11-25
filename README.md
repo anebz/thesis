@@ -22,6 +22,7 @@ git clone https://github.com/clab/fast_align.git
 cd fast_align
 mkdir build
 cd build
+sudo apt install cmake
 cmake ..
 make
 ```
@@ -46,6 +47,13 @@ pip -r install requirements.txt
 Modify `settings.py` for your desired parameters. To run all pipeline:
 
 ```bash
+./run.sh
+```
+
+If you get an error like `/bin/bash^M: bad interpreter: No such file`, run this:
+
+```bash
+sed -i -e 's/\r$//' run.sh # https://stackoverflow.com/questions/14219092/bash-script-and-bin-bashm-bad-interpreter-no-such-file-or-directory
 ./run.sh
 ```
 
