@@ -165,19 +165,17 @@ if __name__ == "__main__":
     unit_maps = parse_mapping(symb)
     all_maps, subwords = aggregate_mappings(unit_maps)
 
-    # joined maps
-    joined_maps = dict()
-    for fname in glob.glob(join(rootdir, 'data', 'best_mappings_*.json')):
-        mappings = json.load(open(fname, 'r', encoding='utf-8'))
-        if joined_maps == dict():
-            joined_maps = mappings
-            continue
-        for k, v in mappings.items():
-            if k in joined_maps:
-                joined_maps[k] = max(joined_maps[k], v, key=len)
-            else:
-                joined_maps[k] = v
+    # join subwords
+    if os.path.isfile(join(rootdir, 'data', f'subwords.txt')):
+        print("Merging with previous subword list")
+        with open(join(rootdir, 'data', f'subwords.txt'), 'r', encoding='utf8') as subwordf:
+            prev_subwords = [line.strip('\r\n ') for line in subwordf.readlines()]
+
+        for subw in subwords:
+            if subw not in prev_subwords:
+                prev_subwords.append(subw)
+        subwords = prev_subwords
 
     print(f"Writing {len(subwords)} subwords")
-    with open(join(rootdir, 'data', 'best_mappings.txt'), 'w', encoding='utf8') as out:
+    with open(join(rootdir, 'data', 'subwords.txt'), 'w', encoding='utf8') as out:
         out.write('\n'.join(subwords))
