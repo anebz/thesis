@@ -8,8 +8,7 @@ from tqdm import tqdm
 from os.path import join
 from collections import defaultdict, Counter
 
-# import global variables from settings.py
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from settings import *
 
 def read_bpe_model(lang: str) -> (list, int):
@@ -29,16 +28,10 @@ def read_bpe_model(lang: str) -> (list, int):
 def join_best_mappings(lang: str, text: str) -> str:
     if it > 0 and lang == target:
         print(f"Iteration {it} of mapping mode")
-        with open(join(rootdir, 'data', f'best_mappings.json'), 'r', encoding='utf-8') as JSON:
-            mappings = json.load(JSON)
-
-        deu_maps = []
-        for k, v in mappings.items():
-            deu_maps.append(' '.join(list(v)))
-        deu_maps.sort(key=len, reverse=True)
-
-        for elem in deu_maps:
-            text = text.replace(elem, ''.join(elem.split()))
+        with open(join(rootdir, 'data', f'subwords.txt'), 'r', encoding='utf-8') as subwf:
+            prev_subwords = [line.strip('\r\n ') for line in subwf.readlines()]
+        for elem in prev_subwords:
+            text = text.replace(' '.join(list(elem)), elem)
     return text
 
 
@@ -61,10 +54,16 @@ def read_corpus(lang: str, corpus: list) -> list:
 
     tokens = []
     for line in corpus:
+        if line[0] == '<' or line == '\n':
+            continue
         char_map = {ord('ä'): 'ae', ord('ü'): 'ue',
                     ord('ö'): 'oe', ord('ß'): 'ss'}
         line = line.translate(char_map)
-        line = line.split('\t')[1].strip('\r\n ').split()
+        try:
+            line = line.split('\t')[1]
+        except:
+            pass
+        line = line.strip('\r\n ').split()
         line[0] = str.lower(line[0])
 
         if params[lang]['space']:
@@ -249,7 +248,7 @@ def learn_bpe(lang: str, corpus: list) -> list:
         if most_frequent[1] == 1:
             break
 
-        most_freq_merges.append(most_frequent[0])
+        most_freq_merges.append(tuple(most_frequent[0]))
         tokens, scores, pairs, idx = update_tokens(lang, tokens, scores, pairs, idx, most_frequent[0])
 
     return most_freq_merges
@@ -261,21 +260,3 @@ def write_bpe(lang, most_freq_merges):
     bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
     bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
     return
-
-
-if __name__ == '__main__':
-
-    for lang in [source, target]:
-        
-        if not params[lang]['bpe']:
-            continue
-
-        argsinput = codecs.open(inputpath[lang], encoding='utf-8')
-        _, model_symbols = read_bpe_model(lang)
-
-        if learn_merges <= int(model_symbols):
-            print(f"A model for lang={lang} with at least {learn_merges} symbols already exists")
-            continue
-
-        most_freq_merges = learn_bpe(lang, argsinput)
-        write_bpe(lang, most_freq_merges)
