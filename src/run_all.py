@@ -35,8 +35,7 @@ def apply_bpes(corpus_source, bpe_model_target, i):
     corpusfile = codecs.open(inputpath[target], encoding='utf-8').readlines()
     corpus_target = read_corpus(target, corpusfile)
     target_bpe = apply_bpe(target, bpe_model_target, corpus_target, i)
-
-    create_parallel_text(corpus_target, target_bpe.split('\n'))
+    create_parallel_text(corpus_target, target_bpe.split('\n'), i)
     return
 
 @ray.remote
@@ -51,6 +50,8 @@ def bpe_pipeline(corpus_source, bpe_model_target, i):
 
 if __name__ == "__main__":
 
+    print(f"Running iteration {it}")
+
     os.makedirs(join(bpedir, 'segmentations'), exist_ok=True)
     os.makedirs(join(bpedir, 'fastalign'), exist_ok=True)
 
@@ -59,8 +60,9 @@ if __name__ == "__main__":
     bpe_model_target = learn_bpes(target)
     
     t0 = time.time()
-    ray.init()
+    ray.init(num_cpus=5)
     futures = [bpe_pipeline.remote(corpus_source, bpe_model_target, i) for i in range(dropout_samples)]
     ray.get(futures)
+    ray.shutdown()
 
     print(f"The pipeline took {str(timedelta(seconds=time.time()-t0))}")

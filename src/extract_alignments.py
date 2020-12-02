@@ -12,7 +12,6 @@ from collections import Counter
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
-from subword_word import *
 
 
 def create_fwd_rev_files(outpath: str):

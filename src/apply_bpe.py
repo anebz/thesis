@@ -30,9 +30,9 @@ def apply_bpe(lang: str, bpe_model: list, corpus: str, i: int=-1):
     return str_corpus
 
 
-def create_parallel_text(corpus_source: list, target_bpe: list):
+def create_parallel_text(corpus_source: list, target_bpe: list, i:int):
     fa_file = codecs.open(join(bpedir, mode, f"{merges[-1]}_{i}.txt"), "w", "utf-8")
-    for sl, tl in zip(corpus_source, target_bpe.split('\n')):
+    for sl, tl in zip(corpus_source, target_bpe):
         fa_file.write(f"{sl} ||| {tl}\n")
     fa_file.close()
     return

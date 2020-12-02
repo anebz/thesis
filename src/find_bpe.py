@@ -13,7 +13,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
 threshold = 0.1
-most_freq_segments = 5000
+most_freq_segments = 20000
 r = re.compile('[^a-zA-Z]')
 
 def parse_alignment(al_line: str) -> defaultdict(list):
@@ -91,7 +91,7 @@ def parse_mapping(symb: int) -> defaultdict(Counter):
     for segment in counter_map[:most_freq_segments]:
         v = unit_maps[segment]
         all_sum = sum(v.values())
-        shorter_unit_map[segment] = {i: f"{v[i]/all_sum:.4f}" for i, _ in v.most_common(10)}
+        shorter_unit_map[segment] = {i: f"{v[i]/all_sum:.4f}" for i, _ in v.most_common(20)}
 
     return shorter_unit_map
 
