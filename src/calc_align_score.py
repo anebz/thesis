@@ -2,14 +2,58 @@
 import os
 import sys
 import json
+import codecs
 import pandas as pd
+from tqdm import tqdm
 import seaborn as sns
 from os.path import join
+from collections import Counter
 import matplotlib.pyplot as plt
 
 # import global variables from settings.py
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
+
+
+def merge_dropout_alignments():
+    union_merge, inter_merge, thres_merge = {}, {}, {}
+    for num_symbols in tqdm(merges, desc=f"merging dropout align files"):
+        union_merge[num_symbols], inter_merge[num_symbols], thres_merge[num_symbols] = [
+        ], [], []
+
+        for i in range(dropout_samples):
+            alpath = join(bpedir, mode, f"{num_symbols}_{i}.wgdfa")
+            for j, line in enumerate(open(alpath, 'r').readlines()):
+                al = frozenset(line.strip().split("\t")[1].split())
+
+                # at the first iteration, just append the alignment
+                if i == 0:
+                    #union_merge[num_symbols].append(al)
+                    #inter_merge[num_symbols].append(al)
+                    thres_merge[num_symbols].append(Counter(al))
+                    continue
+
+                # do union, intersection or frequency addition
+                #union_merge[num_symbols][j] |= al
+                #inter_merge[num_symbols][j] &= al
+                thres_merge[num_symbols][j] += Counter(al)
+
+        # write to output
+        os.chdir(join(bpedir, mode))
+        #unionfile = codecs.open(f'{num_symbols}_union.wgdfa', 'w')
+        #interfile = codecs.open(f'{num_symbols}_inter.wgdfa', 'w')
+        thresfiles = {merge_t: codecs.open(f'{num_symbols}_thres_{merge_t}.wgdfa', 'w') for merge_t in merge_threshold}
+
+        for i in range(len(thres_merge[num_symbols])):
+            #unionfile.write(f"{i}\t{' '.join(union_merge[num_symbols][i])}\n")
+            #interfile.write(f"{i}\t{' '.join(inter_merge[num_symbols][i])}\n")
+
+            # get alignments more common than the merge_threshold %
+            for merge_t in merge_threshold:
+                common_aligns = [k for k in thres_merge[num_symbols][i]
+                                 if thres_merge[num_symbols][i][k] > merge_t * dropout_samples]
+                thresfiles[merge_t].write(f"{i}\t{' '.join(common_aligns)}\n")
+    return
 
 
 def load_gold(g_path: str) -> (dict, dict, int):
@@ -153,6 +197,8 @@ def calc_score_merges(probs, surs, surs_count):
 
 
 if __name__ == "__main__":
+
+	merge_dropout_alignments()
 
 	print(f"Calculating alignment scores for: {json.dumps(params, indent=2)}")
 	probs, surs, surs_count = load_gold(join(inputdir, source+'_'+target+'.gold'))

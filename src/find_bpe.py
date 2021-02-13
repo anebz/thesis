@@ -12,7 +12,6 @@ from collections import defaultdict, Counter
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
-threshold = 0.1
 most_freq_segments = 20000
 r = re.compile('[^a-zA-Z]')
 
@@ -64,10 +63,10 @@ def parse_mapping(symb: int) -> defaultdict(Counter):
     '''
 
     unit_maps = defaultdict(Counter)
-    for it in tqdm(range(dropout_samples)):
-        alfile = codecs.open(join(bpedir, mode, f'{symb}_{it}.gdfa'), 'r')
+    for ii in tqdm(range(dropout_samples)):
+        alfile = codecs.open(join(bpedir, mode, f'{symb}_{ii}.gdfa'), 'r')
         sourcefile = codecs.open(inputpath[source], 'r')
-        targetfile = codecs.open(join(bpedir, 'segmentations', f'{target}_{symb}_{it}.bpe'), 'r', 'utf-8')
+        targetfile = codecs.open(join(bpedir, 'segmentations', f'{target}_{symb}_{ii}.bpe'), 'r', 'utf-8')
         for al_line, source_line, target_line in zip(alfile, sourcefile, targetfile):
             almaps = parse_alignment(al_line)
             source_line, target_line = parse_segmentations(source_line, target_line)
