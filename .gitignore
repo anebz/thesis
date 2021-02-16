@@ -136,6 +136,8 @@ tools/
 fastalign/
 eflomal/
 *.bpe
+*.gdfa
+*.wgdfa
 
 # LaTeX
 *.aux
@@ -153,4 +155,3 @@ eflomal/
 *.synctex(busy)
 *.xml
 *.pptx
-fastalign_0/
