@@ -17,41 +17,41 @@ from settings import *
 
 def merge_dropout_alignments():
     union_merge, inter_merge, thres_merge = {}, {}, {}
-    for num_symbols in tqdm(merges, desc=f"merging dropout align files"):
-        union_merge[num_symbols], inter_merge[num_symbols], thres_merge[num_symbols] = [
+    for vocab_size in tqdm(merges, desc=f"merging dropout align files"):
+        union_merge[vocab_size], inter_merge[vocab_size], thres_merge[vocab_size] = [
         ], [], []
 
         for i in range(dropout_samples):
-            alpath = join(bpedir, mode, f"{num_symbols}_{i}.wgdfa")
+            alpath = join(bpedir, mode, f"{vocab_size}_{i}.wgdfa")
             for j, line in enumerate(open(alpath, 'r').readlines()):
                 al = frozenset(line.strip().split("\t")[1].split())
 
                 # at the first iteration, just append the alignment
                 if i == 0:
-                    #union_merge[num_symbols].append(al)
-                    #inter_merge[num_symbols].append(al)
-                    thres_merge[num_symbols].append(Counter(al))
+                    #union_merge[vocab_size].append(al)
+                    #inter_merge[vocab_size].append(al)
+                    thres_merge[vocab_size].append(Counter(al))
                     continue
 
                 # do union, intersection or frequency addition
-                #union_merge[num_symbols][j] |= al
-                #inter_merge[num_symbols][j] &= al
-                thres_merge[num_symbols][j] += Counter(al)
+                #union_merge[vocab_size][j] |= al
+                #inter_merge[vocab_size][j] &= al
+                thres_merge[vocab_size][j] += Counter(al)
 
         # write to output
         os.chdir(join(bpedir, mode))
-        #unionfile = codecs.open(f'{num_symbols}_union.wgdfa', 'w')
-        #interfile = codecs.open(f'{num_symbols}_inter.wgdfa', 'w')
-        thresfiles = {merge_t: codecs.open(f'{num_symbols}_thres_{merge_t}.wgdfa', 'w') for merge_t in merge_threshold}
+        #unionfile = codecs.open(f'{vocab_size}_union.wgdfa', 'w')
+        #interfile = codecs.open(f'{vocab_size}_inter.wgdfa', 'w')
+        thresfiles = {merge_t: codecs.open(f'{vocab_size}_thres_{merge_t}.wgdfa', 'w') for merge_t in merge_threshold}
 
-        for i in range(len(thres_merge[num_symbols])):
-            #unionfile.write(f"{i}\t{' '.join(union_merge[num_symbols][i])}\n")
-            #interfile.write(f"{i}\t{' '.join(inter_merge[num_symbols][i])}\n")
+        for i in range(len(thres_merge[vocab_size])):
+            #unionfile.write(f"{i}\t{' '.join(union_merge[vocab_size][i])}\n")
+            #interfile.write(f"{i}\t{' '.join(inter_merge[vocab_size][i])}\n")
 
             # get alignments more common than the merge_threshold %
             for merge_t in merge_threshold:
-                common_aligns = [k for k in thres_merge[num_symbols][i]
-                                 if thres_merge[num_symbols][i][k] > merge_t * dropout_samples]
+                common_aligns = [k for k in thres_merge[vocab_size][i]
+                                 if thres_merge[vocab_size][i][k] > merge_t * dropout_samples]
                 thresfiles[merge_t].write(f"{i}\t{' '.join(common_aligns)}\n")
     return
 
@@ -128,7 +128,7 @@ def plot_scores(df: pd.DataFrame, scoredir: str):
 
 	colors = ['magenta', 'tab:blue', 'tab:green', 'tab:red']
 
-	df = df.sort_values('num_symbols')
+	df = df.sort_values('vocab_size')
 	columns = list(df)
 	for column, color in zip(columns[1:], colors):
 		df.plot(kind='line', x=columns[0], y=column, color=color, ax=ax)
@@ -140,14 +140,14 @@ def plot_scores(df: pd.DataFrame, scoredir: str):
 def calc_align_scores(probs: dict, surs: dict, surs_count: float, i: int=-1) -> pd.DataFrame:
 
 	scores = []
-	for num_symbols in merges:
-		alfile = join(bpedir, mode, f"{num_symbols}.wgdfa")
+	for vocab_size in merges:
+		alfile = join(bpedir, mode, f"{vocab_size}.wgdfa")
 
-		score = [int(num_symbols)]
+		score = [int(vocab_size)]
 		score.extend(list(calc_score(alfile, probs, surs, surs_count)))
 		scores.append(score)
 
-	df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+	df = pd.DataFrame(scores, columns=['vocab_size', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 
 	scorename = join(scoredir,  f"{source}_{target}_{mode}")
 	print(f"Scores saved into {scorename}")
@@ -163,13 +163,13 @@ def calc_score_merges(probs, surs, surs_count):
     ''' currently not doing union and intersection cases
 	for merge_type in ['union', 'inter']:
 		scores = []
-		for num_symbols in merges:
-			mergefilepath = join(bpedir, mode, f'{num_symbols}_{merge_type}.wgdfa')
-			score = [int(num_symbols)]
+		for vocab_size in merges:
+			mergefilepath = join(bpedir, mode, f'{vocab_size}_{merge_type}.wgdfa')
+			score = [int(vocab_size)]
 			score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
 			scores.append(score)
 			
-		df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+		df = pd.DataFrame(scores, columns=['vocab_size', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
 		scorename = join(scorespath, f"{source}_{target}_{merge_type}_{mode}")
 		
 		print(f"Scores saved into {scorename}")
@@ -180,14 +180,14 @@ def calc_score_merges(probs, surs, surs_count):
     # threshold case, iterate all merge_thresholds saved
     for merge_t in merge_threshold:
         scores = []
-        for num_symbols in merges:
-            mergefilepath = join(bpedir, mode, f'{num_symbols}_thres_{merge_t}.wgdfa')
+        for vocab_size in merges:
+            mergefilepath = join(bpedir, mode, f'{vocab_size}_thres_{merge_t}.wgdfa')
 
-            score = [int(num_symbols)]
+            score = [int(vocab_size)]
             score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
             scores.append(score)
 
-        df = pd.DataFrame(scores, columns=['num_symbols', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
+        df = pd.DataFrame(scores, columns=['vocab_size', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
         scorename = join(scorespath, f"{source}_{target}_{merge_t}_thres_{mode}")
         
         print(f"Scores saved into {scorename}")

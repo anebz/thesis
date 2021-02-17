@@ -9,9 +9,9 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
 
-def create_parallel_text(corpusfile: list, num_symbols: int, i: int):
-    target_bpe = codecs.open(join(bpedir, 'segmentations', f'{target}_{num_symbols}_{i}.bpe'), encoding='utf-8')
-    with codecs.open(join(bpedir, mode, f"{num_symbols}_{i}.txt"), "w") as pfile:
+def create_parallel_text(corpusfile: list, vocab_size: int, i: int):
+    target_bpe = codecs.open(join(bpedir, 'segmentations', f'{target}_{vocab_size}_{i}.bpe'), encoding='utf-8')
+    with codecs.open(join(bpedir, mode, f"{vocab_size}_{i}.txt"), "w") as pfile:
         for sl, tl in zip(corpusfile, target_bpe):
             pfile.write(f"{sl} ||| {tl}")
     return
@@ -102,12 +102,12 @@ def map_subword_to_word(corpus: list, bpes: dict, lang: str) -> dict:
     return bpes
 
 
-def load_and_map_segmentations(num_symbols: str, i: int =-1) -> dict:
+def load_and_map_segmentations(vocab_size: str, i: int =-1) -> dict:
     bpes = {}
 
     for lang in [source, target]:
         if params[lang]['bpe']:
-            segmentpath = join(bpedir, 'segmentations', f"{lang}_{num_symbols}{'_'+str(i) if params[lang]['dropout'] else ''}.bpe")
+            segmentpath = join(bpedir, 'segmentations', f"{lang}_{vocab_size}{'_'+str(i) if params[lang]['dropout'] else ''}.bpe")
             argsinput = codecs.open(segmentpath, encoding='utf-8')
             bpes = map_subword_to_word(argsinput, bpes, lang)
         else:
@@ -148,12 +148,12 @@ def bpe_word_align(bpes: dict, bpe_aligns: list) -> str:
 
 
 def extract_alignments(corpusfile: list, i: int = -1, input_mode: bool = False):
-    for num_symbols in merges:
+    for vocab_size in merges:
 
-        print(f"Extracting alignments, i={i}, num_symbols={num_symbols}\n")
-        outpath = join(bpedir, mode, f"{num_symbols}{'_'+str(i) if i != -1 else ''}")
+        print(f"Extracting alignments, i={i}, vocab_size={vocab_size}\n")
+        outpath = join(bpedir, mode, f"{vocab_size}{'_'+str(i) if i != -1 else ''}")
 
-        create_parallel_text(corpusfile, num_symbols, i)
+        create_parallel_text(corpusfile, vocab_size, i)
         create_fwd_rev_files(outpath)
         create_gdfa_file(outpath)
 
@@ -161,7 +161,7 @@ def extract_alignments(corpusfile: list, i: int = -1, input_mode: bool = False):
             break
 
         # map alignment from subword to word
-        bpes = load_and_map_segmentations(num_symbols, i)
+        bpes = load_and_map_segmentations(vocab_size, i)
         all_word_aligns = bpe_word_align(bpes, codecs.open(outpath+'.gdfa', encoding='utf-8'))
         os.system(f"rm {outpath}.gdfa")
         codecs.open(outpath+'.wgdfa', 'w', encoding='utf-8').write(all_word_aligns)
