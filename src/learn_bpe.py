@@ -11,19 +11,6 @@ from collections import defaultdict, Counter
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from settings import *
 
-def read_bpe_model(lang: str) -> (list, int):
-    # check if a BPE model for this language exists
-    # if so, only create new BPE model if learn_merges > symbols in the model
-    model_path = join(inputdir, f"{lang}{'' if params[lang]['space'] else '_ns'}{'_scoring' if scoring else ''}{'_'+str(it) if it >= 0 else ''}.model")
-    if os.path.isfile(model_path):
-        bpe_model = codecs.open(model_path, encoding='utf-8').readlines()
-        model_symbols = bpe_model[0].strip('\r\n').split()[1] if bpe_model else 0
-    else:
-        bpe_model = codecs.open(model_path, 'w', encoding='utf-8')
-        model_symbols = 0
-        
-    return bpe_model, model_symbols
-
 
 def join_best_mappings(lang: str, text: str) -> str:
     if it > 0 and lang == target:
@@ -224,7 +211,7 @@ def update_tokens(lang: str, tokens: list, scores: Counter, pairs: Counter, idx:
     return tokens, scores, pairs, idx
 
 
-def learn_bpe(lang: str, corpus: list) -> list:
+def learn_bpe(lang: str, corpus: list, vocab_to_learn: int) -> list:
     """
     Learn BPE operations from vocabulary.
     Steps:
@@ -234,12 +221,16 @@ def learn_bpe(lang: str, corpus: list) -> list:
     4. Update bigrams in corpus 
     """
 
-    tokens = read_corpus(lang, corpus)
+    # if bpe model has already been imported, use this
+    if vocab_to_learn < learn_vocab_size:
+        tokens = corpus
+    else:
+        tokens = read_corpus(lang, corpus)
     pairs, idx = get_stats(lang, tokens)
     scores = pairs.copy()
     most_freq_merges = []
 
-    for i in tqdm(range(learn_merges), desc=f"learn_bpe: lang={lang}, space mode={params[lang]['space']}"):
+    for i in tqdm(range(vocab_to_learn), desc=f"learn_bpe: lang={lang}, space mode={params[lang]['space']}"):
         try:
             most_frequent = scores.most_common(1)[0]
         except:
@@ -255,8 +246,8 @@ def learn_bpe(lang: str, corpus: list) -> list:
 
 
 def write_bpe(lang, most_freq_merges):
-    filename = f"{lang}{'' if params[lang]['space'] else '_ns'}{'_scoring' if scoring else ''}{'_'+str(it) if it >= 0 else ''}.model"
-    bpe_file = codecs.open(join(inputdir, filename), 'w', encoding='utf-8')
+    bpe_model_fname = join(inputdir, f"{lang}{'' if params[lang]['space'] else '_ns'}{'_scoring' if scoring else ''}{'_'+str(it) if it >= 0 else ''}.model")
+    bpe_file = codecs.open(bpe_model_fname, 'w', encoding='utf-8')
     bpe_file.write(f"{lang} {len(most_freq_merges)}\n")
     bpe_file.write('\n'.join(' '.join(item) for item in most_freq_merges))
     return
