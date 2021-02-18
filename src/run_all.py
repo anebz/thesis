@@ -55,16 +55,11 @@ def learn_bpes(lang):
     return most_freq_merges
 
 
-def apply_bpes(bpe_model_target, i):
-    corpus_target = read_corpus(target, codecs.open(inputpath[target], encoding='utf-8'))
-    target_bpe = apply_bpe(target, bpe_model_target, corpus_target, i)
-    return
-
-
 @ray.remote
 def bpe_pipeline(corpusfile, bpe_model_target, i):
     print("apply_bpe ", i)
-    apply_bpes(bpe_model_target, i)
+    corpus_target = read_corpus(target, codecs.open(inputpath[target], encoding='utf-8'))
+    target_bpe = apply_bpe(target, bpe_model_target, corpus_target, i)
     print("extract aligns ", i)
     extract_alignments(corpusfile, i)
     print("done ", i)

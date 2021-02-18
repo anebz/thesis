@@ -6,7 +6,6 @@ from os.path import join
 word_sep = u'\u2581' # symbol to use for word separators
 source, target = 'eng', 'deu' # eng, deu, ron, hin
 mode = "fastalign"  # fastalign, eflomal
-scoring = False # True to activate the scoring method
 it = 0
 threshold = 0.1 # frequency threshold for finding subword units
 
