@@ -10,7 +10,6 @@ from datetime import timedelta
 from learn_bpe import learn_bpe, read_corpus, write_bpe
 from apply_bpe import apply_bpe
 from extract_alignments import extract_alignments
-from find_bpe import aggregate_mappings
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from settings import *
