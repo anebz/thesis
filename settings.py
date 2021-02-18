@@ -23,9 +23,10 @@ params = {
     }
 }
 
-learn_vocab_size = 35000  # how many BPE units to learn in learn_bpe.py
-merges = [100, 200, 500, 1000, 2000, 4000] # create segmentations with different number of merges
-dropout_samples = 4 # how many samples to create in dropout mode
+learn_vocab_size = 32000  # how many BPE units to learn in learn_bpe.py
+# create segmentations with different number of merges
+merges = [100, 200, 500, 1000, 2000, 4000, 8000, 16000, 32000]
+dropout_samples = 5 # how many samples to create in dropout mode
 merge_threshold = [0.5] # alignment threshold for dropout mode
 
 # paths for input files

@@ -10,7 +10,7 @@ from settings import *
 
 
 def create_parallel_text(corpusfile: list, vocab_size: int, i: int):
-    target_bpe = codecs.open(join(bpedir, 'segmentations', f'{target}_{vocab_size}_{i}.bpe'), encoding='utf-8')
+    target_bpe = codecs.open(join(bpedir, 'segmentations', f"{target}_{vocab_size}{'_'+str(i) if params[target]['dropout'] > 0 else ''}.bpe"), encoding='utf-8')
     with codecs.open(join(bpedir, mode, f"{vocab_size}_{i}.txt"), "w") as pfile:
         for sl, tl in zip(corpusfile, target_bpe):
             pfile.write(f"{sl} ||| {tl}")
@@ -107,7 +107,7 @@ def load_and_map_segmentations(vocab_size: str, i: int =-1) -> dict:
 
     for lang in [source, target]:
         if params[lang]['bpe']:
-            segmentpath = join(bpedir, 'segmentations', f"{lang}_{vocab_size}{'_'+str(i) if params[lang]['dropout'] else ''}.bpe")
+            segmentpath = join(bpedir, 'segmentations', f"{lang}_{vocab_size}{'_'+str(i) if params[lang]['dropout'] > 0 else ''}.bpe")
             argsinput = codecs.open(segmentpath, encoding='utf-8')
             bpes = map_subword_to_word(argsinput, bpes, lang)
         else:

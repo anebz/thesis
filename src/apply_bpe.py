@@ -12,7 +12,7 @@ from settings import *
 from learn_bpe import read_corpus
 
 def write_bpe(lang: str, vocab_size: int, str_corpus: str, i: int=-1):
-    outputpath = join(bpedir, 'segmentations', f"{lang}_{vocab_size}{'_'+str(i) if i != -1 else ''}.bpe")
+    outputpath = join(bpedir, 'segmentations', f"{lang}_{vocab_size}{'_'+str(i) if params[lang]['dropout'] else ''}.bpe")
     codecs.open(outputpath, 'w', encoding='utf-8').write(str_corpus)
 
 

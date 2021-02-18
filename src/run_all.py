@@ -78,9 +78,9 @@ if __name__ == "__main__":
     os.makedirs(join(bpedir, 'segmentations'), exist_ok=True)
     os.makedirs(join(bpedir, 'fastalign'), exist_ok=True)
 
-    corpus_source = [line.strip('\r\n ').split('\t')[1] for line in codecs.open(inputpath[source])]
     bpe_model_target = learn_bpes(target)
-    
+    corpus_source = [line.strip('\r\n ').split('\t')[1] for line in codecs.open(inputpath[source])]
+
     t0 = time.time()
     ray.init(num_cpus=5)
     futures = [bpe_pipeline.remote(corpus_source, bpe_model_target, i) for i in range(dropout_samples)]

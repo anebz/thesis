@@ -18,12 +18,10 @@ from settings import *
 def merge_dropout_alignments():
     union_merge, inter_merge, thres_merge = {}, {}, {}
     for vocab_size in tqdm(merges, desc=f"merging dropout align files"):
-        union_merge[vocab_size], inter_merge[vocab_size], thres_merge[vocab_size] = [
-        ], [], []
+        union_merge[vocab_size], inter_merge[vocab_size], thres_merge[vocab_size] = [], [], []
 
         for i in range(dropout_samples):
-            alpath = join(bpedir, mode, f"{vocab_size}_{i}.wgdfa")
-            for j, line in enumerate(open(alpath, 'r').readlines()):
+            for j, line in enumerate(open(join(bpedir, mode, f"{vocab_size}_{i}.wgdfa"), 'r')):
                 al = frozenset(line.strip().split("\t")[1].split())
 
                 # at the first iteration, just append the alignment
@@ -141,7 +139,7 @@ def calc_align_scores(probs: dict, surs: dict, surs_count: float, i: int=-1) -> 
 
 	scores = []
 	for vocab_size in merges:
-		alfile = join(bpedir, mode, f"{vocab_size}.wgdfa")
+		alfile = join(bpedir, mode, f"{vocab_size}_{i}.wgdfa")
 
 		score = [int(vocab_size)]
 		score.extend(list(calc_score(alfile, probs, surs, surs_count)))
@@ -206,4 +204,4 @@ if __name__ == "__main__":
 	if max(params[source]['dropout'], params[target]['dropout']):
 		calc_score_merges(probs, surs, surs_count)
 	else:
-		calc_align_scores(probs, surs, surs_count)
+		calc_align_scores(probs, surs, surs_count, 0)
