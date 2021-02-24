@@ -57,8 +57,7 @@ def learn_bpes(lang):
 @ray.remote
 def bpe_pipeline(corpusfile, bpe_model_target, i):
     print("apply_bpe ", i)
-    corpus_target = read_corpus(target, codecs.open(inputpath[target], encoding='utf-8'))
-    target_bpe = apply_bpe(target, bpe_model_target, corpus_target, i)
+    apply_bpe(target, bpe_model_target, corpus_target, i)
     print("extract aligns ", i)
     extract_alignments(corpusfile, i)
     print("done ", i)
@@ -74,10 +73,11 @@ if __name__ == "__main__":
 
     bpe_model_target = learn_bpes(target)
     corpus_source = [line.strip('\r\n ').split('\t')[1] for line in codecs.open(inputpath[source])]
+    corpus_target = read_corpus(target, codecs.open(inputpath[target], encoding='utf-8'))
 
     t0 = time.time()
     ray.init(num_cpus=5)
-    futures = [bpe_pipeline.remote(corpus_source, bpe_model_target, i) for i in range(dropout_samples)]
+    futures = [bpe_pipeline.remote(corpus_source, bpe_model_target, corpus_target, i) for i in range(dropout_samples)]
     ray.get(futures)
     ray.shutdown()
 

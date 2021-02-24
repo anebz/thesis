@@ -147,12 +147,12 @@ def bpe_word_align(bpes: dict, bpe_aligns: list) -> str:
                     word_aligns.add(f"{el1}-{el2}")
 
         all_word_aligns += f"{i}\t{' '.join(word_aligns)}\n"
-    return all_word_aligns
+    return all_word_aligns.split('\n')
 
 
 def merge_dropout_alignments():
 	thres_merge = {}
-	for vocab_size in tqdm(merges, desc=f"merging dropout align files"):
+	for vocab_size in tqdm(merges, desc=f"merging dropout align files for all vocab sizes"):
 		thres_merge[vocab_size] = []
 		for i in range(dropout_samples):
 
@@ -163,6 +163,8 @@ def merge_dropout_alignments():
 
 			# merge dropout alignments
 			for j, line in enumerate(all_word_aligns):
+				if line == '':
+					continue
 				al = frozenset(line.strip().split("\t")[1].split())
 
 				# at the first iteration, just append the alignment
@@ -259,23 +261,6 @@ def calc_align_scores(probs: dict, surs: dict, surs_count: float, i: int=-1) -> 
 def calc_score_merges(probs, surs, surs_count):
     scorespath = join(scoredir, str(max(params[source]['dropout'], params[target]['dropout'])))
     os.makedirs(scorespath, exist_ok=True)
-
-    ''' currently not doing union and intersection cases
-	for merge_type in ['union', 'inter']:
-		scores = []
-		for vocab_size in merges:
-			mergefilepath = join(bpedir, mode, f'{vocab_size}_{merge_type}.wgdfa')
-			score = [int(vocab_size)]
-			score.extend(list(calc_score(mergefilepath, probs, surs, surs_count)))
-			scores.append(score)
-			
-		df = pd.DataFrame(scores, columns=['vocab_size', 'prec', 'rec', 'f1', 'AER']).round(decimals=3)
-		scorename = join(scorespath, f"{source}_{target}_{merge_type}_{mode}")
-		
-		print(f"Scores saved into {scorename}")
-		df.to_csv(scorename+'.csv', index=False)
-		#plot_scores(df, scorename)
-	'''
 
     # threshold case, iterate all merge_thresholds saved
     for merge_t in merge_threshold:

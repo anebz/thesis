@@ -14,8 +14,8 @@ from settings import *
 
 def join_best_mappings(lang: str, text: str) -> str:
     if it > 0 and lang == target:
-        print(f"Iteration {it} of mapping mode")
-        with open(join(rootdir, 'data', f'subwords.txt'), 'r', encoding='utf-8') as subwf:
+        print(f"Importing subwords from iteration {it-1}")
+        with open(join(rootdir, 'data', f'subwords_{it-1}.txt'), 'r', encoding='utf-8') as subwf:
             prev_subwords = [line.strip('\r\n ') for line in subwf.readlines()]
         for elem in prev_subwords:
             text = text.replace(' '.join(list(elem)), elem)
@@ -215,7 +215,7 @@ def learn_bpe(lang: str, corpus: list, vocab_to_learn: int) -> list:
     """
 
     # if bpe model has already been imported, use this
-    if vocab_to_learn < learn_vocab_size:
+    if it > 0 or vocab_to_learn < learn_vocab_size:
         tokens = corpus
     else:
         tokens = read_corpus(lang, corpus)

@@ -7,7 +7,6 @@ word_sep = u'\u2581' # symbol to use for word separators
 source, target = 'eng', 'deu' # eng, deu, ron, hin
 mode = "fastalign"  # fastalign, eflomal
 it = 0
-threshold = 0.1 # frequency threshold for finding subword units
 
 params = {
     source: {
@@ -24,7 +23,7 @@ params = {
 
 learn_vocab_size = 32000  # how many BPE units to learn in learn_bpe.py
 # create segmentations with different number of merges
-merges = [100, 200, 500, 1000, 2000, 4000, 8000, 16000, 32000]
+merges = [100, 200, 500, 1000, 2000, 4000]
 dropout_samples = 10 # how many samples to create in dropout mode
 merge_threshold = [0.5] # alignment threshold for dropout mode
 
