@@ -12,7 +12,6 @@ from collections import defaultdict, Counter
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from settings import *
 
-threshold = 0.04 # frequency threshold for finding subword units
 r = re.compile('[^a-zA-Z]')
 
 def parse_alignment(al_line: str) -> defaultdict(list):
@@ -46,7 +45,7 @@ def parse_source(source_line: str,) -> str:
     return source_line.split()
 
 
-def parse_mapping(symb: int) -> defaultdict(Counter):
+def parse_mapping(vocab_size: int) -> defaultdict(Counter):
     '''
     obtain most common mappings from source language to target language,
     and print the mappings and the percentage they appear in. Steps:
@@ -61,9 +60,9 @@ def parse_mapping(symb: int) -> defaultdict(Counter):
 
     unit_maps = defaultdict(Counter)
     source_corpus = [parse_source(line) for line in codecs.open(inputpath[source], 'r')]
-    for ii in tqdm(range(dropout_samples)):
-        alfile = codecs.open(join(bpedir, mode, f'{symb}_{ii}.gdfa'), 'r')
-        targetfile = codecs.open(join(bpedir, 'segmentations', f'{target}_{symb}_{ii}.bpe'), 'r', 'utf-8')
+    for ii in tqdm(range(dropout_samples), desc=f"vocab_size={vocab_size}"):
+        alfile = codecs.open(join(bpedir, mode, f'{vocab_size}_{ii}.gdfa'), 'r')
+        targetfile = codecs.open(join(bpedir, 'segmentations', f'{target}_{vocab_size}_{ii}.bpe'), 'r', 'utf-8')
         for al_line, source_line, target_line in zip(alfile, source_corpus, targetfile):
             almaps = parse_alignment(al_line)
 
@@ -108,7 +107,7 @@ def most_common_substring(lst: list) -> str:
     return list(filter(lambda elem: len(elem) > 1, list(zip(*subs.most_common()))[0]))[0]
 
 
-def max_subarray(arr: list) -> list:
+def max_subarray(arr: list, threshold: int) -> list:
     '''
     Given an array, find the subarray with the maximum value with a certain threshold
     Example: threshold = 2
@@ -125,12 +124,17 @@ def max_subarray(arr: list) -> list:
             maxval = count
             beg = i if beg == -1 else beg
             end = i + 1
-    return range(beg, end)
+    return beg, end, maxval
 
 
-def aggregate_mappings(unit_maps: defaultdict(Counter)) -> dict:
-    good_subwords = set()
+def aggregate_mappings(unit_maps: defaultdict(Counter), threshold: int) -> dict:
+    good_subwords = {}
     for eng_word, deu_maps in unit_maps.items():
+
+        # remove bias in mappings. if there are only 2 mappings, a substring of those will for sure get added
+        if len(deu_maps) < 5:
+            continue
+
         # obtain the longest mapping that contains the most common substring
         most_common_unit = most_common_substring(deu_maps)
         for longest in sorted(deu_maps.keys(), key=len, reverse=True):
@@ -138,6 +142,9 @@ def aggregate_mappings(unit_maps: defaultdict(Counter)) -> dict:
                 break
         else:
             print("Error. Mapping with most common substring not found")
+
+        if longest == "zu"+u'\u2581'+"der"+u'\u2581'+"die"+u'\u2581':
+            ane = 1
 
         # update scores with the scores of the words
         scores = [0 for i in range(len(longest))]
@@ -148,29 +155,46 @@ def aggregate_mappings(unit_maps: defaultdict(Counter)) -> dict:
                     scores[i] += float(deu_maps[word])
 
         # get the characters with the highest scores. maximum subarray of the scores array
-        good_subw = ''.join(list(map(longest.__getitem__, max_subarray(scores))))
+        beg, end, count = max_subarray(scores, threshold)
+        good_subw = longest[beg:end]
         if len(good_subw) > 1:
-            good_subwords.add(good_subw)
-    return list(good_subwords)
+            if good_subw in good_subwords:
+                good_subwords[good_subw] = max(good_subwords[good_subw], count)
+            else:
+                good_subwords[good_subw] = count
+    
+    # sort good subwords by score, and obtain list with the top-scoring subwords
+    good_subwords = sorted(good_subwords, key=good_subwords.get, reverse=True)
+    return good_subwords
 
 
 if __name__ == "__main__":
 
-    symb = merges[0]
-    unit_maps = parse_mapping(symb)
-    good_subwords = aggregate_mappings(unit_maps)
+    for vocab_size in merges:
+        unit_maps = parse_mapping(vocab_size)
 
-    # join good_subwords
-    if os.path.isfile(join(rootdir, 'data', f'subwords_{it-1}.txt')):
-        print("Merging with previous subword list")
-        with open(join(rootdir, 'data', f'subwords_{it-1}.txt'), 'r', encoding='utf8') as subwordf:
-            prev_subwords = [line.strip('\r\n ') for line in subwordf.readlines()]
+        # iterate and relax threshold until reaching LIMIT subwords
+        threshold = 0.3  # frequency threshold for finding subword units
+        LIMIT = int(vocab_size/max_it)
+        good_subwords = aggregate_mappings(unit_maps, threshold)
+        while len(good_subwords) < LIMIT:
+            threshold *= 0.9
+            print(f"Minimum length criteria not met. Trying again with threshold={threshold}")
+            good_subwords = aggregate_mappings(unit_maps, threshold)
+        good_subwords = good_subwords[:LIMIT]
 
-        for subw in good_subwords:
-            if subw not in prev_subwords:
-                prev_subwords.append(subw)
-        good_subwords = prev_subwords
+        # if file already exists, import good_subwords
+        if os.path.isfile(join(rootdir, 'data', f'subwords_{vocab_size}_{it-1}.txt')):
+            print("Merging with previous subword list")
+            with open(join(rootdir, 'data', f'subwords_{it-1}.txt'), 'r', encoding='utf8') as subwordf:
+                prev_subwords = [line.strip('\r\n ') for line in subwordf]
 
-    print(f"Writing {len(good_subwords)} good subwords")
-    with open(join(rootdir, 'data', f'subwords_{it}.txt'), 'w', encoding='utf8') as out:
-        out.write('\n'.join(good_subwords))
+            for subw in good_subwords:
+                if subw not in prev_subwords:
+                    prev_subwords.append(subw)
+            good_subwords = prev_subwords
+
+        # write list of good subwords to file
+        print(f"Writing {len(good_subwords)} good subwords")
+        with open(join(rootdir, 'data', f'subwords_{vocab_size}_{it}.txt'), 'w', encoding='utf8') as out:
+            out.write('\n'.join(good_subwords))

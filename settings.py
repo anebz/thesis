@@ -7,6 +7,7 @@ word_sep = u'\u2581' # symbol to use for word separators
 source, target = 'eng', 'deu' # eng, deu, ron, hin
 mode = "fastalign"  # fastalign, eflomal
 it = 0
+max_it = 4
 
 params = {
     source: {
@@ -21,9 +22,8 @@ params = {
     }
 }
 
-learn_vocab_size = 32000  # how many BPE units to learn in learn_bpe.py
-# create segmentations with different number of merges
-merges = [100, 200, 500, 1000, 2000, 4000]
+learn_vocab_size = 8000  # how many BPE units to learn in learn_bpe.py
+merges = [100, 200, 500, 1000, 2000, 4000] # vocabulary size for segmentations
 dropout_samples = 10 # how many samples to create in dropout mode
 merge_threshold = [0.5] # alignment threshold for dropout mode
 
@@ -43,6 +43,9 @@ baselinedir = join(rootdir, 'reports', 'scores_normal_bpe')
 bpedir = join(rootdir, 'data', 'dropout_bpe' if params[target]['dropout'] else 'normal_bpe')
 scoredir = join(rootdir, 'reports', 'scores_' + ('dropout_bpe' if params[target]['dropout'] else 'normal_bpe'),
                 'space' if params[target]['space'] else 'no space', )
+
+os.makedirs(join(bpedir, 'segmentations'), exist_ok=True)
+os.makedirs(join(bpedir, 'fastalign'), exist_ok=True)
 
 # paths for alignment algorithms
 fastalign_path = join(rootdir, "tools/fast_align/build/fast_align")

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import sys
-import codecs
 from os.path import join
 
 # import global variables from settings.py
@@ -10,10 +9,10 @@ from settings import *
 
 
 def create_parallel_text(corpusfile: list, vocab_size: int, i: int):
-    target_bpe = codecs.open(join(bpedir, 'segmentations', f"{target}_{vocab_size}{'_'+str(i) if params[target]['dropout'] > 0 else ''}.bpe"), encoding='utf-8')
-    with codecs.open(join(bpedir, mode, f"{vocab_size}_{i}.txt"), "w") as pfile:
-        for sl, tl in zip(corpusfile, target_bpe):
-            pfile.write(f"{sl} ||| {tl}")
+    with open(join(bpedir, 'segmentations', f"{target}_{vocab_size}{'_'+str(i) if params[target]['dropout'] > 0 else ''}.bpe"), encoding='utf-8') as target_bpe:
+        with open(join(bpedir, mode, f"{vocab_size}_{i}.txt"), "w") as pfile:
+            for sl, tl in zip(corpusfile, target_bpe):
+                pfile.write(f"{sl} ||| {tl}")
     return
 
 
@@ -31,8 +30,8 @@ def create_gdfa_file(outpath: str):
     os.system(f"{atools_path} -i {outpath}.fwd -j {outpath}.rev -c grow-diag-final-and > {outpath}_unnum.gdfa")
 
     # parse _unnum.gdfa to .gdfa with "\t" separator
-    with codecs.open(f"{outpath}_unnum.gdfa", "r", "utf-8") as fi:
-        with codecs.open(f"{outpath}.gdfa", "w", "utf-8") as fo:
+    with open(f"{outpath}_unnum.gdfa", "r", "utf-8") as fi:
+        with open(f"{outpath}.gdfa", "w", "utf-8") as fo:
             for ii, line in enumerate(fi):
                 fo.write(f"{ii}\t{line.strip()}\n")
 
@@ -41,17 +40,11 @@ def create_gdfa_file(outpath: str):
     return
 
 
+def extract_alignments(corpusfile: list, vocab_size:int, i: int=-1):
+    print(f"Extracting alignments, i={i}, vocab_size={vocab_size}\n")
+    outpath = join(bpedir, mode, f"{vocab_size}{'_'+str(i) if i != -1 else ''}")
 
-
-def extract_alignments(corpusfile: list, i: int = -1):
-
-    for vocab_size in merges:
-
-        print(f"Extracting alignments, i={i}, vocab_size={vocab_size}\n")
-        outpath = join(bpedir, mode, f"{vocab_size}{'_'+str(i) if i != -1 else ''}")
-
-        create_parallel_text(corpusfile, vocab_size, i)
-        create_fwd_rev_files(outpath)
-        create_gdfa_file(outpath)
-
+    create_parallel_text(corpusfile, vocab_size, i)
+    create_fwd_rev_files(outpath)
+    create_gdfa_file(outpath)
     return

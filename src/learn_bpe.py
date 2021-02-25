@@ -12,14 +12,14 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 from settings import *
 
 
-def join_best_mappings(lang: str, text: str) -> str:
+def join_best_mappings(lang: str, text: str, vocab_size: int=merges[-1]) -> list:
     if it > 0 and lang == target:
         print(f"Importing subwords from iteration {it-1}")
         with open(join(rootdir, 'data', f'subwords_{it-1}.txt'), 'r', encoding='utf-8') as subwf:
             prev_subwords = [line.strip('\r\n ') for line in subwf.readlines()]
-        for elem in prev_subwords:
-            text = text.replace(' '.join(list(elem)), elem)
-    return text
+            for elem in prev_subwords[:vocab_size]:
+                text = text.replace(' '.join(list(elem)), elem)
+    return text.split('\n')
 
 
 def read_corpus(lang: str, corpus: list) -> list:
@@ -60,7 +60,7 @@ def read_corpus(lang: str, corpus: list) -> list:
             # join all words by word_sep
             tokens.append(f' {word_sep} '.join([' '.join(word) for word in line]))
 
-    tokens = join_best_mappings(lang, '\n'.join(tokens)).split('\n')
+    #tokens = join_best_mappings(lang, '\n'.join(tokens))
     return tokens
 
 
@@ -219,6 +219,7 @@ def learn_bpe(lang: str, corpus: list, vocab_to_learn: int) -> list:
         tokens = corpus
     else:
         tokens = read_corpus(lang, corpus)
+        tokens = join_best_mappings(lang, '\n'.join(tokens))
     pairs, idx = get_stats(lang, tokens)
     most_freq_merges = []
 
