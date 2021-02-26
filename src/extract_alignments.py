@@ -30,8 +30,8 @@ def create_gdfa_file(outpath: str):
     os.system(f"{atools_path} -i {outpath}.fwd -j {outpath}.rev -c grow-diag-final-and > {outpath}_unnum.gdfa")
 
     # parse _unnum.gdfa to .gdfa with "\t" separator
-    with open(f"{outpath}_unnum.gdfa", "r", "utf-8") as fi:
-        with open(f"{outpath}.gdfa", "w", "utf-8") as fo:
+    with open(f"{outpath}_unnum.gdfa", "r") as fi:
+        with open(f"{outpath}.gdfa", "w") as fo:
             for ii, line in enumerate(fi):
                 fo.write(f"{ii}\t{line.strip()}\n")
 

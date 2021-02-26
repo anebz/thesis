@@ -12,14 +12,16 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.
 from settings import *
 
 
-def join_best_mappings(lang: str, text: str, vocab_size: int=merges[-1]) -> list:
+def join_best_mappings(lang: str, corpus: list, vocab_size: int=merges[-1]) -> list:
+    text = '\n'.join(corpus)
     if it > 0 and lang == target:
-        print(f"Importing subwords from iteration {it-1}")
-        with open(join(rootdir, 'data', f'subwords_{it-1}.txt'), 'r', encoding='utf-8') as subwf:
+        print(f"Importing subwords from iteration={it-1}, vocab_size={vocab_size}")
+        with open(join(rootdir, 'data', f'subwords_{vocab_size}.txt'), 'r', encoding='utf-8') as subwf:
             prev_subwords = [line.strip('\r\n ') for line in subwf.readlines()]
-            for elem in prev_subwords[:vocab_size]:
+            for elem in prev_subwords:
                 text = text.replace(' '.join(list(elem)), elem)
-    return text.split('\n')
+            text = text.split('\n')
+    return text
 
 
 def read_corpus(lang: str, corpus: list) -> list:

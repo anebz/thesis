@@ -135,6 +135,7 @@ pbc_utils/
 tools/
 fastalign/
 eflomal/
+*.model
 *.bpe
 *.gdfa
 *.wgdfa

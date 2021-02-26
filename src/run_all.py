@@ -23,7 +23,8 @@ def learn_bpes(lang):
         return bpe_model
 
     corpus = read_corpus(lang, codecs.open(inputpath[lang], encoding='utf-8'))
-    corpus = join_best_mappings(lang, '\n'.join(corpus))
+    for vocab_size in merges:
+        corpus = join_best_mappings(lang, corpus, vocab_size)
     bpe_model = learn_bpe(lang, corpus, learn_vocab_size)
     write_bpe(lang, bpe_model)
     return bpe_model
@@ -57,7 +58,6 @@ if __name__ == "__main__":
     corpus_source = [line.strip('\r\n ').split('\t')[1] for line in codecs.open(inputpath[source])]
     corpus_target = read_corpus(target, codecs.open(inputpath[target], encoding='utf-8'))
 
-    
     t0 = time.time()
     ray.init(num_cpus=5)
     '''
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     ray.get(futures)
     '''
     for vocab_size in merges:
-        corpus_target = join_best_mappings(target, corpus_target, vocab_size/max_it)
+        corpus_target = join_best_mappings(target, corpus_target, vocab_size)
         futures = [bpe_pipeline_fancy.remote(corpus_source, bpe_model_target, corpus_target, vocab_size, i) for i in range(dropout_samples)]
         ray.get(futures)
     ray.shutdown()
